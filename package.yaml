@@ -27,9 +27,7 @@ dependencies:
 library:
   source-dirs: src
   ghc-options:
-  - -threaded
-  - -rtsopts
-  - -with-rtsopts=-N
+  - -O2
 
 tests:
   qb11-test:

@@ -18,7 +18,7 @@ isSameColumns csL csR | length csL /= length csR = False
                       compareColumn :: Column -> Column -> Bool
                       compareColumn (Column cl)            (Column cr)            = cl == cr
                       compareColumn (ColumnAlias cl al)    (ColumnAlias cr ar)    = cl == cr && al == ar
-                      compareColumn (RawColumn cl)         (RawColumn cr)         = cl == cr
-                      compareColumn (RawColumnAlias cl al) (RawColumnAlias cr ar) = cl == cr && al == ar
+                   -- compareColumn (RawColumn cl)         (RawColumn cr)         = cl == cr
+                   -- compareColumn (RawColumnAlias cl al) (RawColumnAlias cr ar) = cl == cr && al == ar
                       compareColumn _                   _                         = False
 

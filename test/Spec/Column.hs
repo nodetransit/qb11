@@ -14,7 +14,7 @@ runColumnSpec =
   describe "column semigroup/monoid" $ do
     context "concatenation with columns" $ do
       it "should overwrite columns" $ do
-        checkConcatColumns select_ `shouldBe` True
+        checkConcatColumns Select `shouldBe` True
 
 -- |
 checkConcatColumns :: Query -> Bool
