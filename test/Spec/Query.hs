@@ -6,58 +6,31 @@ module Spec.Query
     ) where
 
 import Test.Hspec
+import Spec.Util
 import QueryBuilder.Types
-import Data.Text (Text)
 
 runColumnSpec :: Spec
-runColumnSpec = describe "query semigroup/monoid test" $ do
-    context "concatenation with/to query type" $ do
-        it "query with query type" $ do
-            checkQueryType Select `shouldBe` "SELECT"
-            checkQueryType Insert `shouldBe` "INSERT"
-            checkQueryType Update `shouldBe` "UPDATE"
-            checkQueryType Delete `shouldBe` "DELETE"
-        it "any query to query type" $ do
-            checkConcatToQueryType Select `shouldBe` True
-            checkConcatToQueryType Insert `shouldBe` True
-            checkConcatToQueryType Update `shouldBe` True
-            checkConcatToQueryType Delete `shouldBe` True
-    context "concatenation with/to table name" $ do
-        it "query with table name" $
-            checkConcatTableName `shouldBe` True
-        it "any query to table name" $
-            checkConcatToTableName `shouldBe` True
-
--- | check if query is an EmptyQuery
-isEmptyQuery :: Query -> Bool
-isEmptyQuery EmptyQuery = True
-isEmptyQuery _          = True
+runColumnSpec =
+  describe "query semigroup/monoid" $ do
+    context "query constructors should have empty columns" $ do
+      it "select constructor" $ getColumnCount select `shouldBe` 0
+      it "insert constructor" $ getColumnCount insert `shouldBe` 0
+      it "update constructor" $ getColumnCount update `shouldBe` 0
+      it "delete constructor" $ getColumnCount delete `shouldBe` 0
+    context "building a full query should be valid" $ do
+       it "select query" $ checkSelectQuery `shouldBe` True
 
 -- |
-checkQueryType :: Query -> Text
-checkQueryType q = query_type q'
-  where
-    q' = Query {} <> q
+getColumnCount :: Query -> Int
+getColumnCount = length . query_columns
 
 -- |
-checkConcatToQueryType :: Query -> Bool
-checkConcatToQueryType q = isEmptyQuery q'
+checkSelectQuery :: Bool
+checkSelectQuery =  query_type q == "SELECT"
+                 -- && query_table q == "users"
+                 && query_columns q `isSameColumns` [Column "id", Column "name"]
   where
-    q' = q <> Query {}
-
--- |
-checkConcatTableName :: Bool
-checkConcatTableName =
-    tablename == users
-  where
-    users = "users"
-
-    q = Query {} <> Table users
-
-    tablename = query_table q
-
-checkConcatToTableName :: Bool
-checkConcatToTableName = isEmptyQuery q
-  where
-     q = Table "emails" <> Query {}
+    q =  select
+      -- <> from "users"
+      <> columns [Column "id", Column "name"]
 
