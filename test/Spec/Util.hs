@@ -3,7 +3,7 @@ module Spec.Util
     , isSameColumns
     ) where
 
-import QueryBuilder.Types
+import QueryBuilder.Query
 
 -- | check if query is an EmptyQuery
 isEmptyQuery :: Query -> Bool

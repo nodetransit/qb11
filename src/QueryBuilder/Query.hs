@@ -2,19 +2,17 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module QueryBuilder.Types
+module QueryBuilder.Query
     ( Query(..)
     , Column(..)
-    , select
-    , insert
-    , update
-    , delete
-    , from
-    , into
-    , table
-    , columns
-    , Operation(..)
-    , Condition(..)
+    , select_
+    , insert_
+    , update_
+    , delete_
+    , from_
+    , into_
+    , table_
+    , columns_
     , Join(..)
     ) where
 
@@ -24,25 +22,14 @@ import Data.Array as Array
 import Control.Monad
 import Control.Applicative
 
+import QueryBuilder.Condition
+
 
 data Column = Column         Text
             | ColumnAlias    Text Text
             | RawColumn      Text
             | RawColumnAlias Text Text
             deriving Show
-
-data Operation = Equals
-               | NotEquals
-               | Null
-               | NotNull
-               | Like
-               | NotLike
-             deriving Show
-
-data Condition = Condition String Operation String
-               | Group [Condition]
-             deriving Show
--- data Condition = Condition Text | Array Condition
 
 data Query = EmptyQuery
            | Table Text
@@ -64,16 +51,16 @@ defaultQuery = Query { query_type    = ""
                      , query_columns = []
                      }
 
-select = defaultQuery { query_type = "SELECT" }
-insert = defaultQuery { query_type = "INSERT" }
-update = defaultQuery { query_type = "UPDATE" }
-delete = defaultQuery { query_type = "DELETE" }
+select_ = defaultQuery { query_type = "SELECT" }
+insert_ = defaultQuery { query_type = "INSERT" }
+update_ = defaultQuery { query_type = "UPDATE" }
+delete_ = defaultQuery { query_type = "DELETE" }
 
-from = Table
-into = Table
-table = Table
+from_ = Table
+into_ = Table
+table_ = Table
 
-columns = Columns
+columns_ = Columns
 
 modify_query :: Query -> Query -> Query
 modify_query EmptyQuery     q              = q

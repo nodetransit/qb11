@@ -13,6 +13,5 @@ module QueryBuilder
 import Data.Text as T
 import Data.Text (Text)
 import Data.Array as Array
-import QueryBuilder.Types
 
 
