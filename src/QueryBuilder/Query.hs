@@ -5,15 +5,8 @@
 module QueryBuilder.Query
     ( Query(..)
     , Column(..)
-    , select_
-    , insert_
-    , update_
-    , delete_
-    , from_
-    , into_
-    , table_
-    , columns_
     , Join(..)
+    , defaultQuery
     ) where
 
 import Data.Text as T
@@ -27,12 +20,18 @@ import QueryBuilder.Condition
 
 data Column = Column         Text
             | ColumnAlias    Text Text
-            | RawColumn      Text
-            | RawColumnAlias Text Text
+         -- | RawColumn      Text
+         -- | RawColumnAlias Text Text
             deriving Show
 
 data Query = EmptyQuery
+           | Select
+           | Insert
+           | Update
+           | Delete
+           | From Text
            | Table Text
+           | Into Text
            | Columns [Column]
            | Query { query_type       :: Text
                    , query_table      :: Text
@@ -51,24 +50,25 @@ defaultQuery = Query { query_type    = ""
                      , query_columns = []
                      }
 
-select_ = defaultQuery { query_type = "SELECT" }
-insert_ = defaultQuery { query_type = "INSERT" }
-update_ = defaultQuery { query_type = "UPDATE" }
-delete_ = defaultQuery { query_type = "DELETE" }
-
-from_ = Table
-into_ = Table
-table_ = Table
-
-columns_ = Columns
-
 modify_query :: Query -> Query -> Query
-modify_query EmptyQuery     q              = q
-modify_query q              EmptyQuery     = q
+modify_query EmptyQuery     q              = defaultQuery <> q
+modify_query q              EmptyQuery     = defaultQuery <> q
+modify_query q@(Query {})   Select         = q { query_type = "SELECT" }
+modify_query q@(Query {})   Insert         = q { query_type = "INSERT" }
+modify_query q@(Query {})   Update         = q { query_type = "UPDATE" }
+modify_query q@(Query {})   Delete         = q { query_type = "DELETE" }
+modify_query q@(Query {})   (From t)       = q { query_table = t }
 modify_query q@(Query {})   (Table t)      = q { query_table = t }
+modify_query q@(Query {})   (Into t)       = q { query_table = t }
 modify_query q@(Query {})   (Columns c)    = q { query_columns = c }
+modify_query Select         q              = defaultQuery { query_type = "SELECT" } <> q
+modify_query Insert         q              = defaultQuery { query_type = "INSERT" } <> q
+modify_query Update         q              = defaultQuery { query_type = "UPDATE" } <> q
+modify_query Delete         q              = defaultQuery { query_type = "DELETE" } <> q
 modify_query (Columns c)    q              = defaultQuery { query_columns = c } <> q
+modify_query (From t)       q              = defaultQuery { query_table = t } <> q
 modify_query (Table t)      q              = defaultQuery { query_table = t } <> q
+modify_query (Into t)       q              = defaultQuery { query_table = t } <> q
 modify_query qL             qR             = coalesceQuery qL qR
 
 coalesceQuery :: Query -> Query -> Query
