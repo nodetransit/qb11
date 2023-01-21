@@ -7,14 +7,14 @@ module Spec.Column
 
 import Test.Hspec
 import Spec.Util
-import QueryBuilder.Types
+import QueryBuilder.Query
 
 runColumnSpec :: Spec
 runColumnSpec =
   describe "column semigroup/monoid" $ do
     context "concatenation with columns" $ do
       it "should overwrite columns" $ do
-        checkConcatColumns select `shouldBe` True
+        checkConcatColumns select_ `shouldBe` True
 
 -- |
 checkConcatColumns :: Query -> Bool

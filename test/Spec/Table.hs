@@ -6,7 +6,7 @@ module Spec.Table
     ) where
 
 import Test.Hspec
-import QueryBuilder.Types
+import QueryBuilder.Query
 
 runTableSpec :: Spec
 runTableSpec =
@@ -21,22 +21,22 @@ runTableSpec =
 checkConcatSelectTable :: Bool
 checkConcatSelectTable = query_table q' == "users"
   where
-    q' = select <> from "users"
+    q' = select_ <> from_ "users"
 
 -- |
 checkConcatInsertTable :: Bool
 checkConcatInsertTable = query_table q' == "emails"
   where
-    q' = insert <> into "emails"
+    q' = insert_ <> into_ "emails"
 
 -- |
 checkConcatUpdateTable :: Bool
 checkConcatUpdateTable = query_table q' == "infos"
   where
-    q' = update <> table "infos"
+    q' = update_ <> table_ "infos"
 
 -- |
 checkConcatDeleteTable :: Bool
 checkConcatDeleteTable = query_table q' == "accounts"
   where
-    q' = delete <> from "accounts"
+    q' = delete_ <> from_ "accounts"
