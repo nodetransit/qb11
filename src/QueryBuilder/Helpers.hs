@@ -2,6 +2,8 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RecordWildCards #-}
 
+{-| collection of smart constructors
+ -}
 module QueryBuilder.Helpers
     ( select_
     , insert_
@@ -27,4 +29,7 @@ into_  t = defaultQuery <> Into  t
 table_ t = defaultQuery <> Table t
 
 columns_ c = defaultQuery <> Columns c
+
+-- where_ :: (Condition, [Text]) -> Query
+-- where_ predicate@(condition, bindings@(b:bs)) = 
 
