@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -36,18 +37,20 @@ data Query = EmptyQuery
            | Query { query_type       :: Text
                    , query_table      :: Text
                    , query_columns    :: [Column]
-               -- , query_conditions :: Condition
-               -- , query_bindings   :: [a]
-               -- , query_orderBy    :: [a]
-               -- , query_distinct   :: [b]
-               -- , query_limit      :: [n]
-               -- , query_joins      :: [a]
+                   , query_conditions :: (Text, [Text])
+                -- , query_orderBy    :: [a]
+                -- , query_distinct   :: [b]
+                -- , query_limit      :: [n]
+                -- , query_joins      :: [a]
+                -- , query_having     :: (Text, [Text])
+                -- , query_group      :: [Text]
                }
             deriving Show
 
-defaultQuery = Query { query_type    = ""
-                     , query_table   = ""
-                     , query_columns = []
+defaultQuery = Query { query_type       = ""
+                     , query_table      = ""
+                     , query_columns    = []
+                     , query_conditions = ("", [])
                      }
 
 modify_query :: Query -> Query -> Query
@@ -72,28 +75,34 @@ modify_query (Into t)       q              = defaultQuery { query_table = t } <>
 modify_query qL             qR             = coalesceQuery qL qR
 
 coalesceQuery :: Query -> Query -> Query
-coalesceQuery qL qR = Query { query_type    = queryType
-                            , query_table   = queryTable
-                            , query_columns = queryColumns
+coalesceQuery qL qR = Query { query_type       = queryType
+                            , query_table      = queryTable
+                            , query_columns    = queryColumns
+                            , query_conditions = queryConditions
                             }
   where
     coalesce f a b = if f a /= 0 then a else b
+    conditionLen (p, _) = T.length p
 
-    queryType    = coalesce T.length (query_type qL) (query_type qR)
-    queryTable   = coalesce T.length (query_table qL) (query_table qR)
-    queryColumns = coalesce Prelude.length (query_columns qL) (query_columns qR)
+    queryType       = coalesce T.length       (query_type qL)       (query_type qR)
+    queryTable      = coalesce T.length       (query_table qL)      (query_table qR)
+    queryColumns    = coalesce Prelude.length (query_columns qL)    (query_columns qR)
+    queryConditions = coalesce conditionLen   (query_conditions qL) (query_conditions qR)
 
 instance Semigroup Query where
+    (<>) :: Query -> Query -> Query
     (<>) = modify_query
 
 instance Monoid Query where
-    mempty  = EmptyQuery
+    mempty :: Query
+    mempty = EmptyQuery
+
+    mappend :: Query -> Query -> Query
     mappend = (<>)
 
 data Join = Join
     { join_table      :: Text
     , join_alias      :: Text
-    -- , join_bindings   :: Array Text
-    , join_conditions :: Condition
+    , join_conditions :: (Text, [Text])
     }
 
