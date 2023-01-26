@@ -40,27 +40,27 @@ instance Show Operation where
     show Like      = "LIKE"
     show NotLike   = "NOT LIKE"
 
-data ConditionT m b = ConditionT { runConditionT :: m b }
+data ConditionT m b a = ConditionT { runConditionT :: m b }
 
-instance (Functor m) => Functor (ConditionT m) where
-    fmap :: (a -> b) -> ConditionT m a -> ConditionT m b
+instance (Monoid b, Functor m) => Functor (ConditionT m b) where
+    -- fmap :: (a -> b) -> ConditionT m a x -> ConditionT m b x
     fmap f = mapConditionT $ fmap $ \b -> f b
       where
         mapConditionT f m = ConditionT $ f (runConditionT m)
 
-instance (Applicative m) => Applicative (ConditionT m) where
-    pure :: b -> ConditionT m b
+instance (Monoid b, Applicative m) => Applicative (ConditionT m b) where
+    -- pure :: b -> ConditionT m b x
     pure b = ConditionT $ pure b
 
-    (<*>) :: ConditionT m (a -> b) -> ConditionT m a -> ConditionT m b
+    (<*>) :: ConditionT m (a -> b) -> ConditionT m a x -> ConditionT m b x
     (<*>) f v = ConditionT $ do
         f' <*> v'
       where
         f' = runConditionT f
         v' = runConditionT v
 
-instance (Monad m) => Monad (ConditionT m) where
-    return :: b -> ConditionT m b
+instance (Monoid b, Monad m) => Monad (ConditionT m b) where
+    -- return :: b -> ConditionT m b x
     -- return b = ConditionT $ \b -> return (b, mempty)
     return b = (ConditionT . return) b
 
@@ -73,7 +73,7 @@ instance (Monad m) => Monad (ConditionT m) where
 -- and :: Condition -> Text -> W Text
 -- and (Condition a b c) d = W (d <> " " <> a <> (T.pack $ show b) <> "?", [c])
 
-main :: ConditionT Identity (Text, [Text])
+main :: ConditionT Identity (Text, [Text]) Bool
 main = do
     return ("?", ["a"])
 --    f
