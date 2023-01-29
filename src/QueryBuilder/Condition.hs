@@ -3,6 +3,8 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveFunctor #-}
+
 
 module QueryBuilder.Condition
     ( ConditionT(..)
@@ -78,10 +80,11 @@ like v = Condition "LIKE ?" [v]
 
 data
     -- (Monoid query, Monoid bindings) =>
-    Condition query bindings = Condition
+    Condition a b = Condition
         { query :: Text
-        , bindings :: [Text]
+        , bindings :: b
         }
+        -- deriving Functor
 
 type QueryCondition = Condition Text [Text]
 
@@ -90,6 +93,10 @@ instance (Monoid a, Monoid b) => Semigroup (Condition a b) where
 
 instance (Monoid a, Monoid b) => Monoid (Condition a b) where
     mempty = Condition mempty mempty
+
+instance Functor (Condition a) where
+    fmap :: (b1 -> b2) -> Condition a b1 -> Condition a b2
+    fmap f (Condition a b) = Condition a (f b)
 
 -- instance Monad (Condition a) where
 --     return a = Condition a' []
