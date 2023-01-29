@@ -23,6 +23,8 @@ dependencies:
 - text
 - array
 - mtl
+- bytestring
+- utf8-string
 
 library:
   source-dirs: src
