@@ -2,31 +2,43 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module QueryBuilder.Condition
     ( ConditionT(..)
     , Condition(..)
+    , condition
+    , QueryCondition
     , Operation(..)
-    -- , and_
-    -- , or_
-    -- , main
+    , and
+    , (&&)
+    , (&&...)
+    , (||)
+    , (||...)
+    , or
+    , null
+    , true
+    , false
+    , begin
     ) where
 
-import Data.Text as T
+import Data.Text as T hiding (null)
 import Data.Text (Text)
 import Control.Monad
 import Control.Applicative
-import Prelude hiding (and)
+import Prelude hiding (and, or, null, (&&), (||))
 
-data Condition = Condition Text Operation Text
-            -- | GroupStart
-            -- | GroupEnd
+-- data Condition = Condition Text Operation Text
+--             -- | GroupStart
+--             -- | GroupEnd
 
 data Operation = Equals
                | NotEquals
                | Is
-               | Null
-               | NotNull
+               | IsNot
+               | Not
+            -- | Null
+            -- | NotNull
                | Like
                | NotLike
 
@@ -34,22 +46,62 @@ instance Show Operation where
     show Equals    = "="
     show NotEquals = "<>"
     show Is        = "IS"
-    show Null      = "iS NULL"
-    show NotNull   = "IS NOT NULL"
+    show IsNot     = "IS NOT"
+    show Not       = "NOT"
+    -- show Null      = "IS NULL"
+    -- show NotNull   = "IS NOT NULL"
     show Like      = "LIKE"
     show NotLike   = "NOT LIKE"
 
+data
+    -- (Monoid query, Monoid bindings) =>
+    Condition query bindings = Condition
+        { query :: Text
+        , bindings :: [Text]
+        }
+
+type QueryCondition = Condition Text [Text]
+
+instance (Monoid a, Monoid b) => Semigroup (Condition a b) where
+    (<>) (Condition aL bL) (Condition aR bR) = Condition (aL <> " " <> aR) (bL <> bR)
+
+instance (Monoid a, Monoid b) => Monoid (Condition a b) where
+    mempty = Condition mempty mempty
+
+-- instance Monad (Condition a) where
+--     return a = Condition a' []
+--       where
+--         a' = "(" <> a <> ")"
+-- 
+--     -- (>>=) :: Condition a b -> (a -> Condition a b) -> Condition a b
+--     -- (>>=) c f = Condition q' b'
+--     --   where
+--     --     c' = f $ query c
+--     --     q' = query c'
+--     --     b' = bindings c <> bindings c'
+-- 
+-- instance Applicative (Condition a) where
+--     pure = return
+
+condition :: Text -> Operation -> Text -> QueryCondition
+condition left op right = Condition query bindings
+  where
+    operation = (T.pack . show) op
+    query    = left <> " " <> operation <> " ?"
+    bindings = [right]
+
 data ConditionT a m b = ConditionT { runConditionT :: m (b, a) }
 
-instance (Functor m) => Functor (ConditionT b m) where
-    fmap f = mapConditionT $ fmap $ \(b, w) -> (f b, w)
+instance (Functor m) => Functor (ConditionT a m) where
+    fmap f = mapConditionT $ fmap $ \(a, w) -> (f a, w)
       where
         mapConditionT f m = ConditionT $ f (runConditionT m)
 
-instance (Monoid b, Applicative m) => Applicative (ConditionT b m) where
-    pure b = ConditionT $ pure (b, mempty)
+instance (Monoid a, Applicative m) => Applicative (ConditionT a m) where
+    pure a = ConditionT $ pure (a, mempty)
 
-    (<*>) f v = ConditionT $ liftA2 k f' v'
+    (<*>) f v = ConditionT $ do
+        liftA2 k f' v'
       where
         k (b, a) (b', a') = (b b', a <> a')
         f' = runConditionT f
@@ -66,25 +118,36 @@ instance (Monoid a, Monad m) => Monad (ConditionT a m) where
         (b', a') <- runConditionT (k b)
         return (b', a <> a')
 
--- and :: Condition -> Text -> W Text
--- and (Condition a b c) d = W (d <> " " <> a <> (T.pack $ show b) <> "?", [c])
--- 
--- main :: W Text
--- main = do
---     f
---     and $ Condition "id" Equals "1"
---   where
---     f = return "where"
+and :: QueryCondition
+and = Condition "AND" []
+{-# INLINABLE and #-}
 
--- and_ :: Bool
--- and_ = True
--- 
--- or_ :: Bool
--- or_ = False
--- 
--- equals_ :: Text -> Text -> (Text, [Text])
--- equals_ column binding = (column, "= ?", [binding])
--- 
--- equals_ :: Text -> Raw Text -> (Text, [Text])
--- equals_ column binding = (column, "= ?", [binding])
+or :: QueryCondition
+or = Condition "OR" []
+{-# INLINABLE or #-}
+
+(&&) :: QueryCondition -> QueryCondition -> QueryCondition
+(&&) cL cR = cL <> and <> cR
+
+(||) :: QueryCondition -> QueryCondition -> QueryCondition
+(||) cL cR = cL <> or <> cR
+
+null :: Text
+null = "NULL"
+
+true :: Text
+true = "1"
+
+false :: Text
+false = "0"
+
+begin ::QueryCondition -> QueryCondition
+begin c = Condition "(" [] <> c <> Condition ")" []
+{-# INLINABLE begin #-}
+
+(&&...) :: QueryCondition -> QueryCondition -> QueryCondition
+(&&...) cL cR = cL <> and <> begin cR
+
+(||...) :: QueryCondition -> QueryCondition -> QueryCondition
+(||...) cL cR = cL <> or <> begin cR
 
