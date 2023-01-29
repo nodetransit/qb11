@@ -9,7 +9,12 @@ module QueryBuilder.Condition
     , Condition(..)
     , condition
     , QueryCondition
-    , Operation(..)
+    , Operator(..)
+    , equals
+    , notEquals
+    , isNull
+    , isNotNull
+    , like
     , and
     , (&&)
     , (&&...)
@@ -32,7 +37,7 @@ import Prelude hiding (and, or, null, (&&), (||))
 --             -- | GroupStart
 --             -- | GroupEnd
 
-data Operation = Equals
+data Operator = Equals
                | NotEquals
                | Is
                | IsNot
@@ -42,7 +47,7 @@ data Operation = Equals
                | Like
                | NotLike
 
-instance Show Operation where
+instance Show Operator where
     show Equals    = "="
     show NotEquals = "<>"
     show Is        = "IS"
@@ -52,6 +57,24 @@ instance Show Operation where
     -- show NotNull   = "IS NOT NULL"
     show Like      = "LIKE"
     show NotLike   = "NOT LIKE"
+
+equals :: Text -> QueryCondition
+equals v = Condition "= ?" [v]
+
+notEquals :: Text -> QueryCondition
+notEquals v = Condition "<> ?" [v]
+
+isNull :: QueryCondition
+isNull = Condition "IS NULL" []
+
+isNotNull :: QueryCondition
+isNotNull = Condition "IS NOT NULL" []
+
+isNot :: Text -> QueryCondition
+isNot v = Condition "IS NOT ?" [v]
+
+like :: Text -> QueryCondition
+like v = Condition "LIKE ?" [v]
 
 data
     -- (Monoid query, Monoid bindings) =>
@@ -83,12 +106,8 @@ instance (Monoid a, Monoid b) => Monoid (Condition a b) where
 -- instance Applicative (Condition a) where
 --     pure = return
 
-condition :: Text -> Operation -> Text -> QueryCondition
-condition left op right = Condition query bindings
-  where
-    operation = (T.pack . show) op
-    query    = left <> " " <> operation <> " ?"
-    bindings = [right]
+condition :: Text -> QueryCondition -> QueryCondition
+condition left right = Condition left [] <> right
 
 data ConditionT a m b = ConditionT { runConditionT :: m (b, a) }
 

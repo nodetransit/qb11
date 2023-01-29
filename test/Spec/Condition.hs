@@ -16,29 +16,29 @@ runConditionSpec =
     describe "condition semigroup/monoid" $ do
       context "test concatenation" $ do
         it "simple query condition catenation" $ do
-          query testConcatenate `shouldBe` "a = ? AND b IS ? AND ( c <> ? OR d = ? OR d IS ? )"
-          bindings testConcatenate `shouldBe` ["1", "NULL", "C", "", "NULL"]
+          query testConcatenate `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR d = ? OR d IS NULL )"
+          bindings testConcatenate `shouldBe` ["1", "C", ""]
         it "simple query condition catenation" $ do
-          query operatorOverload `shouldBe` "a = ? AND b IS NOT ? AND ( c IS NOT ? OR c <> ? ) AND d LIKE ?"
-          bindings operatorOverload `shouldBe` ["0", "NULL"]
+          query operatorOverload `shouldBe` "a = ? AND b IS NOT NULL AND ( c IS NOT NULL OR c <> ? ) AND d LIKE ?"
+          bindings operatorOverload `shouldBe` ["0", "", "%D%"]
 
 testConcatenate :: QueryCondition
 testConcatenate =
-    condition "a" Equals true
-    <> and <> condition "b" Is null 
+    condition "a" (equals true)
+    <> and <> condition "b" isNull 
     <> and
     <> begin (
-        condition "c" NotEquals "C"
-        <> or <> condition "d" Equals ""
-        <> or <> condition "d" Is null
+        condition "c" (notEquals "C")
+        <> or <> condition "d" (equals "")
+        <> or <> condition "d" isNull
     )
 
 operatorOverload :: QueryCondition
 operatorOverload =
-       condition "a" Equals false
-    && condition "b" IsNot null
-    &&... ( condition "c" IsNot null
-         || condition "c" NotEquals ""
+       condition "a" (equals false)
+    && condition "b" isNotNull
+    &&... ( condition "c" isNotNull
+         || condition "c" (notEquals "")
     )
-    && condition "d" Like "%D%"
+    && condition "d" (like "%D%")
 
