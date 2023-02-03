@@ -9,6 +9,7 @@
 module QueryBuilder.Condition
     ( ConditionT(..)
     , Condition(..)
+    , runConditionT
     , condition
     , QueryCondition
     , Operator(..)
@@ -98,6 +99,9 @@ instance Functor (Condition a) where
     fmap :: (b1 -> b2) -> Condition a b1 -> Condition a b2
     fmap f (Condition a b) = Condition a (f b)
 
+-- instance Applicative (Condition a) where
+--     pure = Condition (mempty, mempty)
+
 -- instance Monad (Condition a) where
 --     return a = Condition a' []
 --       where
@@ -109,40 +113,44 @@ instance Functor (Condition a) where
 --     --     c' = f $ query c
 --     --     q' = query c'
 --     --     b' = bindings c <> bindings c'
--- 
--- instance Applicative (Condition a) where
---     pure = return
 
 condition :: Text -> QueryCondition -> QueryCondition
 condition left right = Condition left [] <> right
 
-data ConditionT a m b = ConditionT { runConditionT :: m (b, a) }
+data InternalConditionT a m b = InternalConditionT { runInternalConditionT :: m (b, a) }
 
-instance (Functor m) => Functor (ConditionT a m) where
+instance (Functor m) => Functor (InternalConditionT a m) where
     fmap f = mapConditionT $ fmap $ \(a, w) -> (f a, w)
       where
-        mapConditionT f m = ConditionT $ f (runConditionT m)
+        mapConditionT f m = InternalConditionT $ f (runInternalConditionT m)
 
-instance (Monoid a, Applicative m) => Applicative (ConditionT a m) where
-    pure a = ConditionT $ pure (a, mempty)
+instance (Monoid a, Applicative m) => Applicative (InternalConditionT a m) where
+    pure a = InternalConditionT $ pure (a, mempty)
 
-    (<*>) f v = ConditionT $ do
+    (<*>) f v = InternalConditionT $ do
         liftA2 k f' v'
       where
         k (b, a) (b', a') = (b b', a <> a')
-        f' = runConditionT f
-        v' = runConditionT v
+        f' = runInternalConditionT f
+        v' = runInternalConditionT v
  
-instance (Monoid a, Monad m) => Monad (ConditionT a m) where
-    return :: b -> ConditionT a m b
-    -- return b = ConditionT $ \b -> return (b, mempty)
-    return b = (ConditionT . return) (b, mempty)
+instance (Monoid a, Monad m) => Monad (InternalConditionT a m) where
+    return :: b -> InternalConditionT a m b
+    -- return b = InternalConditionT $ \b -> return (b, mempty)
+    return b = (InternalConditionT . return) (b, mempty)
 
-    -- (>>=) :: ConditionT a m b -> (a -> ConditionT a m b) -> ConditionT a m b
-    (>>=) m k = ConditionT $ do
-        (b, a) <- runConditionT m
-        (b', a') <- runConditionT (k b)
+    -- (>>=) :: InternalConditionT a m b -> (a -> InternalConditionT a m b) -> InternalConditionT a m b
+    (>>=) m k = InternalConditionT $ do
+        (b, a)   <- runInternalConditionT m
+        (b', a') <- runInternalConditionT (k b)
         return (b', a <> a')
+
+type ConditionT m = InternalConditionT QueryCondition m Bool
+
+runConditionT :: (Monad m) => InternalConditionT a m b -> m b
+runConditionT q = do
+    (r, _) <- runInternalConditionT q
+    return r
 
 and :: QueryCondition
 and = Condition "AND" []

@@ -7,6 +7,7 @@ module Spec.Condition
 import Prelude hiding (and, or, null, (&&), (||))
 import Data.Text as T hiding (null)
 import Test.Hspec
+import Control.Monad.Identity
 
 import QueryBuilder.Condition
 import QueryBuilder.ToText
@@ -21,6 +22,8 @@ runConditionSpec =
         it "simple query condition catenation" $ do
           query operatorOverload `shouldBe` "a = ? AND b IS NOT NULL AND ( c IS NOT NULL OR c <> ? ) AND d LIKE ?"
           bindings operatorOverload `shouldBe` ["0", "", "%D%"]
+        it "ConditionT" $ do
+          testConditionTransformer `shouldBe` True
 
 testConcatenate :: QueryCondition
 testConcatenate =
@@ -42,3 +45,9 @@ operatorOverload =
     )
     && condition "d" (like "%D%")
 
+testConditionTransformer :: Bool
+testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
+  where
+    createQueryCondition :: ConditionT Identity
+    createQueryCondition = do
+        return False
