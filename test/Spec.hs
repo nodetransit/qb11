@@ -1,17 +1,17 @@
 import Test.Hspec
-import qualified Spec.Condition as Condition
-import qualified Spec.Query     as Query
-import qualified Spec.Column    as Column
-import qualified Spec.Table     as Table
-import qualified Spec.ToText    as ToText
+import Spec.Condition as Run
+import Spec.Query     as Run
+import Spec.Column    as Run
+import Spec.Table     as Run
+import Spec.ToText    as Run
 
 main :: IO ()
 main = do
     putStrLn "QueryBuilder"
     hspec $ do
-        Query.runColumnSpec
-        Table.runTableSpec
-        Column.runColumnSpec
-        Condition.runConditionSpec
-        ToText.runToTextSpec
+        Run.queryColumnSpec
+        Run.tableSpec
+        Run.columnSpec
+        Run.conditionSpec
+        Run.toTextSpec
 

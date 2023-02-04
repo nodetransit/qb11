@@ -2,15 +2,15 @@
 {-# OPTIONS -Wall -Wno-missing-fields #-}
 
 module Spec.Column
-    ( runColumnSpec
+    ( columnSpec
     ) where
 
 import Test.Hspec
 import Spec.Util
 import QueryBuilder.Query
 
-runColumnSpec :: Spec
-runColumnSpec =
+columnSpec :: Spec
+columnSpec =
   describe "column semigroup/monoid" $ do
     context "concatenation with columns" $ do
       it "should overwrite columns" $ do
