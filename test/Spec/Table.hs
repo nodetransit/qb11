@@ -2,14 +2,14 @@
 {-# OPTIONS -Wall -Wno-missing-fields #-}
 
 module Spec.Table
-    ( runTableSpec
+    ( tableSpec
     ) where
 
 import Test.Hspec
 import QueryBuilder.Query
 
-runTableSpec :: Spec
-runTableSpec =
+tableSpec :: Spec
+tableSpec =
   describe "table semigroup/monoid" $ do
     context "concatenation with table" $ do
       it "should overwrite select table" $ checkConcatSelectTable `shouldBe` True

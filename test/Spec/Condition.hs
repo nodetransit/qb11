@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Spec.Condition
-    ( runConditionSpec
+    ( conditionSpec
     ) where
 
 import Prelude hiding (and, or, null, (&&), (||))
@@ -12,8 +12,8 @@ import Control.Monad.Identity
 import QueryBuilder.Condition
 import QueryBuilder.ToText
 
-runConditionSpec :: Spec
-runConditionSpec =
+conditionSpec :: Spec
+conditionSpec =
     describe "condition semigroup/monoid" $ do
       context "test concatenation" $ do
         it "simple query condition catenation" $ do

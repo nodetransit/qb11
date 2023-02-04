@@ -2,15 +2,15 @@
 {-# OPTIONS -Wall -Wno-missing-fields #-}
 
 module Spec.Query
-    ( runColumnSpec
+    ( queryColumnSpec
     ) where
 
 import Test.Hspec
 import Spec.Util
 import QueryBuilder.Query
 
-runColumnSpec :: Spec
-runColumnSpec =
+queryColumnSpec :: Spec
+queryColumnSpec =
   describe "query semigroup/monoid" $ do
     context "query constructors should have empty columns" $ do
       it "select constructor" $ getColumnCount Select `shouldBe` 0
