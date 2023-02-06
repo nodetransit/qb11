@@ -15,15 +15,13 @@ import QueryBuilder.ToText
 conditionSpec :: Spec
 conditionSpec =
     describe "condition semigroup/monoid" $ do
-      context "test concatenation" $ do
-        it "simple query condition catenation" $ do
+      context "simple query concatenation" $ do
+        it "using mconcat" $ do
           query testConcatenate `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR d = ? OR d IS NULL )"
           bindings testConcatenate `shouldBe` ["1", "C", ""]
-        it "simple query condition catenation" $ do
+        it "using operators" $ do
           query operatorOverload `shouldBe` "a = ? AND b IS NOT NULL AND ( c IS NOT NULL OR c <> ? ) AND d LIKE ?"
           bindings operatorOverload `shouldBe` ["0", "", "%D%"]
-        -- it "ConditionT" $ do
-        --   testConditionTransformer `shouldBe` True
 
 testConcatenate :: QueryCondition
 testConcatenate =
@@ -45,9 +43,3 @@ operatorOverload =
     )
     && condition "d" (like "%D%")
 
--- testConditionTransformer :: Bool
--- testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
---   where
---     createQueryCondition :: ConditionT Identity
---     createQueryCondition = do
---         return False
