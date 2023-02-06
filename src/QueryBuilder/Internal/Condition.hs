@@ -9,7 +9,6 @@
 module QueryBuilder.Internal.Condition
     ( ConditionT(..)
     , Condition(..)
-    , runConditionT
     , condition
     , QueryCondition
     , equals
@@ -43,6 +42,9 @@ data
         }
         -- deriving Functor
 
+class (Monoid a) => Wrappable a where
+    wrap :: a -> a
+
 type QueryCondition = Condition Text [Text]
 
 instance (Monoid a, Monoid b) => Semigroup (Condition a b) where
@@ -51,10 +53,16 @@ instance (Monoid a, Monoid b) => Semigroup (Condition a b) where
 instance (Monoid a, Monoid b) => Monoid (Condition a b) where
     mempty = Condition mempty mempty
 
-instance Functor (Condition a) where
-    fmap :: (b1 -> b2) -> Condition a b1 -> Condition a b2
-    fmap f (Condition a b) = Condition a (f b)
+instance Wrappable (Text) where
+    wrap t = "( " <> t <> " )"
 
+instance Wrappable (Condition a b) where
+    wrap c = Condition ((wrap . query) c) (bindings c)
+
+-- instance Functor (Condition a) where
+--     fmap :: (b1 -> b2) -> Condition a b1 -> Condition a b2
+--     fmap f (Condition a b) = Condition a (f b)
+-- 
 -- instance Applicative (Condition a) where
 --     pure = Condition (mempty, mempty)
 
@@ -69,9 +77,6 @@ instance Functor (Condition a) where
 --     --     c' = f $ query c
 --     --     q' = query c'
 --     --     b' = bindings c <> bindings c'
-
-condition :: Text -> QueryCondition -> QueryCondition
-condition left right = Condition left [] <> right
 
 data ConditionT a m b = ConditionT { runConditionT :: m (b, a) }
 
@@ -93,13 +98,17 @@ instance (Monoid a, Applicative m) => Applicative (ConditionT a m) where
 instance (Monoid a, Monad m) => Monad (ConditionT a m) where
     return :: b -> ConditionT a m b
     -- return b = ConditionT $ \b -> return (b, mempty)
-    return b = (ConditionT . return) (b, mempty)
+    return b = do
+        (ConditionT . return) (b, mempty)
 
     -- (>>=) :: ConditionT a m b -> (a -> ConditionT a m b) -> ConditionT a m b
     (>>=) m k = ConditionT $ do
         (b, a)   <- runConditionT m
         (b', a') <- runConditionT (k b)
         return (b', a <> a')
+
+condition :: Text -> QueryCondition -> QueryCondition
+condition left right = Condition left [] <> right
 
 equals :: Text -> QueryCondition
 equals v = Condition "= ?" [v]
@@ -135,12 +144,15 @@ or = Condition "OR" []
 
 null :: Text
 null = "NULL"
+{-# INLINE null #-}
 
 true :: Text
 true = "1"
+{-# INLINE true #-}
 
 false :: Text
 false = "0"
+{-# INLINE false #-}
 
 begin ::QueryCondition -> QueryCondition
 begin c = Condition "(" [] <> c <> Condition ")" []
