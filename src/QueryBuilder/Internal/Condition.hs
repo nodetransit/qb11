@@ -13,9 +13,13 @@ module QueryBuilder.Internal.Condition
     , QueryCondition
     , equals
     , notEquals
+    , is
+    , not
+    , isNot
     , isNull
     , isNotNull
     , like
+    , notLike
     , and
     , (&&)
     , (&&...)
@@ -32,7 +36,7 @@ import Data.Text as T hiding (null)
 import Data.Text (Text)
 import Control.Monad
 import Control.Applicative
-import Prelude hiding (and, or, null, (&&), (||))
+import Prelude hiding (and, or, null, not, (&&), (||))
 
 data
     -- (Monoid query, Monoid bindings) =>
@@ -110,15 +114,31 @@ notEquals v = Condition "<> ?" [v]
 
 isNull :: QueryCondition
 isNull = Condition "IS NULL" []
+{-# INLINABLE isNull #-}
 
 isNotNull :: QueryCondition
 isNotNull = Condition "IS NOT NULL" []
+{-# INLINABLE isNotNull #-}
+
+is :: Text -> QueryCondition
+is v = Condition "IS ?" [v]
+{-# INLINABLE is #-}
+
+not :: Text -> QueryCondition
+not v = Condition "NOT ?" [v]
+{-# INLINABLE not #-}
 
 isNot :: Text -> QueryCondition
 isNot v = Condition "IS NOT ?" [v]
+{-# INLINABLE isNot #-}
 
 like :: Text -> QueryCondition
 like v = Condition "LIKE ?" [v]
+{-# INLINABLE like #-}
+
+notLike :: Text -> QueryCondition
+notLike v = Condition "NOT LIKE ?" [v]
+{-# INLINABLE notLike #-}
 
 and :: QueryCondition
 and = Condition "AND" []

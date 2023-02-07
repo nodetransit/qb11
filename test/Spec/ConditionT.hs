@@ -17,6 +17,7 @@ conditionTSpec =
       context "y" $ do
         it "ConditionT" $ do
           query testConditionTransformer `shouldBe` ""
+          bindings testConditionTransformer `shouldBe` []
 
 testConditionTransformer :: QueryCondition
 testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
@@ -25,8 +26,8 @@ testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
     createQueryCondition = do
         condition "a" (equals true)
         and "b" isNull
-        -- and begin $ do
-        --     condition "c" (notEquals "")
-        --     or "c" isNotNull
-
-
+        -- and `uncurry` mkTuple "" xx
+        and `begin` do
+            condition "c" (notEquals "")
+            or "c" isNotNull
+        and "d" (like "%D%")
