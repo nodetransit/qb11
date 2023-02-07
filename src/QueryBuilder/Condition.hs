@@ -8,27 +8,27 @@
 
 module QueryBuilder.Condition
     ( ConditionT
-    -- , Condition(..)
+    , Condition(..)
     , runConditionT
     , condition
     , QueryCondition
     , query
     , bindings
     , equals
-    -- , notEquals
-    -- , isNull
-    -- , isNotNull
-    -- , like
+    , notEquals
+    , isNull
+    , isNotNull
+    , like
     , and
     -- , (&&)
     -- , (&&...)
     -- , (||)
     -- , (||...)
-    -- , or
-    -- , null
-    -- , true
+    , or
+    , null
+    , true
     , false
-    -- , begin
+    , begin
     ) where
 
 import Data.Text as T hiding (null)
@@ -58,6 +58,27 @@ condition left right = Internal.ConditionT $ do
 
 equals :: Text -> QueryCondition
 equals v = Internal.Condition "= ?" [v]
+{-# INLINABLE equals #-}
+
+notEquals :: Text -> QueryCondition
+notEquals v = Internal.Condition "<> ?" [v]
+{-# INLINABLE notEquals #-}
+
+isNull :: QueryCondition
+isNull = Internal.Condition "IS NULL" []
+{-# INLINABLE isNull #-}
+
+isNotNull :: QueryCondition
+isNotNull = Internal.Condition "IS NOT NULL" []
+{-# INLINABLE isNotNull #-}
+
+isNot :: Text -> QueryCondition
+isNot v = Internal.Condition "IS NOT ?" [v]
+{-# INLINABLE isNot #-}
+
+like :: Text -> QueryCondition
+like v = Internal.Condition "LIKE ?" [v]
+{-# INLINABLE like #-}
 
 null = Internal.null
 {-# INLINE null #-}
@@ -79,4 +100,13 @@ or left right = do
     Internal.ConditionT $ return (False, Internal.or)
     condition left right
 {-# INLINABLE or #-}
+
+begin :: (Monad m) => ConditionT m -> ConditionT m
+begin c = do
+    let q = runConditionT c
+    return (False, "(")
+    return (False, q)
+    return (False, ")")
+    return True
+{-# INLINABLE begin #-}
 
