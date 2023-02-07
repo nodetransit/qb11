@@ -20,11 +20,11 @@ module QueryBuilder.Condition
     , isNotNull
     , like
     , and
+    , or
     -- , (&&)
     -- , (&&...)
     -- , (||)
     -- , (||...)
-    , or
     , null
     , true
     , false
@@ -36,7 +36,7 @@ import Data.Text (Text)
 import Control.Monad
 import Control.Monad.Identity
 import Control.Applicative
-import Prelude hiding (and, or, null, (&&), (||))
+import Prelude hiding (and, or, null, not, (&&), (||))
 
 import           QueryBuilder.Operator
 import qualified QueryBuilder.Internal.Condition as Internal
@@ -51,34 +51,56 @@ runConditionT q = (return . snd) =<< Internal.runConditionT q
 query    = Internal.query
 bindings = Internal.bindings
 
-condition :: (Monad m) => Text -> QueryCondition -> ConditionT m
+condition :: (Monad m) => Text -> ConditionT m -> ConditionT m
 condition left right = Internal.ConditionT $ do
-    return (True, Internal.condition left right)
+    (_, right') <- Internal.runConditionT right
+    let left'  = Internal.Condition left []
+    return (True, left' <> right')
 {-# INLINABLE condition #-}
 
-equals :: Text -> QueryCondition
-equals v = Internal.Condition "= ?" [v]
+equals :: (Monad m) => Text -> ConditionT m
+equals v = Internal.ConditionT $ do
+    return (True, Internal.equals v)
 {-# INLINABLE equals #-}
 
-notEquals :: Text -> QueryCondition
-notEquals v = Internal.Condition "<> ?" [v]
+notEquals :: (Monad m) => Text -> ConditionT m
+notEquals v = Internal.ConditionT $ do
+    return (True, Internal.notEquals v)
 {-# INLINABLE notEquals #-}
 
-isNull :: QueryCondition
-isNull = Internal.Condition "IS NULL" []
+is :: (Monad m) => Text -> ConditionT m
+is v = Internal.ConditionT $ do
+    return (True, Internal.is v)
+{-# INLINABLE is #-}
+
+not :: (Monad m) => Text -> ConditionT m
+not v = Internal.ConditionT $ do
+    return (True, Internal.not v)
+{-# INLINABLE not #-}
+
+isNull :: (Monad m) => ConditionT m
+isNull = Internal.ConditionT $ return (True, Internal.isNull)
 {-# INLINABLE isNull #-}
 
-isNotNull :: QueryCondition
-isNotNull = Internal.Condition "IS NOT NULL" []
+isNotNull :: (Monad m) => ConditionT m
+isNotNull = Internal.ConditionT $ do
+    return (True, Internal.isNotNull)
 {-# INLINABLE isNotNull #-}
 
-isNot :: Text -> QueryCondition
-isNot v = Internal.Condition "IS NOT ?" [v]
+isNot :: (Monad m) => Text -> ConditionT m
+isNot v = Internal.ConditionT $ do
+    return (True, Internal.isNot v)
 {-# INLINABLE isNot #-}
 
-like :: Text -> QueryCondition
-like v = Internal.Condition "LIKE ?" [v]
+like :: (Monad m) => Text -> ConditionT m
+like v = Internal.ConditionT $ do
+    return(True, Internal.like v)
 {-# INLINABLE like #-}
+
+notLike :: (Monad m) => Text -> ConditionT m
+notLike v = Internal.ConditionT $ do
+    return(True, Internal.notLike v)
+{-# INLINABLE notLike #-}
 
 null = Internal.null
 {-# INLINE null #-}
@@ -89,24 +111,38 @@ true = Internal.true
 false = Internal.false
 {-# INLINE false #-}
 
-and :: (Monad m) => Text -> QueryCondition -> ConditionT m
+and :: (Monad m) => Text -> ConditionT m -> ConditionT m
 and left right = do
     Internal.ConditionT $ return (False, Internal.and)
     condition left right
 {-# INLINABLE and #-}
 
-or :: (Monad m) => Text -> QueryCondition -> ConditionT m
+or :: (Monad m) => Text -> ConditionT m -> ConditionT m
 or left right = do
     Internal.ConditionT $ return (False, Internal.or)
     condition left right
 {-# INLINABLE or #-}
 
-begin :: (Monad m) => ConditionT m -> ConditionT m
-begin c = do
-    let q = runConditionT c
-    return (False, "(")
-    return (False, q)
-    return (False, ")")
-    return True
+-- begin :: (Monad m) => ConditionT m -> ConditionT m
+-- begin c = do
+--     let q = runConditionT c
+--     return (False, "(")
+--     return (False, q)
+--     return (False, ")")
+--     return True
+
+-- begin :: (Monad m) => (Text -> ConditionT m -> ConditionT m) -> ConditionT m -> (Text, ConditionT m)
+begin f c = uncurry f args 
+  where
+    args = mktuple "" grouped
+
+    mktuple a b = (a, b)
+
+    grouped = do
+        Internal.ConditionT $ return (False, Internal.Condition "(" [])
+        Internal.ConditionT $ do
+            (_, q) <- Internal.runConditionT c
+            return (False, q)
+        Internal.ConditionT $ return (False, Internal.Condition  ")" [])
 {-# INLINABLE begin #-}
 
