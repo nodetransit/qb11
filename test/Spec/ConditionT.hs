@@ -16,13 +16,25 @@ conditionTSpec =
     describe "x" $ do
       context "y" $ do
         it "ConditionT" $ do
-          query testConditionTransformer `shouldBe` ""
+          query testConditionTransformer `shouldBe` "a = ? AND b IS NULL"
+          main `shouldBe` ""
 
 testConditionTransformer :: QueryCondition
 testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
   where
     createQueryCondition :: ConditionT Identity
     createQueryCondition = do
-        condition "a" (equals false)
-        and "b" (equals "B")
+        condition "a" (equals true)
+        and "b" isNull
+        -- and begin $ do
+        --     condition "c" (notEquals "")
+        --     or "c" isNotNull
+
+main :: Text
+main = (query . runIdentity . runConditionT) $ do
+    condition "a" (equals true)
+    and "a" (equals "A")
+    and "b" isNull
+    and isNotNull ""
+    and "d" (T.pack "D")
 
