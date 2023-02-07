@@ -23,6 +23,10 @@ testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
   where
     createQueryCondition :: ConditionT Identity
     createQueryCondition = do
-        condition "a" (equals false)
-        and "b" (equals "B")
+        condition "a" (equals true)
+        and "b" isNull
+        -- and begin $ do
+        --     condition "c" (notEquals "")
+        --     or "c" isNotNull
+
 

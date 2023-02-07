@@ -40,10 +40,8 @@ data
         { query :: Text
         , bindings :: b
         }
+        deriving Show
         -- deriving Functor
-
-class (Monoid a) => Wrappable a where
-    wrap :: a -> a
 
 type QueryCondition = Condition Text [Text]
 
@@ -52,12 +50,6 @@ instance (Monoid a, Monoid b) => Semigroup (Condition a b) where
 
 instance (Monoid a, Monoid b) => Monoid (Condition a b) where
     mempty = Condition mempty mempty
-
-instance Wrappable (Text) where
-    wrap t = "( " <> t <> " )"
-
-instance Wrappable (Condition a b) where
-    wrap c = Condition ((wrap . query) c) (bindings c)
 
 -- instance Functor (Condition a) where
 --     fmap :: (b1 -> b2) -> Condition a b1 -> Condition a b2
