@@ -51,7 +51,11 @@ data
 type QueryCondition = Condition Text [Text]
 
 instance (Monoid a, Monoid b) => Semigroup (Condition a b) where
-    (<>) (Condition aL bL) (Condition aR bR) = Condition (aL <> " " <> aR) (bL <> bR)
+    (<>) (Condition aL bL) (Condition aR bR) = Condition (join aL aR) (bL <> bR)
+      where
+        join "" b  = b
+        join a  "" = a
+        join a  b  = a <> " " <> b
 
 instance (Monoid a, Monoid b) => Monoid (Condition a b) where
     mempty = Condition mempty mempty

@@ -128,12 +128,8 @@ or left right = do
 {-# INLINABLE or #-}
 
 -- begin :: (Monad m) => (Text -> ConditionT m -> ConditionT m) -> ConditionT m -> (Text, ConditionT m)
-begin f c = uncurry f args 
+begin f c = uncurry f ("", grouped) 
   where
-    args = mktuple "" grouped
-
-    mktuple a b = (a, b)
-
     grouped = do
         Internal.ConditionT $ return (False, Internal.Condition "(" [])
         Internal.ConditionT $ do

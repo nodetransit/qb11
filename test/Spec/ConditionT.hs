@@ -13,11 +13,11 @@ import QueryBuilder.Condition
 
 conditionTSpec :: Spec
 conditionTSpec =
-    describe "x" $ do
-      context "y" $ do
-        it "ConditionT" $ do
-          query testConditionTransformer `shouldBe` ""
-          bindings testConditionTransformer `shouldBe` []
+    describe "condition transformer" $ do
+      context "simple query" $ do
+        it "using identity monad" $ do
+          query testConditionTransformer `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL ) AND d LIKE ?"
+          bindings testConditionTransformer `shouldBe` ["1", "", "%D%"]
 
 testConditionTransformer :: QueryCondition
 testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
