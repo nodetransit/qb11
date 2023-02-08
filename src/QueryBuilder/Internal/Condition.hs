@@ -10,6 +10,7 @@ module QueryBuilder.Internal.Condition
     ( ConditionT(..)
     , Condition(..)
     , condition
+    , rawCondition
     , QueryCondition
     , equals
     , notEquals
@@ -102,6 +103,9 @@ instance (Monoid a, Monad m) => Monad (ConditionT a m) where
         (b, a)   <- runConditionT m
         (b', a') <- runConditionT (k b)
         return (b', a <> a')
+
+rawCondition :: Text -> QueryCondition
+rawCondition c = Condition c []
 
 condition :: Text -> QueryCondition -> QueryCondition
 condition left right = Condition left [] <> right
