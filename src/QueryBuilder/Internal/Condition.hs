@@ -9,9 +9,11 @@
 module QueryBuilder.Internal.Condition
     ( ConditionT(..)
     , Condition(..)
+    , lift
     , condition
     , rawCondition
     , QueryCondition
+    , rawQueryCondition
     , equals
     , notEquals
     , is
@@ -36,6 +38,9 @@ module QueryBuilder.Internal.Condition
 import Data.Text as T hiding (null)
 import Data.Text (Text)
 import Control.Monad
+import Control.Monad.Fail as Fail
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
 import Control.Applicative
 import Prelude hiding (and, or, null, not, (&&), (||))
 
@@ -49,6 +54,9 @@ data
         -- deriving Functor
 
 type QueryCondition = Condition Text [Text]
+
+rawQueryCondition :: Text -> [Text] -> QueryCondition
+rawQueryCondition a b = Condition a b
 
 instance (Monoid a, Monoid b) => Semigroup (Condition a b) where
     (<>) (Condition aL bL) (Condition aR bR) = Condition (join aL aR) (bL <> bR)
@@ -88,6 +96,7 @@ instance (Functor m) => Functor (ConditionT a m) where
 
 instance (Monoid a, Applicative m) => Applicative (ConditionT a m) where
     pure a = ConditionT $ pure (a, mempty)
+    {-# INLINE pure #-}
 
     (<*>) f v = ConditionT $ do
         liftA2 k f' v'
@@ -95,30 +104,58 @@ instance (Monoid a, Applicative m) => Applicative (ConditionT a m) where
         k (b, a) (b', a') = (b b', a <> a')
         f' = runConditionT f
         v' = runConditionT v
- 
+    {-# INLINE (<*>) #-}
+
+instance (Monoid c, Alternative m) => Alternative (ConditionT c m) where
+    empty   = ConditionT Control.Applicative.empty
+    {-# INLINE empty #-}
+
+    (<|>) m n = ConditionT $ runConditionT m <|> runConditionT n
+    {-# INLINE (<|>) #-}
+
 instance (Monoid a, Monad m) => Monad (ConditionT a m) where
     return :: b -> ConditionT a m b
     -- return b = ConditionT $ \b -> return (b, mempty)
     return b = do
         (ConditionT . return) (b, mempty)
+    {-# INLINE return #-}
 
     -- (>>=) :: ConditionT a m b -> (a -> ConditionT a m b) -> ConditionT a m b
     (>>=) m k = ConditionT $ do
         (b, a)   <- runConditionT m
         (b', a') <- runConditionT (k b)
         return (b', a <> a')
+    {-# INLINE (>>=) #-}
+
+instance (Monoid c, Fail.MonadFail m) => Fail.MonadFail (ConditionT c m) where
+    fail msg = ConditionT $ Fail.fail msg
+    {-# INLINE fail #-}
+
+instance (Monoid c, MonadIO m) => MonadIO (ConditionT c m) where
+    liftIO = lift . liftIO
+    {-# INLINE liftIO #-}
+
+instance (Monoid c) => MonadTrans (ConditionT c) where
+    lift m = ConditionT $ do
+        a <- m
+        return (a, mempty)
+    {-# INLINE lift #-}
 
 rawCondition :: Text -> QueryCondition
 rawCondition c = Condition c []
+{-# INLINABLE rawCondition #-}
 
 condition :: Text -> QueryCondition -> QueryCondition
 condition left right = Condition left [] <> right
+{-# INLINABLE condition #-}
 
 equals :: Text -> QueryCondition
 equals v = Condition "= ?" [v]
+{-# INLINABLE equals #-}
 
 notEquals :: Text -> QueryCondition
 notEquals v = Condition "<> ?" [v]
+{-# INLINABLE notEquals #-}
 
 isNull :: QueryCondition
 isNull = Condition "IS NULL" []
@@ -156,12 +193,6 @@ or :: QueryCondition
 or = Condition "OR" []
 {-# INLINABLE or #-}
 
-(&&) :: QueryCondition -> QueryCondition -> QueryCondition
-(&&) cL cR = cL <> and <> cR
-
-(||) :: QueryCondition -> QueryCondition -> QueryCondition
-(||) cL cR = cL <> or <> cR
-
 null :: Text
 null = "NULL"
 {-# INLINE null #-}
@@ -177,6 +208,12 @@ false = "0"
 begin ::QueryCondition -> QueryCondition
 begin c = Condition "(" [] <> c <> Condition ")" []
 {-# INLINABLE begin #-}
+
+(&&) :: QueryCondition -> QueryCondition -> QueryCondition
+(&&) cL cR = cL <> and <> cR
+
+(||) :: QueryCondition -> QueryCondition -> QueryCondition
+(||) cL cR = cL <> or <> cR
 
 (&&...) :: QueryCondition -> QueryCondition -> QueryCondition
 (&&...) cL cR = cL <> and <> begin cR

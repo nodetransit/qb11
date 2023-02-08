@@ -23,6 +23,7 @@ dependencies:
 - text
 - array
 - mtl
+- transformers
 - bytestring
 - utf8-string
 

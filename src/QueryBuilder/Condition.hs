@@ -10,8 +10,10 @@ module QueryBuilder.Condition
     ( ConditionT
     , Condition(..)
     , runConditionT
+    , lift
     , condition
     , QueryCondition
+    , rawQueryCondition
     , query
     , bindings
     , equals
@@ -49,8 +51,13 @@ type QueryCondition = Internal.QueryCondition
 type ConditionT m   = Internal.ConditionT QueryCondition m Bool
 type Condition      = Internal.ConditionT QueryCondition Identity Bool
 
+rawQueryCondition = Internal.rawQueryCondition
+
 runConditionT :: (Monad m) => Internal.ConditionT a m b -> m a
 runConditionT q = (return . snd) =<< Internal.runConditionT q
+
+lift ::(Monad m) => m a -> Internal.ConditionT QueryCondition m a
+lift = Internal.lift
 
 query    = Internal.query
 bindings = Internal.bindings
