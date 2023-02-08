@@ -5,6 +5,7 @@ import Spec.Query      as Run
 import Spec.Column     as Run
 import Spec.Table      as Run
 import Spec.ToText     as Run
+import Spec.Operators  as Run
 
 main :: IO ()
 main = do
@@ -16,4 +17,5 @@ main = do
         Run.toTextSpec
         Run.conditionSpec
         Run.conditionTSpec
+        Run.operatorSpec
 

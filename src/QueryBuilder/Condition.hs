@@ -16,9 +16,13 @@ module QueryBuilder.Condition
     , bindings
     , equals
     , notEquals
+    , is
+    , isNot
+    , not
     , isNull
     , isNotNull
     , like
+    , notLike
     , and
     , or
     -- , (&&)
@@ -73,6 +77,11 @@ is v = Internal.ConditionT $ do
     return (True, Internal.is v)
 {-# INLINABLE is #-}
 
+isNot :: (Monad m) => Text -> ConditionT m
+isNot v = Internal.ConditionT $ do
+    return (True, Internal.isNot v)
+{-# INLINABLE isNot #-}
+
 not :: (Monad m) => Text -> ConditionT m
 not v = Internal.ConditionT $ do
     return (True, Internal.not v)
@@ -86,11 +95,6 @@ isNotNull :: (Monad m) => ConditionT m
 isNotNull = Internal.ConditionT $ do
     return (True, Internal.isNotNull)
 {-# INLINABLE isNotNull #-}
-
-isNot :: (Monad m) => Text -> ConditionT m
-isNot v = Internal.ConditionT $ do
-    return (True, Internal.isNot v)
-{-# INLINABLE isNot #-}
 
 like :: (Monad m) => Text -> ConditionT m
 like v = Internal.ConditionT $ do
@@ -122,14 +126,6 @@ or left right = do
     Internal.ConditionT $ return (False, Internal.or)
     condition left right
 {-# INLINABLE or #-}
-
--- begin :: (Monad m) => ConditionT m -> ConditionT m
--- begin c = do
---     let q = runConditionT c
---     return (False, "(")
---     return (False, q)
---     return (False, ")")
---     return True
 
 -- begin :: (Monad m) => (Text -> ConditionT m -> ConditionT m) -> ConditionT m -> (Text, ConditionT m)
 begin f c = uncurry f args 
