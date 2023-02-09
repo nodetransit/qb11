@@ -10,6 +10,7 @@ module QueryBuilder.Internal.Condition
     ( ConditionT(..)
     , Condition(..)
     , lift
+    , liftIO
     , condition
     , rawCondition
     , QueryCondition
@@ -93,6 +94,7 @@ instance (Functor m) => Functor (ConditionT a m) where
     fmap f = mapConditionT $ fmap $ \(a, w) -> (f a, w)
       where
         mapConditionT f m = ConditionT $ f (runConditionT m)
+    {-# INLINE fmap #-}
 
 instance (Monoid a, Applicative m) => Applicative (ConditionT a m) where
     pure a = ConditionT $ pure (a, mempty)
@@ -106,12 +108,19 @@ instance (Monoid a, Applicative m) => Applicative (ConditionT a m) where
         v' = runConditionT v
     {-# INLINE (<*>) #-}
 
-instance (Monoid c, Alternative m) => Alternative (ConditionT c m) where
-    empty   = ConditionT Control.Applicative.empty
-    {-# INLINE empty #-}
+-- instance (Monoid c, Alternative m) => Alternative (ConditionT c m) where
+--     empty = ConditionT Control.Applicative.empty
+--     {-# INLINE empty #-}
+--
+--     (<|>) m n = ConditionT $ runConditionT m <|> runConditionT n
+--     {-# INLINE (<|>) #-}
 
-    (<|>) m n = ConditionT $ runConditionT m <|> runConditionT n
-    {-# INLINE (<|>) #-}
+-- instance (Monoid w, MonadPlus m) => MonadPlus (ConditionT w m) where
+--     mzero = ConditionT mzero
+--     {-# INLINE mzero #-}
+--
+--     mplus left right = ConditionT $ mplus (runConditionT left) (runConditionT right)
+--     {-# INLINE mplus #-}
 
 instance (Monoid a, Monad m) => Monad (ConditionT a m) where
     return :: b -> ConditionT a m b
@@ -127,9 +136,9 @@ instance (Monoid a, Monad m) => Monad (ConditionT a m) where
         return (b', a <> a')
     {-# INLINE (>>=) #-}
 
-instance (Monoid c, Fail.MonadFail m) => Fail.MonadFail (ConditionT c m) where
-    fail msg = ConditionT $ Fail.fail msg
-    {-# INLINE fail #-}
+-- instance (Monoid c, Fail.MonadFail m) => Fail.MonadFail (ConditionT c m) where
+--     fail msg = ConditionT $ Fail.fail msg
+--     {-# INLINE fail #-}
 
 instance (Monoid c, MonadIO m) => MonadIO (ConditionT c m) where
     liftIO = lift . liftIO

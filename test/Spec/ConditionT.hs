@@ -9,6 +9,7 @@ import Data.Text as T hiding (null)
 import Test.Hspec
 import Control.Monad
 import Control.Monad.Identity
+import System.IO.Unsafe
 
 import QueryBuilder.Condition
 
@@ -23,6 +24,19 @@ conditionTSpec =
         it "using maybe monad" $ do
           query testConditionTransformerMaybe `shouldBe` "a = ? AND b IS NULL"
           bindings testConditionTransformerMaybe `shouldBe` ["A"]
+
+        -- it "alternative" $ do
+        --   query testConditionTransformerAlternative `shouldBe` "x = ?"
+
+        -- it "monad plus" $ do
+        --   "NOT IMPLEMENTED" `shouldNotBe` "NOT IMPLEMENTED"
+
+        -- it "fail" $ do
+        --   "NOT IMPLEMENTED" `shouldNotBe` "NOT IMPLEMENTED"
+
+        it "lift IO" $ do
+          query testConditionTransformerIO `shouldBe` "a <> ?"
+          bindings testConditionTransformerIO `shouldBe` ["B"]
 
 testConditionTransformer :: QueryCondition
 testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
@@ -41,7 +55,7 @@ testConditionTransformerMaybe = (runMaybe . runConditionT) createMaybeQueryCondi
   where
     runMaybe :: Maybe QueryCondition -> QueryCondition
     runMaybe (Just x) = x
-    runMaybe _      = rawQueryCondition "" []
+    runMaybe _        = mempty
 
     createMaybeQueryCondition :: ConditionT Maybe
     createMaybeQueryCondition = do
@@ -64,20 +78,16 @@ testConditionOperatorTransformer = (runIdentity .runConditionT) createQueryCondi
             condition "c" (notEquals "")
             or "c" isNotNull
         and "d" (like "%D%")
-
-testConditionTransformerMaybe :: QueryCondition
-testConditionTransformerMaybe = (runMaybe . runConditionT) createMaybeQueryCondition
-  where
-    runMaybe :: Maybe QueryCondition -> QueryCondition
-    runMaybe (Just x) = x
-    runMaybe _      = rawQueryCondition "" []
-
-    createMaybeQueryCondition :: ConditionT Maybe
-    createMaybeQueryCondition = do
-        input <- lift getInput
-        condition "a" (equals input)
-
-    getInput :: Maybe Text
-    getInput = Just "A"
 -}
+
+testConditionTransformerIO :: QueryCondition
+testConditionTransformerIO = (unsafePerformIO . runConditionT) createMaybeQueryCondition
+  where
+    createMaybeQueryCondition :: ConditionT IO
+    createMaybeQueryCondition = do
+        input <- liftIO getInput
+        condition "a" (notEquals input)
+
+    getInput :: IO (Text)
+    getInput = return "B"
 
