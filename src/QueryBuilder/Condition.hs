@@ -11,6 +11,7 @@ module QueryBuilder.Condition
     , Condition(..)
     , runConditionT
     , lift
+    , liftIO
     , condition
     , QueryCondition
     , rawQueryCondition
@@ -41,6 +42,7 @@ import Data.Text as T hiding (null)
 import Data.Text (Text)
 import Control.Monad
 import Control.Monad.Identity
+import qualified Control.Monad.IO.Class as MIO
 import Control.Applicative
 import Prelude hiding (and, or, null, not, (&&), (||))
 
@@ -58,6 +60,11 @@ runConditionT q = (return . snd) =<< Internal.runConditionT q
 
 lift ::(Monad m) => m a -> Internal.ConditionT QueryCondition m a
 lift = Internal.lift
+{-# INLINE lift #-}
+
+liftIO :: (MIO.MonadIO m) => IO a -> m a
+liftIO = Internal.liftIO
+{-# INLINE liftIO #-}
 
 query    = Internal.query
 bindings = Internal.bindings

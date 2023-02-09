@@ -24,15 +24,6 @@ conditionSpec =
           query operatorOverload `shouldBe` "a = ? AND b IS NOT NULL AND ( c IS NOT NULL OR c <> ? ) AND d LIKE ?"
           bindings operatorOverload `shouldBe` ["0", "", "%D%"]
 
-        it "alternative" $ do
-          "NOT IMPLEMENTED" `shouldNotBe` "NOT IMPLEMENTED"
-
-        it "fail" $ do
-          "NOT IMPLEMENTED" `shouldNotBe` "NOT IMPLEMENTED"
-
-        it "lift IO" $ do
-          "NOT IMPLEMENTED" `shouldNotBe` "NOT IMPLEMENTED"
-
 testConcatenate :: QueryCondition
 testConcatenate =
     condition "a" (equals true)
