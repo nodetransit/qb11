@@ -18,8 +18,8 @@ conditionTSpec =
     describe "condition transformer" $ do
       context "simple query" $ do
         it "using identity monad" $ do
-          query testConditionTransformer `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL ) AND d LIKE ?"
-          bindings testConditionTransformer `shouldBe` ["1", "", "%D%"]
+          query testConditionTransformer `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
+          bindings testConditionTransformer `shouldBe` ["1", "", "0", "F", "%G%"]
 
         it "using maybe monad" $ do
           query testConditionTransformerMaybe `shouldBe` "a = ? AND b IS NULL"
@@ -38,6 +38,10 @@ conditionTSpec =
           query testConditionTransformerIO `shouldBe` "a <> ?"
           bindings testConditionTransformerIO `shouldBe` ["B"]
 
+        it "using operators" $ do
+          query testConditionTransformerOperators `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d IS NOT ? AND f IS NOT ? ) ) AND h LIKE ?"
+          bindings testConditionTransformerOperators `shouldBe` ["1", "", "0", "g", "%H%"]
+
 testConditionTransformer :: QueryCondition
 testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
   where
@@ -48,7 +52,10 @@ testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
         and `begin` do
             condition "c" (notEquals "")
             or "c" isNotNull
-        and "d" (like "%D%")
+            or `begin` do
+                condition "d" (notEquals false)
+                and "e" (isNot "F")
+        and "g" (like "%G%")
 
 testConditionTransformerMaybe :: QueryCondition
 testConditionTransformerMaybe = (runMaybe . runConditionT) createMaybeQueryCondition
@@ -66,19 +73,22 @@ testConditionTransformerMaybe = (runMaybe . runConditionT) createMaybeQueryCondi
     getInput :: Maybe Text
     getInput = Just "A"
 
-{-
-testConditionOperatorTransformer :: QueryCondition
-testConditionOperatorTransformer = (runIdentity .runConditionT) createQueryCondition
+testConditionTransformerOperators :: QueryCondition
+testConditionTransformerOperators = (runIdentity .runConditionT) createQueryCondition
   where
     createQueryCondition :: ConditionT Identity
     createQueryCondition = do
            condition "a" (equals true)
         && condition "b" isNull
-        && condition `begin` do
+        &&... ( do
             condition "c" (notEquals "")
-            or "c" isNotNull
-        and "d" (like "%D%")
--}
+            || condition "c" isNotNull
+            ||... ( do
+                condition "d" (isNot false)
+                && condition "f" (isNot "g")
+            )
+        )
+        && condition "h" (like "%H%")
 
 testConditionTransformerIO :: QueryCondition
 testConditionTransformerIO = (unsafePerformIO . runConditionT) createMaybeQueryCondition
