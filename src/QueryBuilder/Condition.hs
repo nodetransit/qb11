@@ -15,6 +15,7 @@ module QueryBuilder.Condition
     , condition
     , QueryCondition
     , rawQueryCondition
+    , rawQueryConditionT
     , query
     , bindings
     , equals
@@ -53,7 +54,11 @@ type QueryCondition = Internal.QueryCondition
 type ConditionT m   = Internal.ConditionT QueryCondition m Bool
 type Condition      = Internal.ConditionT QueryCondition Identity Bool
 
-rawQueryCondition = Internal.rawQueryCondition
+rawQueryCondition :: Text -> [Text] -> QueryCondition
+rawQueryCondition a b = Internal.Condition a b
+
+rawQueryConditionT :: (Monad m) => Text -> [Text] -> ConditionT m
+rawQueryConditionT a b = Internal.ConditionT $ return (True, rawQueryCondition a b)
 
 runConditionT :: (Monad m) => Internal.ConditionT a m b -> m a
 runConditionT q = (return . snd) =<< Internal.runConditionT q
@@ -155,13 +160,6 @@ begin f c = uncurry f ("", grouped)
 infixl 8 &&
 (&&) :: (Monad m) => ConditionT m -> ConditionT m -> ConditionT m
 (&&) left right = do
-    -- Internal.ConditionT $ do
-    --     (_, l) <- Internal.runConditionT left
-    --     return (False, l)
-    -- Internal.ConditionT $ return (False, Internal.and)
-    -- Internal.ConditionT $ do
-    --     (_, r) <- Internal.runConditionT right
-    --     return (False, r)
     Internal.ConditionT $ do
         (_, l) <- Internal.runConditionT left
         (_, r) <- Internal.runConditionT right

@@ -34,6 +34,7 @@ data Query = EmptyQuery
            | Table Text
            | Into Text
            | Columns [Column]
+           | Where (Text, [Text])
            | Query { query_type       :: Text
                    , query_table      :: Text
                    , query_columns    :: [Column]
@@ -54,25 +55,28 @@ defaultQuery = Query { query_type       = ""
                      }
 
 modify_query :: Query -> Query -> Query
-modify_query EmptyQuery     q              = defaultQuery <> q
-modify_query q              EmptyQuery     = defaultQuery <> q
-modify_query q@(Query {})   Select         = q { query_type = "SELECT" }
-modify_query q@(Query {})   Insert         = q { query_type = "INSERT" }
-modify_query q@(Query {})   Update         = q { query_type = "UPDATE" }
-modify_query q@(Query {})   Delete         = q { query_type = "DELETE" }
-modify_query q@(Query {})   (From t)       = q { query_table = t }
-modify_query q@(Query {})   (Table t)      = q { query_table = t }
-modify_query q@(Query {})   (Into t)       = q { query_table = t }
-modify_query q@(Query {})   (Columns c)    = q { query_columns = c }
-modify_query Select         q              = defaultQuery { query_type = "SELECT" } <> q
-modify_query Insert         q              = defaultQuery { query_type = "INSERT" } <> q
-modify_query Update         q              = defaultQuery { query_type = "UPDATE" } <> q
-modify_query Delete         q              = defaultQuery { query_type = "DELETE" } <> q
-modify_query (Columns c)    q              = defaultQuery { query_columns = c } <> q
-modify_query (From t)       q              = defaultQuery { query_table = t } <> q
-modify_query (Table t)      q              = defaultQuery { query_table = t } <> q
-modify_query (Into t)       q              = defaultQuery { query_table = t } <> q
-modify_query qL             qR             = coalesceQuery qL qR
+modify_query EmptyQuery         EmptyQuery        = EmptyQuery
+modify_query EmptyQuery         q                 = defaultQuery <> q
+modify_query q                  EmptyQuery        = defaultQuery <> q
+modify_query q@(Query {})       Select            = q { query_type = "SELECT" }
+modify_query q@(Query {})       Insert            = q { query_type = "INSERT" }
+modify_query q@(Query {})       Update            = q { query_type = "UPDATE" }
+modify_query q@(Query {})       Delete            = q { query_type = "DELETE" }
+modify_query q@(Query {})       (From t)          = q { query_table = t }
+modify_query q@(Query {})       (Table t)         = q { query_table = t }
+modify_query q@(Query {})       (Into t)          = q { query_table = t }
+modify_query q@(Query {})       (Columns c)       = q { query_columns = c }
+modify_query q@(Query {})       (Where c@(a, b))  = q { query_conditions = c }
+modify_query Select             q                 = defaultQuery { query_type = "SELECT" } <> q
+modify_query Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
+modify_query Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
+modify_query Delete             q                 = defaultQuery { query_type = "DELETE" } <> q
+modify_query (Columns c)        q                 = defaultQuery { query_columns = c } <> q
+modify_query (From t)           q                 = defaultQuery { query_table = t } <> q
+modify_query (Table t)          q                 = defaultQuery { query_table = t } <> q
+modify_query (Into t)           q                 = defaultQuery { query_table = t } <> q
+modify_query (Where c@(a, b))   q                 = defaultQuery { query_conditions = c } <> q
+modify_query qL                 qR                = coalesceQuery qL qR
 
 coalesceQuery :: Query -> Query -> Query
 coalesceQuery qL qR = Query { query_type       = queryType
