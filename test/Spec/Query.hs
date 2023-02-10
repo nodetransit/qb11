@@ -17,6 +17,7 @@ queryColumnSpec =
       it "insert constructor" $ getColumnCount Insert `shouldBe` 0
       it "update constructor" $ getColumnCount Update `shouldBe` 0
       it "delete constructor" $ getColumnCount Delete `shouldBe` 0
+
     context "building a full query should be valid" $ do
        it "select query in order" $ checkSelectQuery `shouldBe` True
        it "select query not in order" $ checkSelectQueryNotInOrder `shouldBe` True

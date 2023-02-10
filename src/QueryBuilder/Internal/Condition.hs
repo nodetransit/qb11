@@ -14,7 +14,6 @@ module QueryBuilder.Internal.Condition
     , condition
     , rawCondition
     , QueryCondition
-    , rawQueryCondition
     , equals
     , notEquals
     , is
@@ -55,9 +54,6 @@ data
         -- deriving Functor
 
 type QueryCondition = Condition Text [Text]
-
-rawQueryCondition :: Text -> [Text] -> QueryCondition
-rawQueryCondition a b = Condition a b
 
 instance (Monoid a, Monoid b) => Semigroup (Condition a b) where
     (<>) (Condition aL bL) (Condition aR bR) = Condition (join aL aR) (bL <> bR)
