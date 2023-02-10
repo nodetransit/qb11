@@ -17,7 +17,7 @@ module QueryBuilder.Condition
     , QueryCondition
     , rawQueryCondition
     , rawQueryConditionT
-    , query
+    , clause
     , bindings
     , equals
     , notEquals
@@ -70,7 +70,7 @@ liftIO :: (MIO.MonadIO m) => IO a -> m a
 liftIO = Internal.liftIO
 {-# INLINE liftIO #-}
 
-query    = Internal.query
+clause    = Internal.clause
 bindings = Internal.bindings
 
 condition :: (Monad m) => Text -> ConditionT m -> ConditionT m

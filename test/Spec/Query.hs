@@ -26,7 +26,7 @@ queryColumnSpec =
       it "query type" $ query_type q `shouldBe` "SELECT"
       it "query table" $ query_table q `shouldBe` "users"
       it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "name"]
-      it "query conditions" $ (query. query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+      it "query conditions" $ (clause. query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
       it "query conditions" $ (bindings. query_conditions) q `shouldBe` [""]
 
     context "building a full query in reversed order should be valid" $ do
