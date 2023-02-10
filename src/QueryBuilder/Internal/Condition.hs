@@ -45,9 +45,9 @@ import Control.Applicative
 import Prelude hiding (and, or, null, not, (&&), (||))
 
 data
-    -- (Monoid query, Monoid bindings) =>
+    -- (Monoid clause, Monoid bindings) =>
     Condition a b = Condition
-        { query :: Text
+        { clause :: Text
         , bindings :: b
         }
         deriving Show
@@ -80,8 +80,8 @@ instance (Monoid a, Monoid b) => Monoid (Condition a b) where
 --     -- (>>=) :: Condition a b -> (a -> Condition a b) -> Condition a b
 --     -- (>>=) c f = Condition q' b'
 --     --   where
---     --     c' = f $ query c
---     --     q' = query c'
+--     --     c' = f $ clause c
+--     --     q' = clause c'
 --     --     b' = bindings c <> bindings c'
 
 data ConditionT a m b = ConditionT { runConditionT :: m (b, a) }

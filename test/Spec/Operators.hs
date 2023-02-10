@@ -17,47 +17,47 @@ operatorSpec =
       context "operator strings" $ do
 
         it "equals" $ do
-          query runEquals `shouldBe` "a = ?"
+          clause runEquals `shouldBe` "a = ?"
           bindings runEquals `shouldBe` ["A"]
 
         it "not equals" $ do
-          query runNotEquals `shouldBe` "b <> ?"
+          clause runNotEquals `shouldBe` "b <> ?"
           bindings runNotEquals `shouldBe` ["C"]
 
         it "is" $ do
-          query runIs `shouldBe` "this IS ?"
+          clause runIs `shouldBe` "this IS ?"
           bindings runIs `shouldBe` ["that"]
 
         it "is not" $ do
-          query runIsNot `shouldBe` "that IS NOT ?"
+          clause runIsNot `shouldBe` "that IS NOT ?"
           bindings runIsNot `shouldBe` ["this"]
 
         it "not" $ do
-          query runNot `shouldBe` "x NOT ?"
+          clause runNot `shouldBe` "x NOT ?"
           bindings runNot `shouldBe` ["y"]
 
         it "is null" $ do
-          query runIsNull `shouldBe` "empty IS NULL"
+          clause runIsNull `shouldBe` "empty IS NULL"
           bindings runIsNull `shouldBe` []
 
         it "is not null" $ do
-          query runIsNotNull `shouldBe` "something IS NOT NULL"
+          clause runIsNotNull `shouldBe` "something IS NOT NULL"
           bindings runIsNotNull `shouldBe` []
 
         it "like" $ do
-          query runLike `shouldBe` "girl LIKE ?"
+          clause runLike `shouldBe` "girl LIKE ?"
           bindings runLike `shouldBe` ["%akane%"]
 
         it "not like" $ do
-          query runNotLike `shouldBe` "maybe NOT LIKE ?"
+          clause runNotLike `shouldBe` "maybe NOT LIKE ?"
           bindings runNotLike `shouldBe` ["%this%"]
 
         it "and" $ do
-          query runAnd `shouldBe` "AND d = ?"
+          clause runAnd `shouldBe` "AND d = ?"
           bindings runAnd `shouldBe` ["D"]
 
         it "or" $ do
-          query runOr `shouldBe` "OR e = ?"
+          clause runOr `shouldBe` "OR e = ?"
           bindings runOr `shouldBe` ["E"]
 
         it "constants" $ do

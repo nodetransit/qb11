@@ -19,19 +19,19 @@ conditionTSpec =
     describe "condition transformer" $ do
       context "simple query" $ do
         it "using identity monad" $ do
-          query testConditionTransformer `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
+          clause testConditionTransformer `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
           bindings testConditionTransformer `shouldBe` ["1", "", "0", "F", "%G%"]
 
         it "using maybe monad" $ do
-          query testConditionTransformerMaybe `shouldBe` "a = ? AND b IS NULL"
+          clause testConditionTransformerMaybe `shouldBe` "a = ? AND b IS NULL"
           bindings testConditionTransformerMaybe `shouldBe` ["A"]
 
         it "using implicit identity monad" $ do
-          query testCondition `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL )"
+          clause testCondition `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL )"
           bindings testCondition `shouldBe` ["1", ""]
 
         -- it "alternative" $ do
-        --   query testConditionTransformerAlternative `shouldBe` "x = ?"
+        --   clause testConditionTransformerAlternative `shouldBe` "x = ?"
 
         -- it "monad plus" $ do
         --   "NOT IMPLEMENTED" `shouldNotBe` "NOT IMPLEMENTED"
@@ -40,11 +40,11 @@ conditionTSpec =
         --   "NOT IMPLEMENTED" `shouldNotBe` "NOT IMPLEMENTED"
 
         it "lift IO" $ do
-          query testConditionTransformerIO `shouldBe` "a <> ?"
+          clause testConditionTransformerIO `shouldBe` "a <> ?"
           bindings testConditionTransformerIO `shouldBe` ["B"]
 
         it "using operators" $ do
-          query testConditionTransformerOperators `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d IS NOT ? AND f IS NOT ? ) ) AND h LIKE ?"
+          clause testConditionTransformerOperators `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d IS NOT ? AND f IS NOT ? ) ) AND h LIKE ?"
           bindings testConditionTransformerOperators `shouldBe` ["1", "", "0", "g", "%H%"]
 
 testCondition:: QueryCondition
