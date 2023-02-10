@@ -34,6 +34,8 @@ queryColumnSpec =
       it "query type" $ query_type q `shouldBe` "SELECT"
       it "query table" $ query_table q `shouldBe` "albums"
       it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "title"]
+      it "query conditions" $ (clause. query_conditions) q `shouldBe` "released <> ? OR released IS NOT NULL"
+      it "query conditions" $ (bindings. query_conditions) q `shouldBe` ["''"]
 
 
 -- |
@@ -53,7 +55,11 @@ checkSelectQuery =
 
 checkSelectQueryNotInOrder :: Query
 checkSelectQueryNotInOrder =
-    Columns [Column "id", Column "title"]
+    Where (runCondition $ do
+        condition "released" (notEquals "")
+        and "released" isNotNull
+    )
+    <> Columns [Column "id", Column "title"]
     <> From "albums"
     <> Select
 
