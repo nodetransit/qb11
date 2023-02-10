@@ -34,11 +34,11 @@ data Query = EmptyQuery
            | Table Text
            | Into Text
            | Columns [Column]
-           | Where (Text, [Text])
+           | Where QueryCondition
            | Query { query_type       :: Text
                    , query_table      :: Text
                    , query_columns    :: [Column]
-                   , query_conditions :: (Text, [Text])
+                   , query_conditions :: QueryCondition
                 -- , query_orderBy    :: [a]
                 -- , query_distinct   :: [b]
                 -- , query_limit      :: [n]
@@ -51,7 +51,7 @@ data Query = EmptyQuery
 defaultQuery = Query { query_type       = ""
                      , query_table      = ""
                      , query_columns    = []
-                     , query_conditions = ("", [])
+                     , query_conditions = mempty
                      }
 
 modify_query :: Query -> Query -> Query
@@ -66,7 +66,7 @@ modify_query q@(Query {})       (From t)          = q { query_table = t }
 modify_query q@(Query {})       (Table t)         = q { query_table = t }
 modify_query q@(Query {})       (Into t)          = q { query_table = t }
 modify_query q@(Query {})       (Columns c)       = q { query_columns = c }
-modify_query q@(Query {})       (Where c@(a, b))  = q { query_conditions = c }
+modify_query q@(Query {})       (Where c)         = q { query_conditions = c }
 modify_query Select             q                 = defaultQuery { query_type = "SELECT" } <> q
 modify_query Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
 modify_query Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
@@ -75,7 +75,7 @@ modify_query (Columns c)        q                 = defaultQuery { query_columns
 modify_query (From t)           q                 = defaultQuery { query_table = t } <> q
 modify_query (Table t)          q                 = defaultQuery { query_table = t } <> q
 modify_query (Into t)           q                 = defaultQuery { query_table = t } <> q
-modify_query (Where c@(a, b))   q                 = defaultQuery { query_conditions = c } <> q
+modify_query (Where c)          q                 = defaultQuery { query_conditions = c } <> q
 modify_query qL                 qR                = coalesceQuery qL qR
 
 coalesceQuery :: Query -> Query -> Query
@@ -86,7 +86,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
                             }
   where
     coalesce f a b = if f a /= 0 then a else b
-    conditionLen (p, _) = T.length p
+    conditionLen empty = 0
 
     queryType       = coalesce T.length       (query_type qL)       (query_type qR)
     queryTable      = coalesce T.length       (query_table qL)      (query_table qR)
