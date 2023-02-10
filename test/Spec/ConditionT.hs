@@ -12,6 +12,7 @@ import Control.Monad.Identity
 import System.IO.Unsafe
 
 import QueryBuilder.Condition
+import QueryBuilder.Condition.Operators
 
 conditionTSpec :: Spec
 conditionTSpec =
@@ -24,6 +25,10 @@ conditionTSpec =
         it "using maybe monad" $ do
           query testConditionTransformerMaybe `shouldBe` "a = ? AND b IS NULL"
           bindings testConditionTransformerMaybe `shouldBe` ["A"]
+
+        it "using implicit identity monad" $ do
+          query testCondition `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL )"
+          bindings testCondition `shouldBe` ["1", ""]
 
         -- it "alternative" $ do
         --   query testConditionTransformerAlternative `shouldBe` "x = ?"
@@ -41,6 +46,17 @@ conditionTSpec =
         it "using operators" $ do
           query testConditionTransformerOperators `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d IS NOT ? AND f IS NOT ? ) ) AND h LIKE ?"
           bindings testConditionTransformerOperators `shouldBe` ["1", "", "0", "g", "%H%"]
+
+testCondition:: QueryCondition
+testCondition= (runCondition) createQueryCondition
+  where
+    createQueryCondition :: Condition
+    createQueryCondition = do
+        condition "a" (equals true)
+        and "b" isNull
+        and `begin` do
+            condition "c" (notEquals "")
+            or "c" isNotNull
 
 testConditionTransformer :: QueryCondition
 testConditionTransformer = (runIdentity .runConditionT) createQueryCondition

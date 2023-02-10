@@ -10,6 +10,7 @@ module QueryBuilder.Condition
     ( ConditionT
     , Condition(..)
     , runConditionT
+    , runCondition
     , lift
     , liftIO
     , condition
@@ -29,10 +30,6 @@ module QueryBuilder.Condition
     , notLike
     , and
     , or
-    , (&&)
-    , (&&...)
-    , (||)
-    , (||...)
     , null
     , true
     , false
@@ -45,9 +42,8 @@ import Control.Monad
 import Control.Monad.Identity
 import qualified Control.Monad.IO.Class as MIO
 import Control.Applicative
-import Prelude hiding (and, or, null, not, (&&), (||))
+import Prelude hiding (and, or, null, not)
 
-import           QueryBuilder.Operator
 import qualified QueryBuilder.Internal.Condition as Internal
 
 type QueryCondition = Internal.QueryCondition
@@ -55,13 +51,16 @@ type ConditionT m   = Internal.ConditionT QueryCondition m Bool
 type Condition      = Internal.ConditionT QueryCondition Identity Bool
 
 rawQueryCondition :: Text -> [Text] -> QueryCondition
-rawQueryCondition a b = Internal.Condition a b
+rawQueryCondition = Internal.Condition
 
 rawQueryConditionT :: (Monad m) => Text -> [Text] -> ConditionT m
 rawQueryConditionT a b = Internal.ConditionT $ return (True, rawQueryCondition a b)
 
 runConditionT :: (Monad m) => Internal.ConditionT a m b -> m a
 runConditionT q = (return . snd) =<< Internal.runConditionT q
+
+runCondition :: Condition -> QueryCondition
+runCondition = snd . runIdentity . Internal.runConditionT
 
 lift ::(Monad m) => m a -> Internal.ConditionT QueryCondition m a
 lift = Internal.lift
@@ -156,41 +155,4 @@ begin f c = uncurry f ("", grouped)
         (_, q) <- Internal.runConditionT c
         return (False, open <> q <> close)
 {-# INLINABLE begin #-}
-
-infixl 8 &&
-(&&) :: (Monad m) => ConditionT m -> ConditionT m -> ConditionT m
-(&&) left right = do
-    Internal.ConditionT $ do
-        (_, l) <- Internal.runConditionT left
-        (_, r) <- Internal.runConditionT right
-        return (False,  l <> Internal.and <> r)
-
-infixl 8 &&...
-(&&...) :: (Monad m) => ConditionT m -> ConditionT m -> ConditionT m
-(&&...) left right = Internal.ConditionT $ do
-        (_, l) <- Internal.runConditionT left
-        (_, r) <- Internal.runConditionT right
-        let open  = Internal.Condition "(" []
-            close = Internal.Condition ")" []
-        return (False,  l <> Internal.and <> open <> r <> close)
-
-infixl 8 ||
-(||) :: (Monad m) => ConditionT m -> ConditionT m -> ConditionT m
-(||) left right = do
-    Internal.ConditionT $ do
-        (_, l) <- Internal.runConditionT left
-        return (False, l)
-    Internal.ConditionT $ return (False, Internal.or)
-    Internal.ConditionT $ do
-        (_, r) <- Internal.runConditionT right
-        return (False, r)
-
-infixl 8 ||...
-(||...) :: (Monad m) => ConditionT m -> ConditionT m -> ConditionT m
-(||...) left right = Internal.ConditionT $ do
-        (_, l) <- Internal.runConditionT left
-        (_, r) <- Internal.runConditionT right
-        let open  = Internal.Condition "(" []
-            close = Internal.Condition ")" []
-        return (False,  l <> Internal.or <> open <> r <> close)
 
