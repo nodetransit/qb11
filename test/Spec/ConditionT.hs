@@ -47,6 +47,10 @@ conditionTSpec =
           clause testConditionTransformerOperators `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d IS NOT ? AND f IS NOT ? ) ) AND h LIKE ?"
           bindings testConditionTransformerOperators `shouldBe` ["1", "", "0", "g", "%H%"]
 
+        it "raw queries" $ do
+          clause testRawConditionT `shouldBe` "a = true AND b is NULL"
+          bindings testRawConditionT `shouldBe` []
+
 testCondition:: QueryCondition
 testCondition= (runCondition) createQueryCondition
   where
@@ -116,4 +120,11 @@ testConditionTransformerIO = (unsafePerformIO . runConditionT) createMaybeQueryC
 
     getInput :: IO (Text)
     getInput = return "B"
+
+testRawConditionT :: QueryCondition
+testRawConditionT = (runIdentity . runConditionT) createRawCondition
+  where
+    createRawCondition = do
+        raw "a = true"
+        && raw "b is NULL"
 
