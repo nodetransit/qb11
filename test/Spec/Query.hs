@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS -Wall -Wno-missing-fields #-}
+{-# OPTIONS -Wno-missing-fields #-}
 
 module Spec.Query
     ( queryColumnSpec
@@ -7,7 +7,10 @@ module Spec.Query
 
 import Test.Hspec
 import Spec.Util
+import Prelude hiding (and, or, null, not)
+
 import QueryBuilder.Query
+import QueryBuilder.Condition
 
 queryColumnSpec :: Spec
 queryColumnSpec =
@@ -18,30 +21,39 @@ queryColumnSpec =
       it "update constructor" $ getColumnCount Update `shouldBe` 0
       it "delete constructor" $ getColumnCount Delete `shouldBe` 0
 
-    context "building a full query should be valid" $ do
-       it "select query in order" $ checkSelectQuery `shouldBe` True
-       it "select query not in order" $ checkSelectQueryNotInOrder `shouldBe` True
+    context "building a full query in order should be valid" $ do
+      let q = checkSelectQuery
+      it "query type" $ query_type q `shouldBe` "SELECT"
+      it "query table" $ query_table q `shouldBe` "users"
+      it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "name"]
+      it "query conditions" $ (query. query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+      it "query conditions" $ (bindings. query_conditions) q `shouldBe` [""]
+
+    context "building a full query in reversed order should be valid" $ do
+      let q = checkSelectQueryNotInOrder
+      it "query type" $ query_type q `shouldBe` "SELECT"
+      it "query table" $ query_table q `shouldBe` "albums"
+      it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "title"]
+
 
 -- |
 getColumnCount :: Query -> Int
 getColumnCount = length . query_columns . (EmptyQuery <>)
 
 -- |
-checkSelectQuery :: Bool
-checkSelectQuery =  query_type q == "SELECT"
-                 && query_table q == "users"
-                 && query_columns q `isSameColumns` [Column "id", Column "name"]
-  where
-    q =  Select
-      <> From "users"
-      <> Columns [Column "id", Column "name"]
+checkSelectQuery :: Query
+checkSelectQuery =
+    Select
+    <> From "users"
+    <> Columns [Column "id", Column "name"]
+    <> Where (runCondition $ do
+        condition "deleted" (notEquals "")
+        or "deleted" isNotNull
+    )
 
-checkSelectQueryNotInOrder :: Bool
-checkSelectQueryNotInOrder =  query_type q == "SELECT"
-                           && query_table q == "users"
-                           && query_columns q `isSameColumns` [Column "id", Column "name"]
-  where
-    q =  Columns [Column "id", Column "name"]
-      <> From "users"
-      <> Select
+checkSelectQueryNotInOrder :: Query
+checkSelectQueryNotInOrder =
+    Columns [Column "id", Column "title"]
+    <> From "albums"
+    <> Select
 
