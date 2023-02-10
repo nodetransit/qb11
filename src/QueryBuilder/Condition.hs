@@ -17,6 +17,7 @@ module QueryBuilder.Condition
     , QueryCondition
     , rawQueryCondition
     , rawQueryConditionT
+    , raw
     , clause
     , bindings
     , equals
@@ -55,6 +56,9 @@ rawQueryCondition = Internal.Condition
 
 rawQueryConditionT :: (Monad m) => Text -> [Text] -> ConditionT m
 rawQueryConditionT a b = Internal.ConditionT $ return (True, rawQueryCondition a b)
+
+raw :: (Monad m) => Text -> ConditionT m
+raw a = rawQueryConditionT a []
 
 runConditionT :: (Monad m) => Internal.ConditionT a m b -> m a
 runConditionT q = (return . snd) =<< Internal.runConditionT q
