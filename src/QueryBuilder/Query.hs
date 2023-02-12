@@ -6,13 +6,11 @@
 module QueryBuilder.Query
     ( Query(..)
     , Column(..)
-    , Join(..)
     , defaultQuery
     ) where
 
 import Data.Text as T
 import Data.Text (Text)
-import Data.Array as Array
 import Control.Monad
 import Control.Applicative
 
@@ -36,24 +34,30 @@ data Query = EmptyQuery
            | From Text
            | Table Text
            | Into Text
+           -- | Distinct
            | Columns [Column]
-           | Where QueryCondition
-           | OrderBy Order
+           -- | Values [Column]
            | GroupBy [Column]
            -- | Having QueryCondition
+           -- | Join (Text, Text, QueryCondition)
+           | Where QueryCondition
+           | OrderBy Order
+           -- | Limit Int
            | Query { query_type       :: Text
                    , query_table      :: Text
+                -- , query_distinct   :: Bool
                    , query_columns    :: [Column]
-                   , query_conditions :: QueryCondition
-                   , query_orderBy    :: Order
-                -- , query_distinct   :: [b]
-                -- , query_limit      :: [n]
-                -- , query_joins      :: [a]
+                -- , query_values     :: [Column]
                    , query_groupBy    :: [Column]
                 -- , query_having     :: QueryCondition
+                -- , query_joins      :: [a]
+                   , query_conditions :: QueryCondition
+                   , query_orderBy    :: Order
+                -- , query_limit      :: [n]
                }
             deriving Show
 
+-- | Default Query with empty values
 defaultQuery = Query { query_type       = ""
                      , query_table      = ""
                      , query_columns    = []
@@ -62,34 +66,42 @@ defaultQuery = Query { query_type       = ""
                      , query_groupBy    = []
                      }
 
+-- | Concatenate Queries
+--
+--   modify existing query if the property is empty
+--   if the property is not empty, the current value
+--   is not modified
 modify_query :: Query -> Query -> Query
-modify_query EmptyQuery         EmptyQuery        = EmptyQuery
-modify_query EmptyQuery         q                 = defaultQuery <> q
-modify_query q                  EmptyQuery        = defaultQuery <> q
-modify_query q@(Query {})       Select            = q { query_type = "SELECT" }
-modify_query q@(Query {})       Insert            = q { query_type = "INSERT" }
-modify_query q@(Query {})       Update            = q { query_type = "UPDATE" }
-modify_query q@(Query {})       Delete            = q { query_type = "DELETE" }
-modify_query q@(Query {})       (From t)          = q { query_table = t }
-modify_query q@(Query {})       (Table t)         = q { query_table = t }
-modify_query q@(Query {})       (Into t)          = q { query_table = t }
-modify_query q@(Query {})       (Columns c)       = q { query_columns = c }
-modify_query q@(Query {})       (Where c)         = q { query_conditions = c }
-modify_query q@(Query {})       (OrderBy o)       = q { query_orderBy = o }
-modify_query q@(Query {})       (GroupBy g)       = q { query_groupBy = g }
-modify_query Select             q                 = defaultQuery { query_type = "SELECT" } <> q
-modify_query Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
-modify_query Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
-modify_query Delete             q                 = defaultQuery { query_type = "DELETE" } <> q
-modify_query (From t)           q                 = defaultQuery { query_table = t } <> q
-modify_query (Table t)          q                 = defaultQuery { query_table = t } <> q
-modify_query (Into t)           q                 = defaultQuery { query_table = t } <> q
-modify_query (Columns c)        q                 = defaultQuery { query_columns = c } <> q
-modify_query (Where c)          q                 = defaultQuery { query_conditions = c } <> q
-modify_query (OrderBy o)        q                 = defaultQuery { query_orderBy = o } <> q
-modify_query (GroupBy g)        q                 = defaultQuery { query_groupBy = g } <> q
-modify_query qL                 qR                = coalesceQuery qL qR
+modify_query = mq
+  where
+    mq EmptyQuery         EmptyQuery        = EmptyQuery
+    mq EmptyQuery         q                 = defaultQuery <> q
+    mq q                  EmptyQuery        = defaultQuery <> q
+    mq q@(Query {})       Select            = q { query_type = "SELECT" }
+    mq q@(Query {})       Insert            = q { query_type = "INSERT" }
+    mq q@(Query {})       Update            = q { query_type = "UPDATE" }
+    mq q@(Query {})       Delete            = q { query_type = "DELETE" }
+    mq q@(Query {})       (From t)          = q { query_table = t }
+    mq q@(Query {})       (Table t)         = q { query_table = t }
+    mq q@(Query {})       (Into t)          = q { query_table = t }
+    mq q@(Query {})       (Columns c)       = q { query_columns = c }
+    mq q@(Query {})       (Where c)         = q { query_conditions = c }
+    mq q@(Query {})       (OrderBy o)       = q { query_orderBy = o }
+    mq q@(Query {})       (GroupBy g)       = q { query_groupBy = g }
+    mq Select             q                 = defaultQuery { query_type = "SELECT" } <> q
+    mq Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
+    mq Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
+    mq Delete             q                 = defaultQuery { query_type = "DELETE" } <> q
+    mq (From t)           q                 = defaultQuery { query_table = t } <> q
+    mq (Table t)          q                 = defaultQuery { query_table = t } <> q
+    mq (Into t)           q                 = defaultQuery { query_table = t } <> q
+    mq (Columns c)        q                 = defaultQuery { query_columns = c } <> q
+    mq (Where c)          q                 = defaultQuery { query_conditions = c } <> q
+    mq (OrderBy o)        q                 = defaultQuery { query_orderBy = o } <> q
+    mq (GroupBy g)        q                 = defaultQuery { query_groupBy = g } <> q
+    mq qL                 qR                = coalesceQuery qL qR
 
+-- | Merge Queries
 coalesceQuery :: Query -> Query -> Query
 coalesceQuery qL qR = Query { query_type       = queryType
                             , query_table      = queryTable
@@ -121,10 +133,4 @@ instance Monoid Query where
 
     mappend :: Query -> Query -> Query
     mappend = (<>)
-
-data Join = Join
-    { join_table      :: Text
-    , join_alias      :: Text
-    , join_conditions :: (Text, [Text])
-    }
 
