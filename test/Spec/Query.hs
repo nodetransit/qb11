@@ -11,6 +11,7 @@ import Prelude hiding (and, or, null, not)
 
 import QueryBuilder.Query
 import QueryBuilder.Condition
+import QueryBuilder.Order
 
 queryColumnSpec :: Spec
 queryColumnSpec =
@@ -28,9 +29,11 @@ queryColumnSpec =
       it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "name"]
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
       it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
+      it "query order" $ query_orderBy q `shouldBe` Asc
 
     context "building a full query in reversed order should be valid" $ do
       let q = checkSelectQueryNotInOrder
+      it "query order" $ query_orderBy q `shouldBe` Desc
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "released <> ? AND released IS NOT NULL"
       it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
       it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "title"]
@@ -52,10 +55,12 @@ checkSelectQuery =
         condition "deleted" (notEquals "")
         or "deleted" isNotNull
     )
+    <> OrderBy Asc
 
 checkSelectQueryNotInOrder :: Query
 checkSelectQueryNotInOrder =
-    Where (runCondition $ do
+    OrderBy Desc
+    <> Where (runCondition $ do
         condition "released" (notEquals "")
         and "released" isNotNull
     )
