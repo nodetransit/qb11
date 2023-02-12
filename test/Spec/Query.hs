@@ -26,16 +26,16 @@ queryColumnSpec =
       it "query type" $ query_type q `shouldBe` "SELECT"
       it "query table" $ query_table q `shouldBe` "users"
       it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "name"]
-      it "query conditions" $ (clause. query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
-      it "query conditions" $ (bindings. query_conditions) q `shouldBe` [""]
+      it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+      it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
 
     context "building a full query in reversed order should be valid" $ do
       let q = checkSelectQueryNotInOrder
-      it "query type" $ query_type q `shouldBe` "SELECT"
-      it "query table" $ query_table q `shouldBe` "albums"
+      it "query conditions" $ (clause . query_conditions) q `shouldBe` "released <> ? AND released IS NOT NULL"
+      it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
       it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "title"]
-      it "query conditions" $ (clause. query_conditions) q `shouldBe` "released <> ? OR released IS NOT NULL"
-      it "query conditions" $ (bindings. query_conditions) q `shouldBe` ["''"]
+      it "query table" $ query_table q `shouldBe` "albums"
+      it "query type" $ query_type q `shouldBe` "SELECT"
 
 
 -- |
