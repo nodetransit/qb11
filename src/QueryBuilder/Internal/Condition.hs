@@ -50,8 +50,9 @@ data
         { clause :: Text
         , bindings :: b
         }
-        deriving Show
-        -- deriving Functor
+        deriving ( Show
+                 -- , Functor
+                 , Eq)
 
 type QueryCondition = Condition Text [Text]
 
