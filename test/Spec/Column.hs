@@ -6,6 +6,7 @@ module Spec.Column
     ) where
 
 import Test.Hspec
+import Test.Hspec.QuickCheck
 import Spec.Util
 import QueryBuilder.Query
 
@@ -13,13 +14,10 @@ columnSpec :: Spec
 columnSpec =
   describe "column semigroup/monoid" $ do
     context "concatenation with columns" $ do
-      it "should overwrite columns" $ do
-        checkConcatColumns Select `shouldBe` True
+      prop "should overwrite columns" $ do
+        (query_columns . checkConcatColumns) Select `shouldBeTheSameColumns` [Column "id", Column "name"]
 
 -- |
-checkConcatColumns :: Query -> Bool
-checkConcatColumns q = query_columns q' `isSameColumns` cols
-  where
-    cols = [Column "id", Column "name"]
-    q' = q <> Columns cols
+checkConcatColumns :: Query -> Query
+checkConcatColumns q = q <> Columns [Column "id", Column "name"]
 
