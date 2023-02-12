@@ -29,11 +29,13 @@ queryColumnSpec =
       it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "name"]
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
       it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
-      it "query order" $ query_orderBy q `shouldBe` Asc
+      it "query order by" $ query_orderBy q `shouldBe` Asc
+      it "query group by" $ query_groupBy q `shouldBe` [Column "type", Column "access"]
 
     context "building a full query in reversed order should be valid" $ do
       let q = checkSelectQueryNotInOrder
-      it "query order" $ query_orderBy q `shouldBe` Desc
+      it "query order by" $ query_groupBy q `shouldBe` [Column "genre"]
+      it "query order by" $ query_orderBy q `shouldBe` Desc
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "released <> ? AND released IS NOT NULL"
       it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
       it "query columns" $ query_columns q `isSameColumns` [Column "id", Column "title"]
@@ -56,10 +58,12 @@ checkSelectQuery =
         or "deleted" isNotNull
     )
     <> OrderBy Asc
+    <> GroupBy [Column "type", Column "access" ]
 
 checkSelectQueryNotInOrder :: Query
 checkSelectQueryNotInOrder =
-    OrderBy Desc
+    GroupBy [Column "genre"]
+    <> OrderBy Desc
     <> Where (runCondition $ do
         condition "released" (notEquals "")
         and "released" isNotNull
