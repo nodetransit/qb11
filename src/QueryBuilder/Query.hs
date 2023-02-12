@@ -71,10 +71,10 @@ modify_query Select             q                 = defaultQuery { query_type = 
 modify_query Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
 modify_query Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
 modify_query Delete             q                 = defaultQuery { query_type = "DELETE" } <> q
-modify_query (Columns c)        q                 = defaultQuery { query_columns = c } <> q
 modify_query (From t)           q                 = defaultQuery { query_table = t } <> q
 modify_query (Table t)          q                 = defaultQuery { query_table = t } <> q
 modify_query (Into t)           q                 = defaultQuery { query_table = t } <> q
+modify_query (Columns c)        q                 = defaultQuery { query_columns = c } <> q
 modify_query (Where c)          q                 = defaultQuery { query_conditions = c } <> q
 modify_query qL                 qR                = coalesceQuery qL qR
 
@@ -86,7 +86,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
                             }
   where
     coalesce f a b = if f a /= 0 then a else b
-    conditionLen empty = 0
+    conditionLen = T.length . clause
 
     queryType       = coalesce T.length       (query_type qL)       (query_type qR)
     queryTable      = coalesce T.length       (query_table qL)      (query_table qR)
