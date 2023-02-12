@@ -17,6 +17,7 @@ module QueryBuilder.Helpers
     ) where
 
 import QueryBuilder.Query
+import QueryBuilder.Join
 import QueryBuilder.Condition
 
 select_ = defaultQuery <> Select
