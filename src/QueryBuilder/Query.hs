@@ -17,6 +17,7 @@ import Control.Monad
 import Control.Applicative
 
 import QueryBuilder.Condition
+import QueryBuilder.Order
 
 
 data Column = Column         Text
@@ -35,11 +36,12 @@ data Query = EmptyQuery
            | Into Text
            | Columns [Column]
            | Where QueryCondition
+           | OrderBy Order
            | Query { query_type       :: Text
                    , query_table      :: Text
                    , query_columns    :: [Column]
                    , query_conditions :: QueryCondition
-                -- , query_orderBy    :: [a]
+                   , query_orderBy    :: Order
                 -- , query_distinct   :: [b]
                 -- , query_limit      :: [n]
                 -- , query_joins      :: [a]
@@ -52,6 +54,7 @@ defaultQuery = Query { query_type       = ""
                      , query_table      = ""
                      , query_columns    = []
                      , query_conditions = mempty
+                     , query_orderBy    = None
                      }
 
 modify_query :: Query -> Query -> Query
@@ -67,6 +70,7 @@ modify_query q@(Query {})       (Table t)         = q { query_table = t }
 modify_query q@(Query {})       (Into t)          = q { query_table = t }
 modify_query q@(Query {})       (Columns c)       = q { query_columns = c }
 modify_query q@(Query {})       (Where c)         = q { query_conditions = c }
+modify_query q@(Query {})       (OrderBy o)       = q { query_orderBy = o }
 modify_query Select             q                 = defaultQuery { query_type = "SELECT" } <> q
 modify_query Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
 modify_query Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
@@ -76,6 +80,7 @@ modify_query (Table t)          q                 = defaultQuery { query_table =
 modify_query (Into t)           q                 = defaultQuery { query_table = t } <> q
 modify_query (Columns c)        q                 = defaultQuery { query_columns = c } <> q
 modify_query (Where c)          q                 = defaultQuery { query_conditions = c } <> q
+modify_query (OrderBy o)        q                 = defaultQuery { query_orderBy = o } <> q
 modify_query qL                 qR                = coalesceQuery qL qR
 
 coalesceQuery :: Query -> Query -> Query
@@ -83,15 +88,19 @@ coalesceQuery qL qR = Query { query_type       = queryType
                             , query_table      = queryTable
                             , query_columns    = queryColumns
                             , query_conditions = queryConditions
+                            , query_orderBy    = queryOrder
                             }
   where
     coalesce f a b = if f a /= 0 then a else b
     conditionLen = T.length . clause
+    orderByLen None = 0
+    orderByLen _    = 1
 
     queryType       = coalesce T.length       (query_type qL)       (query_type qR)
     queryTable      = coalesce T.length       (query_table qL)      (query_table qR)
     queryColumns    = coalesce Prelude.length (query_columns qL)    (query_columns qR)
     queryConditions = coalesce conditionLen   (query_conditions qL) (query_conditions qR)
+    queryOrder      = coalesce orderByLen     (query_orderBy qL)    (query_orderBy qR)
 
 instance Semigroup Query where
     (<>) :: Query -> Query -> Query
