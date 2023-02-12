@@ -43,3 +43,4 @@ tests:
     dependencies:
     - qb11
     - hspec
+    - QuickCheck
