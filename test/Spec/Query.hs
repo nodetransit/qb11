@@ -40,7 +40,7 @@ queryColumnSpec =
       it "query having conditions" $ (bindings . query_having) q `shouldBe` ["%admin%"]
 
     context "building a full query in any order should be valid" $ do
-      forM_ (permutations checkSelectQueryNotInOrder) $
+      forM_ (permutations checkSelectQueryNotInOrderNotDistinct) $
         \queries -> do
            let q = foldl' (<>) defaultQuery queries
            it ("testing permutation: " ++ showQueries queries) $ do
@@ -52,6 +52,8 @@ queryColumnSpec =
                query_type q `shouldBe` "SELECT"
                (clause . query_having) q `shouldBe` "genre LIKE ?"
                (bindings . query_having) q `shouldBe` ["%prog%"]
+               query_distinct q `shouldBe` False
+               query_distinct (q <> Distinct) `shouldBe` True
            prop ("testing permutation: " ++ showQueries queries) $ do
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "title"]
            prop ("testing permutation :" ++ showQueries queries) $ do
@@ -77,9 +79,27 @@ checkSelectQuery =
     )
     <> OrderBy [Column "registered", Column "last_login"] Asc
 
-checkSelectQueryNotInOrder :: [Query]
-checkSelectQueryNotInOrder =
+checkSelectQueryNotInOrderNotDistinct :: [Query]
+checkSelectQueryNotInOrderNotDistinct =
     [ Select
+    , Columns [Column "id", Column "title"]
+    , From "albums"
+    , Where (runConditionM $ do
+          condition "released" (notEquals "")
+          and "released" isNotNull
+      )
+    , GroupBy [Column "genre"]
+    , Having (runConditionM $ do
+        condition "genre" (like "%prog%")
+    )
+    , OrderBy [Column "rating", Column "artist"] Desc
+    ]
+
+-- | tests run too long so I 'chose' not to test the order Distinct was concatenated
+checkSelectQueryNotInOrderDistinct :: [Query]
+checkSelectQueryNotInOrderDistinct =
+    [ Select
+    , Distinct
     , Columns [Column "id", Column "title"]
     , From "albums"
     , Where (runConditionM $ do

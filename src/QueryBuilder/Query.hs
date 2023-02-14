@@ -16,8 +16,6 @@ import Control.Applicative
 
 import QueryBuilder.Condition
 import QueryBuilder.Order
-import qualified QueryBuilder.Tristate as Tris
-import QueryBuilder.Tristate (Tristate)
 
 
 data Column = Column         Text
@@ -49,7 +47,7 @@ data Query = EmptyQuery
         -- | Limit Int
            | Query { query_type       :: Text
                    , query_table      :: Text
-                   , query_distinct   :: Tristate
+                   , query_distinct   :: Bool
                    , query_columns    :: [Column]
                 -- , query_values     :: [Column]
                    , query_groupBy    :: [Column]
@@ -64,7 +62,7 @@ data Query = EmptyQuery
 -- | Default Query with empty values
 defaultQuery = Query { query_type       = ""
                      , query_table      = ""
-                     , query_distinct   = Tris.Undefined
+                     , query_distinct   = False
                      , query_columns    = []
                   -- , query_values     = []
                      , query_groupBy    = []
@@ -98,7 +96,7 @@ modify_query = mq
     mq q@(Query {})       (OrderBy c o)     = q { query_orderBy = (c, o) }
     mq q@(Query {})       (GroupBy g)       = q { query_groupBy = g }
     mq q@(Query {})       (Having c)        = q { query_having = c }
-    mq q@(Query {})       Distinct          = q { query_distinct = Tris.True }
+    mq q@(Query {})       Distinct          = q { query_distinct = True }
     mq Select             q                 = defaultQuery { query_type = "SELECT" } <> q
     mq Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
     mq Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
@@ -111,7 +109,7 @@ modify_query = mq
     mq (OrderBy c o)      q                 = defaultQuery { query_orderBy = (c, o) } <> q
     mq (GroupBy g)        q                 = defaultQuery { query_groupBy = g } <> q
     mq (Having c)         q                 = defaultQuery { query_having = c } <> q
-    mq Distinct           q                 = defaultQuery { query_distinct = Tris.True } <> q
+    mq Distinct           q                 = defaultQuery { query_distinct = True } <> q
     mq qL                 qR                = coalesceQuery qL qR
 
 -- | Merge Queries
@@ -132,8 +130,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
     coalesce f a b = if f a /= 0 then a else b
     conditionLen = T.length . clause
     orderByLen (cs, _) = Prelude.length cs
-    distinctLen Tris.Undefined = 0
-    distinctLen _              = 1
+    distinctLen b = if b == True then 1 else 0
 
     queryType       = coalesce T.length       (query_type qL)       (query_type qR)
     queryTable      = coalesce T.length       (query_table qL)      (query_table qR)
