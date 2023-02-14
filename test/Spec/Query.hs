@@ -29,7 +29,7 @@ queryColumnSpec =
     context "building a full query in order should be valid" $ do
       let q = checkSelectQuery
       it "query type" $ query_type q `shouldBe` "SELECT"
-      it "query distinct" $ query_distinct q `shouldBe` False
+      it "query distinct" $ query_distinct q `shouldBe` True
       it "query table" $ query_table q `shouldBe` "users"
       it "query columns" $ query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
@@ -39,6 +39,7 @@ queryColumnSpec =
       it "query group by" $ query_groupBy q `shouldBe` [Column "type", Column "access"]
       it "query having conditions" $ (clause . query_having) q `shouldBe` "type LIKE ?"
       it "query having conditions" $ (bindings . query_having) q `shouldBe` ["%admin%"]
+      it "query limit" $ query_limit q `shouldBe` Just 12
 
     context "building a full query in any order should be valid" $ do
       forM_ (permutations checkSelectQueryNotInOrderNotDistinct) $
@@ -53,6 +54,8 @@ queryColumnSpec =
                query_type q `shouldBe` "SELECT"
                (clause . query_having) q `shouldBe` "genre LIKE ?"
                (bindings . query_having) q `shouldBe` ["%prog%"]
+               query_limit q `shouldBe` Nothing
+               query_limit (q <> Limit 18) `shouldBe` Just 18
                query_distinct q `shouldBe` False
                query_distinct (q <> Distinct) `shouldBe` True
            prop ("testing permutation: " ++ showQueries queries) $ do
@@ -80,6 +83,7 @@ checkSelectQuery =
         condition "type" (like "%admin%")
     )
     <> OrderBy [Column "registered", Column "last_login"] Asc
+    <> Limit 12
 
 checkSelectQueryNotInOrderNotDistinct :: [Query]
 checkSelectQueryNotInOrderNotDistinct =

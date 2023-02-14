@@ -44,7 +44,7 @@ data Query = EmptyQuery
         -- | Join Alias Text Text QueryCondition
            | Where QueryCondition
            | OrderBy [Column] Order
-        -- | Limit Int
+           | Limit Int
            | Query { query_type       :: Text
                    , query_table      :: Text
                    , query_distinct   :: Bool
@@ -55,7 +55,7 @@ data Query = EmptyQuery
                 -- , query_joins      :: [a]
                    , query_conditions :: QueryCondition
                    , query_orderBy    :: ([Column], Order)
-                -- , query_limit      :: Int
+                   , query_limit      :: Maybe Int
                }
             deriving Show
 
@@ -70,7 +70,7 @@ defaultQuery = Query { query_type       = ""
                   -- , query_joins      = []
                      , query_conditions = mempty
                      , query_orderBy    = ([], None)
-                  -- , query_limit      = 0
+                     , query_limit      = Nothing
                      }
 
 -- | Concatenate Queries
@@ -97,6 +97,7 @@ modify_query = mq
     mq q@(Query {})       (GroupBy g)       = q { query_groupBy = g }
     mq q@(Query {})       (Having c)        = q { query_having = c }
     mq q@(Query {})       Distinct          = q { query_distinct = True }
+    mq q@(Query {})       (Limit n)         = q { query_limit = Just n }
     mq Select             q                 = defaultQuery { query_type = "SELECT" } <> q
     mq Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
     mq Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
@@ -110,6 +111,7 @@ modify_query = mq
     mq (GroupBy g)        q                 = defaultQuery { query_groupBy = g } <> q
     mq (Having c)         q                 = defaultQuery { query_having = c } <> q
     mq Distinct           q                 = defaultQuery { query_distinct = True } <> q
+    mq (Limit n)          q                 = defaultQuery { query_limit = Just n } <> q
     mq qL                 qR                = coalesceQuery qL qR
 
 -- | Merge Queries
@@ -124,22 +126,26 @@ coalesceQuery qL qR = Query { query_type       = queryType
                          -- , query_joins      = queryJoins
                             , query_conditions = queryConditions
                             , query_orderBy    = queryOrder
-                         -- , query_limit      = queryLimit
+                            , query_limit      = queryLimit
                             }
   where
-    coalesce f a b = if f a /= 0 then a else b
+    coalesce f g = if (f . g) qL /= 0 then g qL else g qR
+
     conditionLen = T.length . clause
     orderByLen (cs, _) = Prelude.length cs
     distinctLen b = if b == True then 1 else 0
+    limitLen Nothing = 0
+    limitLen _       = 1
 
-    queryType       = coalesce T.length       (query_type qL)       (query_type qR)
-    queryTable      = coalesce T.length       (query_table qL)      (query_table qR)
-    queryColumns    = coalesce Prelude.length (query_columns qL)    (query_columns qR)
-    queryConditions = coalesce conditionLen   (query_conditions qL) (query_conditions qR)
-    queryOrder      = coalesce orderByLen     (query_orderBy qL)    (query_orderBy qR)
-    queryGroups     = coalesce Prelude.length (query_groupBy qL)    (query_groupBy qR)
-    queryHaving     = coalesce conditionLen   (query_having qL)     (query_having qR)
-    queryDistinct   = coalesce distinctLen    (query_distinct qL)   (query_distinct qR)
+    queryType       = coalesce T.length       query_type
+    queryTable      = coalesce T.length       query_table
+    queryColumns    = coalesce Prelude.length query_columns
+    queryConditions = coalesce conditionLen   query_conditions
+    queryOrder      = coalesce orderByLen     query_orderBy
+    queryGroups     = coalesce Prelude.length query_groupBy
+    queryHaving     = coalesce conditionLen   query_having
+    queryDistinct   = coalesce distinctLen    query_distinct
+    queryLimit      = coalesce limitLen       query_limit
 
 instance Semigroup Query where
     (<>) :: Query -> Query -> Query
