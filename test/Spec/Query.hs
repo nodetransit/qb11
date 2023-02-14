@@ -63,6 +63,18 @@ queryColumnSpec =
            prop ("testing permutation :" ++ showQueries queries) $ do
                (fst . query_orderBy) q `shouldBeTheSameColumns` [Column "rating", Column "artist"]
 
+    context "building an insert query in any order should be valid" $ do
+      forM_ (permutations checkInsertQueryNotInOrder) $
+        \queries -> do
+           let q = foldl' (<>) defaultQuery queries
+           it ("testing permutation: " ++ showQueries queries) $ do
+               query_type q `shouldBe` "INSERT"
+               query_table q `shouldBe` "users"
+               (clause . query_values) q `shouldBe` "(?, ?), (?, ?), (?, ?)"
+               (bindings . query_values) q `shouldBe` ["1", "akane", "2", "ayumi", "3", "ayami"]
+           prop ("testing permutation: " ++ showQueries queries) $ do
+               query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
+
 -- |
 getColumnCount :: Query -> Int
 getColumnCount = length . query_columns . (EmptyQuery <>)
@@ -117,5 +129,14 @@ checkSelectQueryNotInOrderDistinct =
         condition "genre" (like "%prog%")
     )
     , OrderBy [Column "rating", Column "artist"] Desc
+    ]
+
+-- |
+checkInsertQueryNotInOrder :: [Query]
+checkInsertQueryNotInOrder =
+    [ Insert
+    , Into "users"
+    , Columns [Column "id", Column "name"]
+    , Values [["1", "akane"], ["2", "ayumi"], ["3", "ayami"]]
     ]
 
