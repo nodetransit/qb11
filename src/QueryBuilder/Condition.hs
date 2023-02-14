@@ -8,9 +8,9 @@
 
 module QueryBuilder.Condition
     ( ConditionT
-    , Condition(..)
+    , ConditionM(..)
     , runConditionT
-    , runCondition
+    , runConditionM
     , lift
     , liftIO
     , condition
@@ -49,13 +49,14 @@ import qualified QueryBuilder.Internal.Condition as Internal
 
 type QueryCondition = Internal.QueryCondition
 type ConditionT m   = Internal.ConditionT QueryCondition m Bool
-type Condition      = Internal.ConditionT QueryCondition Identity Bool
+type ConditionM     = Internal.ConditionT QueryCondition Identity Bool
 
 rawQueryCondition :: Text -> [Text] -> QueryCondition
 rawQueryCondition = Internal.Condition
 
 rawQueryConditionT :: (Monad m) => Text -> [Text] -> ConditionT m
-rawQueryConditionT a b = Internal.ConditionT $ return (True, rawQueryCondition a b)
+rawQueryConditionT a b = Internal.ConditionT $
+    return (True, rawQueryCondition a b)
 
 raw :: (Monad m) => Text -> ConditionT m
 raw a = rawQueryConditionT a []
@@ -63,8 +64,8 @@ raw a = rawQueryConditionT a []
 runConditionT :: (Monad m) => Internal.ConditionT a m b -> m a
 runConditionT q = (return . snd) =<< Internal.runConditionT q
 
-runCondition :: Condition -> QueryCondition
-runCondition = snd . runIdentity . Internal.runConditionT
+runConditionM :: ConditionM -> QueryCondition
+runConditionM = snd . runIdentity . Internal.runConditionT
 
 lift ::(Monad m) => m a -> Internal.ConditionT QueryCondition m a
 lift = Internal.lift

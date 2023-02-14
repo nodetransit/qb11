@@ -52,9 +52,9 @@ conditionTSpec =
           bindings testRawConditionT `shouldBe` []
 
 testCondition:: QueryCondition
-testCondition= (runCondition) createQueryCondition
+testCondition= (runConditionM) createQueryCondition
   where
-    createQueryCondition :: Condition
+    createQueryCondition :: ConditionM
     createQueryCondition = do
         condition "a" (equals true)
         and "b" isNull

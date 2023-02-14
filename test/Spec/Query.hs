@@ -61,7 +61,7 @@ checkSelectQuery =
     Select
     <> From "users"
     <> Columns [Column "id", Column "name"]
-    <> Where (runCondition $ do
+    <> Where (runConditionM $ do
         condition "deleted" (notEquals "")
         or "deleted" isNotNull
     )
@@ -72,7 +72,7 @@ checkSelectQueryNotInOrder :: [Query]
 checkSelectQueryNotInOrder =
     [ GroupBy [Column "genre"]
     , OrderBy Desc
-    , Where (runCondition $ do
+    , Where (runConditionM $ do
           condition "released" (notEquals "")
           and "released" isNotNull
       )
