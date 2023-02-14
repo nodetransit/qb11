@@ -33,16 +33,18 @@ data Query = EmptyQuery
            | Delete
            | From Text
            | Table Text
+           | TableAlias Text Text
            | Into Text
-           -- | Distinct
+        -- | Distinct
            | Columns [Column]
-           -- | Values [Column]
+        -- | Values [Column]
            | GroupBy [Column]
-           -- | Having QueryCondition
-           -- | Join (Text, Text, QueryCondition)
+        -- | Having QueryCondition
+        -- | Join Text QueryCondition
+        -- | Join Alias Text Text QueryCondition
            | Where QueryCondition
            | OrderBy Order
-           -- | Limit Int
+        -- | Limit Int
            | Query { query_type       :: Text
                    , query_table      :: Text
                 -- , query_distinct   :: Bool
