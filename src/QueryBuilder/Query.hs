@@ -43,7 +43,7 @@ data Query = EmptyQuery
         -- | Join Text QueryCondition
         -- | Join Alias Text Text QueryCondition
            | Where QueryCondition
-           | OrderBy Order
+           | OrderBy [Column] Order
         -- | Limit Int
            | Query { query_type       :: Text
                    , query_table      :: Text
@@ -54,7 +54,7 @@ data Query = EmptyQuery
                    , query_having     :: QueryCondition
                 -- , query_joins      :: [a]
                    , query_conditions :: QueryCondition
-                   , query_orderBy    :: Order
+                   , query_orderBy    :: ([Column], Order)
                 -- , query_limit      :: [n]
                }
             deriving Show
@@ -64,7 +64,7 @@ defaultQuery = Query { query_type       = ""
                      , query_table      = ""
                      , query_columns    = []
                      , query_conditions = mempty
-                     , query_orderBy    = None
+                     , query_orderBy    = ([], None)
                      , query_groupBy    = []
                      , query_having     = mempty
                      }
@@ -89,7 +89,7 @@ modify_query = mq
     mq q@(Query {})       (Into t)          = q { query_table = t }
     mq q@(Query {})       (Columns c)       = q { query_columns = c }
     mq q@(Query {})       (Where c)         = q { query_conditions = c }
-    mq q@(Query {})       (OrderBy o)       = q { query_orderBy = o }
+    mq q@(Query {})       (OrderBy c o)     = q { query_orderBy = (c, o) }
     mq q@(Query {})       (GroupBy g)       = q { query_groupBy = g }
     mq q@(Query {})       (Having c)        = q { query_having = c }
     mq Select             q                 = defaultQuery { query_type = "SELECT" } <> q
@@ -101,7 +101,7 @@ modify_query = mq
     mq (Into t)           q                 = defaultQuery { query_table = t } <> q
     mq (Columns c)        q                 = defaultQuery { query_columns = c } <> q
     mq (Where c)          q                 = defaultQuery { query_conditions = c } <> q
-    mq (OrderBy o)        q                 = defaultQuery { query_orderBy = o } <> q
+    mq (OrderBy c o)      q                 = defaultQuery { query_orderBy = (c, o) } <> q
     mq (GroupBy g)        q                 = defaultQuery { query_groupBy = g } <> q
     mq (Having c)         q                 = defaultQuery { query_having = c } <> q
     mq qL                 qR                = coalesceQuery qL qR
@@ -119,8 +119,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
   where
     coalesce f a b = if f a /= 0 then a else b
     conditionLen = T.length . clause
-    orderByLen None = 0
-    orderByLen _    = 1
+    orderByLen (cs, _) = Prelude.length cs
 
     queryType       = coalesce T.length       (query_type qL)       (query_type qR)
     queryTable      = coalesce T.length       (query_table qL)      (query_table qR)
