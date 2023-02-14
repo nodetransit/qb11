@@ -33,7 +33,8 @@ queryColumnSpec =
       it "query columns" $ query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
       it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
-      it "query order by" $ query_orderBy q `shouldBe` Asc
+      it "query order by" $ (fst . query_orderBy) q `shouldBeTheSameColumns` [Column "registered", Column "last_login"]
+      it "query order by" $ (snd . query_orderBy) q `shouldBe` Asc
       it "query group by" $ query_groupBy q `shouldBe` [Column "type", Column "access"]
       it "query having conditions" $ (clause . query_having) q `shouldBe` "type LIKE ?"
       it "query having conditions" $ (bindings . query_having) q `shouldBe` ["%admin%"]
@@ -42,18 +43,19 @@ queryColumnSpec =
       forM_ (permutations checkSelectQueryNotInOrder) $
         \queries -> do
            let q = foldl' (<>) defaultQuery queries
-           it ("testing permutation :" ++ showQueries queries) $ do
+           it ("testing permutation: " ++ showQueries queries) $ do
                query_groupBy q `shouldBe` [Column "genre"]
-               query_orderBy q `shouldBe` Desc
+               (snd . query_orderBy) q `shouldBe` Desc
                (clause . query_conditions) q `shouldBe` "released <> ? AND released IS NOT NULL"
                (bindings . query_conditions) q `shouldBe` [""]
                query_table q `shouldBe` "albums"
                query_type q `shouldBe` "SELECT"
                (clause . query_having) q `shouldBe` "genre LIKE ?"
                (bindings . query_having) q `shouldBe` ["%prog%"]
-           prop ("testing permutation :" ++ showQueries queries) $ do
+           prop ("testing permutation: " ++ showQueries queries) $ do
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "title"]
-
+           prop ("testing permutation :" ++ showQueries queries) $ do
+               (fst . query_orderBy) q `shouldBeTheSameColumns` [Column "rating", Column "artist"]
 
 -- |
 getColumnCount :: Query -> Int
@@ -73,7 +75,7 @@ checkSelectQuery =
     <> Having (runConditionM $ do
         condition "type" (like "%admin%")
     )
-    <> OrderBy Asc
+    <> OrderBy [Column "registered", Column "last_login"] Asc
 
 checkSelectQueryNotInOrder :: [Query]
 checkSelectQueryNotInOrder =
@@ -88,6 +90,6 @@ checkSelectQueryNotInOrder =
     , Having (runConditionM $ do
         condition "genre" (like "%prog%")
     )
-    , OrderBy Desc
+    , OrderBy [Column "rating", Column "artist"] Desc
     ]
 
