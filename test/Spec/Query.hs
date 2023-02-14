@@ -29,6 +29,7 @@ queryColumnSpec =
     context "building a full query in order should be valid" $ do
       let q = checkSelectQuery
       it "query type" $ query_type q `shouldBe` "SELECT"
+      it "query distinct" $ query_distinct q `shouldBe` False
       it "query table" $ query_table q `shouldBe` "users"
       it "query columns" $ query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
@@ -67,6 +68,7 @@ getColumnCount = length . query_columns . (EmptyQuery <>)
 checkSelectQuery :: Query
 checkSelectQuery =
     Select
+    <> Distinct
     <> Columns [Column "id", Column "name"]
     <> From "users"
     <> Where (runConditionM $ do
