@@ -39,7 +39,7 @@ data Query = EmptyQuery
            | Columns [Column]
         -- | Values [Column]
            | GroupBy [Column]
-        -- | Having QueryCondition
+           | Having QueryCondition
         -- | Join Text QueryCondition
         -- | Join Alias Text Text QueryCondition
            | Where QueryCondition
@@ -51,7 +51,7 @@ data Query = EmptyQuery
                    , query_columns    :: [Column]
                 -- , query_values     :: [Column]
                    , query_groupBy    :: [Column]
-                -- , query_having     :: QueryCondition
+                   , query_having     :: QueryCondition
                 -- , query_joins      :: [a]
                    , query_conditions :: QueryCondition
                    , query_orderBy    :: Order
@@ -66,6 +66,7 @@ defaultQuery = Query { query_type       = ""
                      , query_conditions = mempty
                      , query_orderBy    = None
                      , query_groupBy    = []
+                     , query_having     = mempty
                      }
 
 -- | Concatenate Queries
@@ -90,6 +91,7 @@ modify_query = mq
     mq q@(Query {})       (Where c)         = q { query_conditions = c }
     mq q@(Query {})       (OrderBy o)       = q { query_orderBy = o }
     mq q@(Query {})       (GroupBy g)       = q { query_groupBy = g }
+    mq q@(Query {})       (Having c)        = q { query_having = c }
     mq Select             q                 = defaultQuery { query_type = "SELECT" } <> q
     mq Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
     mq Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
@@ -101,6 +103,7 @@ modify_query = mq
     mq (Where c)          q                 = defaultQuery { query_conditions = c } <> q
     mq (OrderBy o)        q                 = defaultQuery { query_orderBy = o } <> q
     mq (GroupBy g)        q                 = defaultQuery { query_groupBy = g } <> q
+    mq (Having c)         q                 = defaultQuery { query_having = c } <> q
     mq qL                 qR                = coalesceQuery qL qR
 
 -- | Merge Queries
@@ -111,6 +114,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
                             , query_conditions = queryConditions
                             , query_orderBy    = queryOrder
                             , query_groupBy    = queryGroups
+                            , query_having     = queryHaving
                             }
   where
     coalesce f a b = if f a /= 0 then a else b
@@ -124,6 +128,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
     queryConditions = coalesce conditionLen   (query_conditions qL) (query_conditions qR)
     queryOrder      = coalesce orderByLen     (query_orderBy qL)    (query_orderBy qR)
     queryGroups     = coalesce Prelude.length (query_groupBy qL)    (query_groupBy qR)
+    queryHaving     = coalesce conditionLen   (query_having qL)     (query_having qR)
 
 instance Semigroup Query where
     (<>) :: Query -> Query -> Query
