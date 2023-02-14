@@ -37,7 +37,7 @@ data Query = EmptyQuery
            | Into Text
            | Distinct
            | Columns [Column]
-        -- | Values [Column]
+           | Values [[Text]]
            | GroupBy [Column]
            | Having QueryCondition
         -- | Join Text QueryCondition
@@ -49,7 +49,7 @@ data Query = EmptyQuery
                    , query_table      :: Text
                    , query_distinct   :: Bool
                    , query_columns    :: [Column]
-                -- , query_values     :: [Column]
+                   , query_values     :: QueryCondition
                    , query_groupBy    :: [Column]
                    , query_having     :: QueryCondition
                 -- , query_joins      :: [a]
@@ -64,7 +64,7 @@ defaultQuery = Query { query_type       = ""
                      , query_table      = ""
                      , query_distinct   = False
                      , query_columns    = []
-                  -- , query_values     = []
+                     , query_values     = mempty
                      , query_groupBy    = []
                      , query_having     = mempty
                   -- , query_joins      = []
@@ -98,6 +98,7 @@ modify_query = mq
     mq q@(Query {})       (Having c)        = q { query_having = c }
     mq q@(Query {})       Distinct          = q { query_distinct = True }
     mq q@(Query {})       (Limit n)         = q { query_limit = Just n }
+    mq q@(Query {})       (Values v)        = q { query_values = makeValues v }
     mq Select             q                 = defaultQuery { query_type = "SELECT" } <> q
     mq Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
     mq Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
@@ -112,7 +113,16 @@ modify_query = mq
     mq (Having c)         q                 = defaultQuery { query_having = c } <> q
     mq Distinct           q                 = defaultQuery { query_distinct = True } <> q
     mq (Limit n)          q                 = defaultQuery { query_limit = Just n } <> q
+    mq (Values v)         q                 = defaultQuery { query_values = makeValues v } <> q
     mq qL                 qR                = coalesceQuery qL qR
+
+makeValues ll = rawQueryCondition clause values
+  where
+    values = Prelude.foldl (<>) [] ll
+    join = T.intercalate ", "
+    replacewith = Prelude.map (const "?")
+    group q = "(" <> q <> ")"
+    clause = join $ Prelude.map (group . join . replacewith) ll
 
 -- | Merge Queries
 coalesceQuery :: Query -> Query -> Query
@@ -120,7 +130,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
                             , query_table      = queryTable
                             , query_distinct   = queryDistinct
                             , query_columns    = queryColumns
-                         -- , query_values     = queryValues
+                            , query_values     = queryValues
                             , query_groupBy    = queryGroups
                             , query_having     = queryHaving
                          -- , query_joins      = queryJoins
@@ -146,6 +156,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
     queryHaving     = coalesce conditionLen   query_having
     queryDistinct   = coalesce distinctLen    query_distinct
     queryLimit      = coalesce limitLen       query_limit
+    queryValues     = coalesce conditionLen   query_values
 
 instance Semigroup Query where
     (<>) :: Query -> Query -> Query

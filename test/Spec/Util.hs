@@ -29,6 +29,7 @@ showQuery q = f q
     f (OrderBy _ _) = "OrderBy"
     f (GroupBy _)   = "GroupBy"
     f (Having _)    = "Having"
+    f (Values _)    = "Values"
     f _             = "?"
 
 showQueries qs = intercalate ", " $ map showQuery qs
