@@ -6,6 +6,8 @@
 module QueryBuilder.Query
     ( Query(..)
     , Column(..)
+    , Order(..)
+    , Alias
     , defaultQuery
     ) where
 
@@ -14,17 +16,11 @@ import Data.Text (Text)
 import Control.Monad
 import Control.Applicative
 
+import QueryBuilder
+import QueryBuilder.Column
 import QueryBuilder.Condition
-import QueryBuilder.Order
+import QueryBuilder.QueryOrder
 
-
-data Column = Column         Text
-            | ColumnAlias    Text Text
-         -- | RawColumn      Text
-         -- | RawColumnAlias Text Text
-            deriving ( Show
-                     , Eq
-                     )
 
 data Query = EmptyQuery
            | Select
@@ -33,7 +29,7 @@ data Query = EmptyQuery
            | Delete
            | From Text
            | Table Text
-           | TableAlias Text Text
+           | TableAlias Text Alias
            | Into Text
            | Distinct
            | Columns [Column]
@@ -41,10 +37,11 @@ data Query = EmptyQuery
            | GroupBy [Column]
            | Having QueryCondition
         -- | Join Text QueryCondition
-        -- | Join Alias Text Text QueryCondition
+        -- | JoinAlias Text Alias QueryCondition
            | Where QueryCondition
            | OrderBy [Column] Order
            | Limit Int
+        -- | Comment [Text]
            | Query { query_type       :: Text
                    , query_table      :: Text
                    , query_distinct   :: Bool
@@ -54,8 +51,9 @@ data Query = EmptyQuery
                    , query_having     :: QueryCondition
                 -- , query_joins      :: [a]
                    , query_conditions :: QueryCondition
-                   , query_orderBy    :: ([Column], Order)
+                   , query_orderBy    :: QueryOrder
                    , query_limit      :: Maybe Int
+                -- , query_comments   :: [Text]
                }
             deriving Show
 
@@ -69,8 +67,9 @@ defaultQuery = Query { query_type       = ""
                      , query_having     = mempty
                   -- , query_joins      = []
                      , query_conditions = mempty
-                     , query_orderBy    = ([], None)
+                     , query_orderBy    = QueryOrder[] None
                      , query_limit      = Nothing
+                  -- , query_comments   = []
                      }
 
 -- | Concatenate Queries
@@ -93,7 +92,7 @@ modify_query = mq
     mq q@(Query {})       (Into t)          = q { query_table = t }
     mq q@(Query {})       (Columns c)       = q { query_columns = c }
     mq q@(Query {})       (Where c)         = q { query_conditions = c }
-    mq q@(Query {})       (OrderBy c o)     = q { query_orderBy = (c, o) }
+    mq q@(Query {})       (OrderBy c o)     = q { query_orderBy = QueryOrder c o }
     mq q@(Query {})       (GroupBy g)       = q { query_groupBy = g }
     mq q@(Query {})       (Having c)        = q { query_having = c }
     mq q@(Query {})       Distinct          = q { query_distinct = True }
@@ -108,7 +107,7 @@ modify_query = mq
     mq (Into t)           q                 = defaultQuery { query_table = t } <> q
     mq (Columns c)        q                 = defaultQuery { query_columns = c } <> q
     mq (Where c)          q                 = defaultQuery { query_conditions = c } <> q
-    mq (OrderBy c o)      q                 = defaultQuery { query_orderBy = (c, o) } <> q
+    mq (OrderBy c o)      q                 = defaultQuery { query_orderBy = QueryOrder c o } <> q
     mq (GroupBy g)        q                 = defaultQuery { query_groupBy = g } <> q
     mq (Having c)         q                 = defaultQuery { query_having = c } <> q
     mq Distinct           q                 = defaultQuery { query_distinct = True } <> q
@@ -137,12 +136,13 @@ coalesceQuery qL qR = Query { query_type       = queryType
                             , query_conditions = queryConditions
                             , query_orderBy    = queryOrder
                             , query_limit      = queryLimit
+                         -- , query_comments   = queryComments
                             }
   where
     coalesce f g = if (f . g) qL /= 0 then g qL else g qR
 
     conditionLen = T.length . clause
-    orderByLen (cs, _) = Prelude.length cs
+    orderByLen = Prelude.length . columns
     distinctLen b = if b == True then 1 else 0
     limitLen Nothing = 0
     limitLen _       = 1

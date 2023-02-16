@@ -7,11 +7,11 @@
             #-}
 
 module QueryBuilder
-    (
+    ( Alias
     ) where
 
-import Data.Text as T
 import Data.Text (Text)
-import Data.Array as Array
+
+type Alias = Text
 
 

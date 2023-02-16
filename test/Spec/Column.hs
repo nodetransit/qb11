@@ -8,6 +8,7 @@ module Spec.Column
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Spec.Util
+
 import QueryBuilder.Query
 
 columnSpec :: Spec
