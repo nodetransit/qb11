@@ -6,6 +6,7 @@ module QueryBuilder.JoinTable
 
 import Data.Text as T
 import Data.Text (Text)
+import Control.Monad
 
 import QueryBuilder.Condition
 
@@ -16,4 +17,6 @@ data JoinTable = JoinTable
     , join_conditions :: QueryCondition
     }
 
+instance Monoid (JoinTable) where
+    (<>) (JoinTable jL) (JoinTable jR) =
 
