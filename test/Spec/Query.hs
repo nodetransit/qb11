@@ -15,7 +15,7 @@ import Prelude hiding (and, or, null, not)
 
 import QueryBuilder.Query
 import QueryBuilder.Condition
-import QueryBuilder.Order
+import QueryBuilder.QueryOrder
 
 queryColumnSpec :: Spec
 queryColumnSpec =
@@ -34,8 +34,8 @@ queryColumnSpec =
       it "query columns" $ query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
       it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
-      it "query order by" $ (fst . query_orderBy) q `shouldBeTheSameColumns` [Column "registered", Column "last_login"]
-      it "query order by" $ (snd . query_orderBy) q `shouldBe` Asc
+      it "query order by" $ (columns . query_orderBy) q `shouldBeTheSameColumns` [Column "registered", Column "last_login"]
+      it "query order by" $ (order . query_orderBy) q `shouldBe` Asc
       it "query group by" $ query_groupBy q `shouldBe` [Column "type", Column "access"]
       it "query having conditions" $ (clause . query_having) q `shouldBe` "type LIKE ?"
       it "query having conditions" $ (bindings . query_having) q `shouldBe` ["%admin%"]
@@ -47,7 +47,7 @@ queryColumnSpec =
            let q = foldl' (<>) defaultQuery queries
            it ("testing permutation: " ++ showQueries queries) $ do
                query_groupBy q `shouldBe` [Column "genre"]
-               (snd . query_orderBy) q `shouldBe` Desc
+               (order . query_orderBy) q `shouldBe` Desc
                (clause . query_conditions) q `shouldBe` "released <> ? AND released IS NOT NULL"
                (bindings . query_conditions) q `shouldBe` [""]
                query_table q `shouldBe` "albums"
@@ -61,7 +61,7 @@ queryColumnSpec =
            prop ("testing permutation: " ++ showQueries queries) $ do
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "title"]
            prop ("testing permutation :" ++ showQueries queries) $ do
-               (fst . query_orderBy) q `shouldBeTheSameColumns` [Column "rating", Column "artist"]
+               (columns . query_orderBy) q `shouldBeTheSameColumns` [Column "rating", Column "artist"]
 
     context "building an insert query in any order should be valid" $ do
       forM_ (permutations checkInsertQueryNotInOrder) $

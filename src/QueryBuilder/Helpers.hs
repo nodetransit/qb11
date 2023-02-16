@@ -13,11 +13,10 @@ module QueryBuilder.Helpers
     , into_
     , table_
     , columns_
-    , Join(..)
     ) where
 
 import QueryBuilder.Query
-import QueryBuilder.Join
+import QueryBuilder.JoinTable
 import QueryBuilder.Condition
 
 select_ = defaultQuery <> Select
