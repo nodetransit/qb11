@@ -20,6 +20,7 @@ import QueryBuilder
 import QueryBuilder.Column
 import QueryBuilder.Condition
 import QueryBuilder.QueryOrder
+import QueryBuilder.JoinTable
 
 
 data Query = EmptyQuery
@@ -29,15 +30,25 @@ data Query = EmptyQuery
            | Delete
            | From Text
            | Table Text
-           | TableAlias Text Alias
+        -- | TableAlias Text Alias
            | Into Text
            | Distinct
            | Columns [Column]
            | Values [[Text]]
            | GroupBy [Column]
            | Having QueryCondition
-        -- | Join Text QueryCondition
-        -- | JoinAlias Text Alias QueryCondition
+           | Join JoinType Text QueryCondition
+        -- | InnerJoin Text QueryCondition
+        -- | LeftJoin Text QueryCondition
+        -- | RightJoin Text QueryCondition
+        -- | OuterJoin Text QueryCondition
+        -- | CrossJoin Text
+           | JoinAlias JoinType Text Alias QueryCondition
+        -- | InnerJoinAlias Text Alias QueryCondition
+        -- | LeftJoinAlias Text Alias QueryCondition
+        -- | RightJoinAlias Text Alias QueryCondition
+        -- | OuterJoinAlias Text Alias QueryCondition
+        -- | CrossJoinAlias Text Alias
            | Where QueryCondition
            | OrderBy [Column] Order
            | Limit Int
@@ -49,7 +60,7 @@ data Query = EmptyQuery
                    , query_values     :: QueryCondition
                    , query_groupBy    :: [Column]
                    , query_having     :: QueryCondition
-                -- , query_joins      :: [a]
+                   , query_joins      :: [JoinTable]
                    , query_conditions :: QueryCondition
                    , query_orderBy    :: QueryOrder
                    , query_limit      :: Maybe Int
@@ -65,7 +76,7 @@ defaultQuery = Query { query_type       = ""
                      , query_values     = mempty
                      , query_groupBy    = []
                      , query_having     = mempty
-                  -- , query_joins      = []
+                     , query_joins      = []
                      , query_conditions = mempty
                      , query_orderBy    = QueryOrder[] None
                      , query_limit      = Nothing
@@ -98,6 +109,7 @@ modify_query = mq
     mq q@(Query {})       Distinct          = q { query_distinct = True }
     mq q@(Query {})       (Limit n)         = q { query_limit = Just n }
     mq q@(Query {})       (Values v)        = q { query_values = makeValues v }
+    mq q@(Query {})       (Join u t c)      = q { query_joins = [makeJoinTable u t c] }
     mq Select             q                 = defaultQuery { query_type = "SELECT" } <> q
     mq Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
     mq Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
@@ -113,6 +125,7 @@ modify_query = mq
     mq Distinct           q                 = defaultQuery { query_distinct = True } <> q
     mq (Limit n)          q                 = defaultQuery { query_limit = Just n } <> q
     mq (Values v)         q                 = defaultQuery { query_values = makeValues v } <> q
+    mq (Join u t c)       q                 = defaultQuery { query_joins = [makeJoinTable u t c] } <> q
     mq qL                 qR                = coalesceQuery qL qR
 
 makeValues ll = rawQueryCondition clause values
@@ -123,6 +136,13 @@ makeValues ll = rawQueryCondition clause values
     group q = "(" <> q <> ")"
     clause = join $ Prelude.map (group . join . replacewith) ll
 
+makeJoinTable utype table cond = JoinTable
+    { join_table      = table
+    , join_type       = utype
+    , join_alias      = mempty
+    , join_conditions = cond
+    }
+
 -- | Merge Queries
 coalesceQuery :: Query -> Query -> Query
 coalesceQuery qL qR = Query { query_type       = queryType
@@ -132,7 +152,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
                             , query_values     = queryValues
                             , query_groupBy    = queryGroups
                             , query_having     = queryHaving
-                         -- , query_joins      = queryJoins
+                            , query_joins      = queryJoins
                             , query_conditions = queryConditions
                             , query_orderBy    = queryOrder
                             , query_limit      = queryLimit
@@ -157,6 +177,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
     queryDistinct   = coalesce distinctLen    query_distinct
     queryLimit      = coalesce limitLen       query_limit
     queryValues     = coalesce conditionLen   query_values
+    queryJoins      = query_joins qL <> query_joins qR
 
 instance Semigroup Query where
     (<>) :: Query -> Query -> Query

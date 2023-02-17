@@ -2,6 +2,7 @@
 
 module QueryBuilder.JoinTable
     ( JoinTable(..)
+    , JoinType(..)
     ) where
 
 import Data.Text as T
@@ -12,11 +13,20 @@ import QueryBuilder.Condition
 
 data JoinTable = JoinTable
     { join_table      :: Text
-    , join_type       :: Text
+    , join_type       :: JoinType
     , join_alias      :: Text
     , join_conditions :: QueryCondition
     }
+    deriving ( Show
+             , Eq
+             )
 
-instance Monoid (JoinTable) where
-    (<>) (JoinTable jL) (JoinTable jR) =
+data JoinType = Inner
+              | Left
+              | Right
+              | Outer
+              | Cross
+              deriving ( Show
+                       , Eq
+                       )
 
