@@ -17,8 +17,12 @@ module QueryBuilder.Internal.Condition
     , equals
     , notEquals
     , is
-    , not
     , isNot
+    , not
+    , isIn
+    , isNotIn
+    , between
+    , notBetween
     , isNull
     , isNotNull
     , like
@@ -175,13 +179,40 @@ is :: Text -> QueryCondition
 is v = Condition "IS ?" [v]
 {-# INLINABLE is #-}
 
+isNot :: Text -> QueryCondition
+isNot v = Condition "IS NOT ?" [v]
+{-# INLINABLE isNot #-}
+
 not :: Text -> QueryCondition
 not v = Condition "NOT ?" [v]
 {-# INLINABLE not #-}
 
-isNot :: Text -> QueryCondition
-isNot v = Condition "IS NOT ?" [v]
-{-# INLINABLE isNot #-}
+escapeList :: [Text] -> Text
+escapeList = group . join . replacewith
+  where
+    group q = "(" <> q <> ")"
+    join = T.intercalate ", "
+    replacewith = Prelude.map (const "?")
+
+isIn :: [Text] -> QueryCondition
+isIn v = Condition ("IN " <> clause) v
+  where
+    clause = escapeList v
+{-# INLINABLE isIn #-}
+
+isNotIn :: [Text] -> QueryCondition
+isNotIn v = Condition ("NOT IN " <> clause) v
+  where
+    clause = escapeList v
+{-# INLINABLE isNotIn #-}
+
+between :: Text -> Text -> QueryCondition
+between a c = Condition "BETWEEN ? AND ?" [a, c]
+{-# INLINABLE between #-}
+
+notBetween :: Text -> Text -> QueryCondition
+notBetween a c = Condition "NOT BETWEEN ? AND ?" [a, c]
+{-# INLINABLE notBetween #-}
 
 like :: Text -> QueryCondition
 like v = Condition "LIKE ?" [v]

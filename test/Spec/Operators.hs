@@ -36,6 +36,22 @@ operatorSpec =
           clause runNot `shouldBe` "x NOT ?"
           bindings runNot `shouldBe` ["y"]
 
+        it "is in" $ do
+          clause runIsIn `shouldBe` "heart IN (?, ?, ?)"
+          bindings runIsIn `shouldBe` ["akane", "ayumi", "ayami"]
+
+        it "is not in" $ do
+          clause runIsNotIn `shouldBe` "money NOT IN (?, ?, ?)"
+          bindings runIsNotIn `shouldBe` ["pocket", "wallet", "bag"]
+
+        it "is between" $ do
+          clause runBetween `shouldBe` "ur BETWEEN ? AND ?"
+          bindings runBetween `shouldBe` ["ch", "ch"]
+
+        it "is not between" $ do
+          clause runNotBetween `shouldBe` "me NOT BETWEEN ? AND ?"
+          bindings runNotBetween `shouldBe` ["devil", "ocean"]
+
         it "is null" $ do
           clause runIsNull `shouldBe` "empty IS NULL"
           bindings runIsNull `shouldBe` []
@@ -79,6 +95,18 @@ runIsNot = (runIdentity . runConditionT) $ condition "that" (isNot "this")
 
 runNot :: QueryCondition
 runNot = (runIdentity . runConditionT) $ condition "x" (not "y")
+
+runIsIn :: QueryCondition
+runIsIn = (runIdentity . runConditionT) $ condition "heart" (isIn ["akane", "ayumi", "ayami"])
+
+runIsNotIn :: QueryCondition
+runIsNotIn = (runIdentity . runConditionT) $ condition "money" (isNotIn ["pocket", "wallet", "bag"])
+
+runBetween :: QueryCondition
+runBetween = (runIdentity . runConditionT) $ condition "ur" (between "ch" "ch")
+
+runNotBetween :: QueryCondition
+runNotBetween = (runIdentity . runConditionT) $ condition "me" (notBetween "devil" "ocean")
 
 runIsNull :: QueryCondition
 runIsNull = (runIdentity . runConditionT) $ condition "empty" isNull
