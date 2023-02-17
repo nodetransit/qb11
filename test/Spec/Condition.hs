@@ -17,8 +17,8 @@ conditionSpec =
     describe "condition semigroup/monoid" $ do
       context "simple query concatenation" $ do
         it "using mconcat" $ do
-          clause testConcatenate `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR d = ? OR d IS NULL ) AND e = E"
-          bindings testConcatenate `shouldBe` ["1", "C", ""]
+          clause testConcatenate `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR d = ? OR d IS NULL ) AND e = E AND f IN (?, ?)"
+          bindings testConcatenate `shouldBe` ["1", "C", "", "i1", "i2"]
 
         it "using operators" $ do
           clause operatorOverload `shouldBe` "a = ? AND b IS NOT NULL AND ( c IS NOT NULL OR c <> ? ) AND d LIKE ?"
@@ -35,6 +35,7 @@ testConcatenate =
         <> or <> condition "d" isNull
     )
     <> and <> rawCondition "e = E"
+    <> and <> condition "f" (isIn ["i1", "i2"])
 
 operatorOverload :: QueryCondition
 operatorOverload =

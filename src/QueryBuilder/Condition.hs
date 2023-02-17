@@ -25,6 +25,10 @@ module QueryBuilder.Condition
     , is
     , isNot
     , not
+    , isIn
+    , isNotIn
+    , between
+    , notBetween
     , isNull
     , isNotNull
     , like
@@ -109,6 +113,24 @@ not :: (Monad m) => Text -> ConditionT m
 not v = Internal.ConditionT $ do
     return (True, Internal.not v)
 {-# INLINABLE not #-}
+
+isIn :: (Monad m) => [Text] -> ConditionT m
+isIn v = Internal.ConditionT $ do
+    return (True, Internal.isIn v)
+{-# INLINABLE isIn #-}
+
+isNotIn :: (Monad m) => [Text] -> ConditionT m
+isNotIn v = Internal.ConditionT $ do
+    return (True, Internal.isNotIn v)
+{-# INLINABLE isNotIn #-}
+
+between :: (Monad m) => Text -> Text -> ConditionT m
+between a c = Internal.ConditionT $ return (True, Internal.between a c)
+{-# INLINABLE between #-}
+
+notBetween :: (Monad m) => Text -> Text -> ConditionT m
+notBetween a c = Internal.ConditionT $ return (True, Internal.notBetween a c)
+{-# INLINABLE notBetween #-}
 
 isNull :: (Monad m) => ConditionT m
 isNull = Internal.ConditionT $ return (True, Internal.isNull)
