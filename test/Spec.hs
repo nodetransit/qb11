@@ -1,11 +1,12 @@
 import Test.Hspec
-import Spec.Condition  as Run
-import Spec.ConditionT as Run
-import Spec.Query      as Run
-import Spec.Column     as Run
-import Spec.Table      as Run
-import Spec.ToText     as Run
-import Spec.Operators  as Run
+import Spec.Condition    as Run
+import Spec.ConditionT   as Run
+import Spec.Query        as Run
+import Spec.Column       as Run
+import Spec.Table        as Run
+import Spec.ToText       as Run
+import Spec.Operators    as Run
+import Spec.RawOperators as Run
 
 main :: IO ()
 main = do
@@ -18,4 +19,5 @@ main = do
         Run.conditionSpec
         Run.conditionTSpec
         Run.operatorSpec
+        Run.rawOperatorSpec
 
