@@ -21,14 +21,23 @@ module QueryBuilder.Condition
     , clause
     , bindings
     , equals
+    , equalsRaw
     , notEquals
+    , notEqualsRaw
     , is
+    , isRaw
     , isNot
+    , isNotRaw
     , not
+    , notRaw
     , isIn
+    , isInRaw
     , isNotIn
+    , isNotInRaw
     , between
+    , betweenRaw
     , notBetween
+    , notBetweenRaw
     , isNull
     , isNotNull
     , like
@@ -94,43 +103,86 @@ equals v = Internal.ConditionT $ do
     return (True, Internal.equals v)
 {-# INLINABLE equals #-}
 
+equalsRaw :: (Monad m) => Text -> ConditionT m
+equalsRaw v = Internal.ConditionT $ do
+    return (True, Internal.equalsRaw v)
+{-# INLINABLE equalsRaw #-}
+
 notEquals :: (Monad m) => Text -> ConditionT m
 notEquals v = Internal.ConditionT $ do
     return (True, Internal.notEquals v)
 {-# INLINABLE notEquals #-}
+
+notEqualsRaw :: (Monad m) => Text -> ConditionT m
+notEqualsRaw v = Internal.ConditionT $ do
+    return (True, Internal.notEqualsRaw v)
+{-# INLINABLE notEqualsRaw #-}
 
 is :: (Monad m) => Text -> ConditionT m
 is v = Internal.ConditionT $ do
     return (True, Internal.is v)
 {-# INLINABLE is #-}
 
+isRaw :: (Monad m) => Text -> ConditionT m
+isRaw v = Internal.ConditionT $ do
+    return (True, Internal.isRaw v)
+{-# INLINABLE isRaw #-}
+
 isNot :: (Monad m) => Text -> ConditionT m
 isNot v = Internal.ConditionT $ do
     return (True, Internal.isNot v)
 {-# INLINABLE isNot #-}
+
+isNotRaw :: (Monad m) => Text -> ConditionT m
+isNotRaw v = Internal.ConditionT $ do
+    return (True, Internal.isNotRaw v)
+{-# INLINABLE isNotRaw #-}
 
 not :: (Monad m) => Text -> ConditionT m
 not v = Internal.ConditionT $ do
     return (True, Internal.not v)
 {-# INLINABLE not #-}
 
+notRaw :: (Monad m) => Text -> ConditionT m
+notRaw v = Internal.ConditionT $ do
+    return (True, Internal.notRaw v)
+{-# INLINABLE notRaw #-}
+
 isIn :: (Monad m) => [Text] -> ConditionT m
 isIn v = Internal.ConditionT $ do
     return (True, Internal.isIn v)
 {-# INLINABLE isIn #-}
+
+isInRaw :: (Monad m) => [Text] -> ConditionT m
+isInRaw v = Internal.ConditionT $ do
+    return (True, Internal.isInRaw v)
+{-# INLINABLE isInRaw #-}
 
 isNotIn :: (Monad m) => [Text] -> ConditionT m
 isNotIn v = Internal.ConditionT $ do
     return (True, Internal.isNotIn v)
 {-# INLINABLE isNotIn #-}
 
+isNotInRaw :: (Monad m) => [Text] -> ConditionT m
+isNotInRaw v = Internal.ConditionT $ do
+    return (True, Internal.isNotInRaw v)
+{-# INLINABLE isNotInRaw #-}
+
 between :: (Monad m) => Text -> Text -> ConditionT m
 between a c = Internal.ConditionT $ return (True, Internal.between a c)
 {-# INLINABLE between #-}
 
+betweenRaw :: (Monad m) => Text -> Text -> ConditionT m
+betweenRaw a c = Internal.ConditionT $ return (True, Internal.betweenRaw a c)
+{-# INLINABLE betweenRaw #-}
+
 notBetween :: (Monad m) => Text -> Text -> ConditionT m
 notBetween a c = Internal.ConditionT $ return (True, Internal.notBetween a c)
 {-# INLINABLE notBetween #-}
+
+notBetweenRaw :: (Monad m) => Text -> Text -> ConditionT m
+notBetweenRaw a c = Internal.ConditionT $ return (True, Internal.notBetweenRaw a c)
+{-# INLINABLE notBetweenRaw #-}
 
 isNull :: (Monad m) => ConditionT m
 isNull = Internal.ConditionT $ return (True, Internal.isNull)

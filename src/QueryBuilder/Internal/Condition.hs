@@ -15,23 +15,34 @@ module QueryBuilder.Internal.Condition
     , rawCondition
     , QueryCondition
     , equals
+    , equalsRaw
     , notEquals
+    , notEqualsRaw
     , is
+    , isRaw
     , isNot
+    , isNotRaw
     , not
+    , notRaw
     , isIn
+    , isInRaw
     , isNotIn
+    , isNotInRaw
     , between
+    , betweenRaw
     , notBetween
+    , notBetweenRaw
     , isNull
     , isNotNull
     , like
+    -- , likeRaw
     , notLike
-    , and
+    -- , notLikeRaw
     , (&&)
     , (&&...)
     , (||)
     , (||...)
+    , and
     , or
     , null
     , true
@@ -163,9 +174,17 @@ equals :: Text -> QueryCondition
 equals v = Condition "= ?" [v]
 {-# INLINABLE equals #-}
 
+equalsRaw :: Text -> QueryCondition
+equalsRaw v = Condition ("= " <> v) []
+{-# INLINABLE equalsRaw #-}
+
 notEquals :: Text -> QueryCondition
 notEquals v = Condition "<> ?" [v]
 {-# INLINABLE notEquals #-}
+
+notEqualsRaw :: Text -> QueryCondition
+notEqualsRaw v = Condition ("<> " <> v) []
+{-# INLINABLE notEqualsRaw #-}
 
 isNull :: QueryCondition
 isNull = Condition "IS NULL" []
@@ -179,13 +198,25 @@ is :: Text -> QueryCondition
 is v = Condition "IS ?" [v]
 {-# INLINABLE is #-}
 
+isRaw :: Text -> QueryCondition
+isRaw v = Condition ("IS " <> v) []
+{-# INLINABLE isRaw #-}
+
 isNot :: Text -> QueryCondition
 isNot v = Condition "IS NOT ?" [v]
 {-# INLINABLE isNot #-}
 
+isNotRaw :: Text -> QueryCondition
+isNotRaw v = Condition ("IS NOT " <> v) []
+{-# INLINABLE isNotRaw #-}
+
 not :: Text -> QueryCondition
 not v = Condition "NOT ?" [v]
 {-# INLINABLE not #-}
+
+notRaw :: Text -> QueryCondition
+notRaw v = Condition ("NOT " <> v) []
+{-# INLINABLE notRaw #-}
 
 escapeList :: [Text] -> Text
 escapeList = group . join . replacewith
@@ -200,19 +231,43 @@ isIn v = Condition ("IN " <> clause) v
     clause = escapeList v
 {-# INLINABLE isIn #-}
 
+isInRaw :: [Text] -> QueryCondition
+isInRaw v = Condition ("IN " <> clause) []
+  where
+    group q = "(" <> q <> ")"
+    join = T.intercalate ", "
+    clause = (group . join) v
+{-# INLINABLE isInRaw #-}
+
 isNotIn :: [Text] -> QueryCondition
 isNotIn v = Condition ("NOT IN " <> clause) v
   where
     clause = escapeList v
+{-# INLINABLE isNotInRaw #-}
+
+isNotInRaw :: [Text] -> QueryCondition
+isNotInRaw v = Condition ("NOT IN " <> clause) []
+  where
+    group q = "(" <> q <> ")"
+    join = T.intercalate ", "
+    clause = (group . join) v
 {-# INLINABLE isNotIn #-}
 
 between :: Text -> Text -> QueryCondition
 between a c = Condition "BETWEEN ? AND ?" [a, c]
 {-# INLINABLE between #-}
 
+betweenRaw :: Text -> Text -> QueryCondition
+betweenRaw a c = Condition ("BETWEEN " <> a <> " AND " <> c) []
+{-# INLINABLE betweenRaw #-}
+
 notBetween :: Text -> Text -> QueryCondition
 notBetween a c = Condition "NOT BETWEEN ? AND ?" [a, c]
 {-# INLINABLE notBetween #-}
+
+notBetweenRaw :: Text -> Text -> QueryCondition
+notBetweenRaw a c = Condition ("NOT BETWEEN " <> a <> " AND " <> c) []
+{-# INLINABLE notBetweenRaw #-}
 
 like :: Text -> QueryCondition
 like v = Condition "LIKE ?" [v]
