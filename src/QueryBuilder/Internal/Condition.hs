@@ -35,9 +35,9 @@ module QueryBuilder.Internal.Condition
     , isNull
     , isNotNull
     , like
-    -- , likeRaw
+    , likeRaw
     , notLike
-    -- , notLikeRaw
+    , notLikeRaw
     , (&&)
     , (&&...)
     , (||)
@@ -273,9 +273,17 @@ like :: Text -> QueryCondition
 like v = Condition "LIKE ?" [v]
 {-# INLINABLE like #-}
 
+likeRaw :: Text -> QueryCondition
+likeRaw v = Condition ("LIKE " <> v) []
+{-# INLINABLE likeRaw #-}
+
 notLike :: Text -> QueryCondition
 notLike v = Condition "NOT LIKE ?" [v]
 {-# INLINABLE notLike #-}
+
+notLikeRaw :: Text -> QueryCondition
+notLikeRaw v = Condition ("NOT LIKE " <> v) []
+{-# INLINABLE notLikeRaw #-}
 
 and :: QueryCondition
 and = Condition "AND" []

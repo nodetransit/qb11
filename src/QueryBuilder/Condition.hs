@@ -41,7 +41,9 @@ module QueryBuilder.Condition
     , isNull
     , isNotNull
     , like
+    , likeRaw
     , notLike
+    , notLikeRaw
     , and
     , or
     , null
@@ -198,10 +200,20 @@ like v = Internal.ConditionT $ do
     return(True, Internal.like v)
 {-# INLINABLE like #-}
 
+likeRaw :: (Monad m) => Text -> ConditionT m
+likeRaw v = Internal.ConditionT $ do
+    return(True, Internal.likeRaw v)
+{-# INLINABLE likeRaw #-}
+
 notLike :: (Monad m) => Text -> ConditionT m
 notLike v = Internal.ConditionT $ do
     return(True, Internal.notLike v)
 {-# INLINABLE notLike #-}
+
+notLikeRaw :: (Monad m) => Text -> ConditionT m
+notLikeRaw v = Internal.ConditionT $ do
+    return(True, Internal.notLikeRaw v)
+{-# INLINABLE notLikeRaw #-}
 
 null = Internal.null
 {-# INLINE null #-}

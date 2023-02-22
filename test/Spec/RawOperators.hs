@@ -51,14 +51,24 @@ rawOperatorSpec =
           clause q `shouldBe` "language NOT IN (php, java, c#)"
           bindings q `shouldBe` mempty
 
-        it "between" $ do
+        it "is between" $ do
           let q = runBetweenRaw
           clause q `shouldBe` "'Kirsthy' BETWEEN A AND C"
           bindings q `shouldBe` mempty
 
-        it "not between" $ do
+        it "is not between" $ do
           let q = runNotBetweenRaw
           clause q `shouldBe` "d NOT BETWEEN a AND c"
+          bindings q `shouldBe` mempty
+
+        it "like" $ do
+          let q = runLikeRaw
+          clause q `shouldBe` "type LIKE %admin%"
+          bindings q `shouldBe` mempty
+
+        it "not like" $ do
+          let q = runNotLikeRaw
+          clause q `shouldBe` "user NOT LIKE %guest%"
           bindings q `shouldBe` mempty
 
 runEqualsRaw :: QueryCondition
@@ -87,4 +97,10 @@ runBetweenRaw = (runIdentity . runConditionT) $ condition "'Kirsthy'" (betweenRa
 
 runNotBetweenRaw :: QueryCondition
 runNotBetweenRaw = (runIdentity . runConditionT) $ condition "d" (notBetweenRaw "a" "c")
+
+runLikeRaw :: QueryCondition
+runLikeRaw = (runIdentity . runConditionT) $ condition "type" (likeRaw "%admin%")
+
+runNotLikeRaw :: QueryCondition
+runNotLikeRaw = (runIdentity . runConditionT) $ condition "user" (notLikeRaw "%guest%")
 
