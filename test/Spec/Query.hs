@@ -13,7 +13,7 @@ import Control.Monad
 import Data.List hiding (and, or)
 import Prelude hiding (and, or, null, not, Left, Right)
 
-import QueryBuilder.Query
+import QueryBuilder.Internal.Query
 import QueryBuilder.JoinTable
 import QueryBuilder.Condition
 import QueryBuilder.QueryOrder

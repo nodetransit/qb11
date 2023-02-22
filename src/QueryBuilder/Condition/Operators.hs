@@ -15,27 +15,6 @@ import Prelude hiding ((&&), (||))
 import qualified QueryBuilder.Internal.Condition as Internal
 import           QueryBuilder.Condition
 
--- data Operator = Equals
---                | NotEquals
---                | Is
---                | IsNot
---                | Not
---              - | Null
---                | NotNull
---                | Like
---                | NotLike
---
--- instance Show Operator where
---     show Equals    = "="
---     show NotEquals = "<>"
---     show Is        = "IS"
---     show IsNot     = "IS NOT"
---     show Not       = "NOT"
---     show IsNull    = "IS NULL"
---     show IsNotNull = "IS NOT NULL"
---     show Like      = "LIKE"
---     show NotLike   = "NOT LIKE"
-
 infixl 8 &&
 (&&) :: (Monad m) => ConditionT m -> ConditionT m -> ConditionT m
 (&&) left right = do

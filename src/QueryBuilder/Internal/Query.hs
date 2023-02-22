@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module QueryBuilder.Query
+module QueryBuilder.Internal.Query
     ( Query(..)
     , Column(..)
     , Order(..)

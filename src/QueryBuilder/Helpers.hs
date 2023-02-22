@@ -15,7 +15,7 @@ module QueryBuilder.Helpers
     , columns_
     ) where
 
-import QueryBuilder.Query
+import QueryBuilder.Internal.Query
 import QueryBuilder.JoinTable
 import QueryBuilder.Condition
 

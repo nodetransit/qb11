@@ -6,7 +6,7 @@ module Spec.Table
     ) where
 
 import Test.Hspec
-import QueryBuilder.Query
+import QueryBuilder.Internal.Query
 
 tableSpec :: Spec
 tableSpec =
