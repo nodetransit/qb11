@@ -49,7 +49,6 @@ queryColumnSpec =
       it "query having conditions" $ (bindings . query_having) q `shouldBe` ["%admin%"]
       it "query limit" $ query_limit q `shouldBe` Just 12
 
-    {-
     context "building a full query in any order should be valid" $ do
       forM_ (permutations checkSelectQueryNotInOrderNotDistinct) $
         \queries -> do
@@ -71,7 +70,6 @@ queryColumnSpec =
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "title"]
            prop ("testing permutation :" ++ showQueries queries) $ do
                (columns . query_orderBy) q `shouldBeTheSameColumns` [Column "rating", Column "artist"]
-    -}
 
     context "building an insert query in any order should be valid" $ do
       forM_ (permutations checkInsertQueryNotInOrder) $
