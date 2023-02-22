@@ -2,7 +2,7 @@
 {-# OPTIONS -Wno-missing-fields #-}
 
 module Spec.Query
-    ( queryColumnSpec
+    ( querySpec
     ) where
 
 import Test.Hspec
@@ -18,8 +18,8 @@ import QueryBuilder.JoinTable
 import QueryBuilder.Condition
 import QueryBuilder.QueryOrder
 
-queryColumnSpec :: Spec
-queryColumnSpec =
+querySpec :: Spec
+querySpec =
   describe "query semigroup/monoid" $ do
     context "query constructors should have empty columns" $ do
       it "select constructor" $ getColumnCount Select `shouldBe` 0
