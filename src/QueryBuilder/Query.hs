@@ -52,7 +52,7 @@ data Query = EmptyQuery
            | Where QueryCondition
            | OrderBy [Column] Order
            | Limit Int
-        -- | Comment [Text]
+           | Comment [Text]
            | Query { query_type       :: Text
                    , query_table      :: Text
                    , query_distinct   :: Bool
@@ -64,7 +64,7 @@ data Query = EmptyQuery
                    , query_conditions :: QueryCondition
                    , query_orderBy    :: QueryOrder
                    , query_limit      :: Maybe Int
-                -- , query_comments   :: [Text]
+                   , query_comments   :: [Text]
                }
             deriving Show
 
@@ -80,7 +80,7 @@ defaultQuery = Query { query_type       = ""
                      , query_conditions = mempty
                      , query_orderBy    = QueryOrder[] None
                      , query_limit      = Nothing
-                  -- , query_comments   = []
+                     , query_comments   = []
                      }
 
 -- | Concatenate Queries
@@ -110,6 +110,7 @@ modify_query = mq
     mq q@(Query {})       (Limit n)         = q { query_limit = Just n }
     mq q@(Query {})       (Values v)        = q { query_values = makeValues v }
     mq q@(Query {})       (Join u t c)      = q { query_joins = [makeJoinTable u t c] }
+    mq q@(Query {})       (Comment t)       = q { query_comments = t }
     mq Select             q                 = defaultQuery { query_type = "SELECT" } <> q
     mq Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
     mq Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
@@ -126,6 +127,7 @@ modify_query = mq
     mq (Limit n)          q                 = defaultQuery { query_limit = Just n } <> q
     mq (Values v)         q                 = defaultQuery { query_values = makeValues v } <> q
     mq (Join u t c)       q                 = defaultQuery { query_joins = [makeJoinTable u t c] } <> q
+    mq (Comment t)        q                 = defaultQuery { query_comments = t }
     mq qL                 qR                = coalesceQuery qL qR
 
 makeValues ll = rawQueryCondition clause values
@@ -156,7 +158,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
                             , query_conditions = queryConditions
                             , query_orderBy    = queryOrder
                             , query_limit      = queryLimit
-                         -- , query_comments   = queryComments
+                            , query_comments   = queryComments
                             }
   where
     coalesce f g = if (f . g) qL /= 0 then g qL else g qR
@@ -178,6 +180,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
     queryLimit      = coalesce limitLen       query_limit
     queryValues     = coalesce conditionLen   query_values
     queryJoins      = query_joins qL <> query_joins qR
+    queryComments   = coalesce Prelude.length query_comments
 
 instance Semigroup Query where
     (<>) :: Query -> Query -> Query
