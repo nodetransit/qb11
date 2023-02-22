@@ -5,6 +5,7 @@
 
 module QueryBuilder.Internal.Query
     ( Query(..)
+    , QueryT(..)
     , Column(..)
     , Order(..)
     , Alias
@@ -14,11 +15,14 @@ module QueryBuilder.Internal.Query
 import Data.Text as T
 import Data.Text (Text)
 import Control.Monad
+import Control.Monad.Fail as Fail
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
 import Control.Applicative
 
 import QueryBuilder
 import QueryBuilder.Column
-import QueryBuilder.Condition
+import QueryBuilder.Condition hiding (lift, liftIO)
 import QueryBuilder.QueryOrder
 import QueryBuilder.JoinTable
 
@@ -193,3 +197,64 @@ instance Monoid Query where
     mappend :: Query -> Query -> Query
     mappend = (<>)
 
+data QueryT a m b = QueryT { runQueryT :: m (b, a) }
+
+instance (Functor m) => Functor (QueryT a m) where
+    fmap f = mapQueryT $ fmap $ \(a, w) -> (f a, w)
+      where
+        mapQueryT f m = QueryT $ f (runQueryT m)
+    {-# INLINE fmap #-}
+
+instance (Monoid a, Applicative m) => Applicative (QueryT a m) where
+    pure a = QueryT $ pure (a, mempty)
+    {-# INLINE pure #-}
+
+    (<*>) f v = QueryT $ do
+        liftA2 k f' v'
+      where
+        k (b, a) (b', a') = (b b', a <> a')
+        f' = runQueryT f
+        v' = runQueryT v
+    {-# INLINE (<*>) #-}
+
+-- instance (Monoid c, Alternative m) => Alternative (QueryT c m) where
+--     empty = QueryT Control.Applicative.empty
+--     {-# INLINE empty #-}
+--
+--     (<|>) m n = QueryT $ runQueryT m <|> runQueryT n
+--     {-# INLINE (<|>) #-}
+
+-- instance (Monoid w, MonadPlus m) => MonadPlus (QueryT w m) where
+--     mzero = QueryT mzero
+--     {-# INLINE mzero #-}
+--
+--     mplus left right = QueryT $ mplus (runQueryT left) (runQueryT right)
+--     {-# INLINE mplus #-}
+
+instance (Monoid a, Monad m) => Monad (QueryT a m) where
+    return :: b -> QueryT a m b
+    -- return b = QueryT $ \b -> return (b, mempty)
+    return b = do
+        (QueryT . return) (b, mempty)
+    {-# INLINE return #-}
+
+    -- (>>=) :: QueryT a m b -> (a -> QueryT a m b) -> QueryT a m b
+    (>>=) m k = QueryT $ do
+        (b, a)   <- runQueryT m
+        (b', a') <- runQueryT (k b)
+        return (b', a <> a')
+    {-# INLINE (>>=) #-}
+
+-- instance (Monoid c, Fail.MonadFail m) => Fail.MonadFail (QueryT c m) where
+--     fail msg = QueryT $ Fail.fail msg
+--     {-# INLINE fail #-}
+
+instance (Monoid c, MonadIO m) => MonadIO (QueryT c m) where
+    liftIO = lift . liftIO
+    {-# INLINE liftIO #-}
+
+instance (Monoid c) => MonadTrans (QueryT c) where
+    lift m = QueryT $ do
+        a <- m
+        return (a, mempty)
+    {-# INLINE lift #-}
