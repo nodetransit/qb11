@@ -11,7 +11,7 @@ module Spec.Util
 -- import Data.Text (Text)
 import Data.List
 import Test.QuickCheck
-import QueryBuilder.Query
+import QueryBuilder.Internal.Query
 
 showQuery :: Query -> String
 showQuery q = f q

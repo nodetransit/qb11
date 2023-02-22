@@ -9,7 +9,7 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import Spec.Util
 
-import QueryBuilder.Query
+import QueryBuilder.Internal.Query
 
 columnSpec :: Spec
 columnSpec =
