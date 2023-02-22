@@ -48,20 +48,18 @@ queryColumnSpec =
       it "query having conditions" $ (clause . query_having) q `shouldBe` "type LIKE ?"
       it "query having conditions" $ (bindings . query_having) q `shouldBe` ["%admin%"]
       it "query limit" $ query_limit q `shouldBe` Just 12
+      it "query comments" $ query_comments q `shouldBe` ["select user", "join with info and logs"]
 
     context "building a full query in any order should be valid" $ do
-      forM_ (permutations checkSelectQueryNotInOrderNotDistinct) $
+      forM_ (permutations checkSelectQueryNotInOrder_pt1) $
         \queries -> do
            let q = foldl' (<>) defaultQuery queries
            it ("testing permutation: " ++ showQueries queries) $ do
-               query_groupBy q `shouldBe` [Column "genre"]
                (order . query_orderBy) q `shouldBe` Desc
                (clause . query_conditions) q `shouldBe` "released <> ? AND released IS NOT NULL"
                (bindings . query_conditions) q `shouldBe` [""]
                query_table q `shouldBe` "albums"
                query_type q `shouldBe` "SELECT"
-               (clause . query_having) q `shouldBe` "genre LIKE ?"
-               (bindings . query_having) q `shouldBe` ["%prog%"]
                query_limit q `shouldBe` Nothing
                query_limit (q <> Limit 18) `shouldBe` Just 18
                query_distinct q `shouldBe` False
@@ -70,6 +68,17 @@ queryColumnSpec =
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "title"]
            prop ("testing permutation :" ++ showQueries queries) $ do
                (columns . query_orderBy) q `shouldBeTheSameColumns` [Column "rating", Column "artist"]
+
+    context "building a full query in any order should be valid" $ do
+      forM_ (permutations checkSelectQueryNotInOrder_pt2) $
+        \queries -> do
+           let q = foldl' (<>) defaultQuery queries
+           it ("testing permutation: " ++ showQueries queries) $ do
+               query_distinct q `shouldBe` True
+               query_groupBy q `shouldBe` [Column "genre"]
+               (clause . query_having) q `shouldBe` "genre LIKE ?"
+               (bindings . query_having) q `shouldBe` ["%prog%"]
+               query_comments q `shouldBe` ["select albums and associated info", "filter unreleased albums and non-prog genres"]
 
     context "building an insert query in any order should be valid" $ do
       forM_ (permutations checkInsertQueryNotInOrder) $
@@ -113,9 +122,11 @@ checkSelectQuery =
     )
     <> OrderBy [Column "registered", Column "last_login"] Asc
     <> Limit 12
+    <> Comment ["select user", "join with info and logs"]
 
-checkSelectQueryNotInOrderNotDistinct :: [Query]
-checkSelectQueryNotInOrderNotDistinct =
+-- | basic query permutations 1
+checkSelectQueryNotInOrder_pt1 :: [Query]
+checkSelectQueryNotInOrder_pt1 =
     [ Select
     , Columns [Column "id", Column "title"]
     , From "albums"
@@ -127,29 +138,24 @@ checkSelectQueryNotInOrderNotDistinct =
           condition "released" (notEquals "")
           and "released" isNotNull
       )
-    , GroupBy [Column "genre"]
-    , Having (runConditionM $ do
-        condition "genre" (like "%prog%")
-    )
     , OrderBy [Column "rating", Column "artist"] Desc
     ]
 
--- | tests run too long so I 'chose' not to test the order Distinct was concatenated
-checkSelectQueryNotInOrderDistinct :: [Query]
-checkSelectQueryNotInOrderDistinct =
+-- | basic query permutations 2
+--
+--   split some of the permutations in another test to make the
+--   test run time more reasonable
+checkSelectQueryNotInOrder_pt2 :: [Query]
+checkSelectQueryNotInOrder_pt2 =
     [ Select
     , Distinct
     , Columns [Column "id", Column "title"]
     , From "albums"
-    , Where (runConditionM $ do
-          condition "released" (notEquals "")
-          and "released" isNotNull
-      )
     , GroupBy [Column "genre"]
     , Having (runConditionM $ do
         condition "genre" (like "%prog%")
     )
-    , OrderBy [Column "rating", Column "artist"] Desc
+    , Comment ["select albums and associated info", "filter unreleased albums and non-prog genres"]
     ]
 
 -- |
