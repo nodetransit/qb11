@@ -159,7 +159,7 @@ coalesceQuery qL qR = Query { query_type        = queryType
 
     queryTableLen = T.length . table_name
     conditionLen = T.length . clause
-    orderByLen = Prelude.length . columns
+    orderByLen = Prelude.length . order_columns
     distinctLen b = if b == True then 1 else 0
     limitLen Nothing = 0
     limitLen _       = 1

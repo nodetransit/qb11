@@ -49,7 +49,7 @@ querySpec =
       it "query columns" $ query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
       it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
-      it "query order by" $ (columns . query_orderBy) q `shouldBeTheSameColumns` [Column "registered", Column "last_login"]
+      it "query order by" $ (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "registered", Column "last_login"]
       it "query order by" $ (order . query_orderBy) q `shouldBe` Asc
       it "query group by" $ query_groupBy q `shouldBe` [Column "type", Column "access"]
       it "query having conditions" $ (clause . query_having) q `shouldBe` "type LIKE ?"
@@ -75,7 +75,7 @@ querySpec =
            prop ("testing permutation: " ++ showQueries queries) $ do
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "title"]
            prop ("testing permutation :" ++ showQueries queries) $ do
-               (columns . query_orderBy) q `shouldBeTheSameColumns` [Column "rating", Column "artist"]
+               (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "rating", Column "artist"]
 
     context "building a full query in any order should be valid" $ do
       forM_ (permutations checkSelectQueryNotInOrder_pt2) $
