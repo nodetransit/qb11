@@ -17,6 +17,7 @@ import QueryBuilder.Internal.Query
 import QueryBuilder.JoinTable
 import QueryBuilder.Alias as Alias
 import QueryBuilder.Condition
+import QueryBuilder.QueryTable
 import QueryBuilder.QueryOrder
 
 querySpec :: Spec
@@ -32,7 +33,8 @@ querySpec =
       let q = checkSelectQuery
       it "query type" $ query_type q `shouldBe` "SELECT"
       it "query distinct" $ query_distinct q `shouldBe` True
-      it "query table" $ query_table q `shouldBe` "users"
+      it "query table" $ (table_name . query_table) q `shouldBe` "users"
+      it "query table" $ (table_alias . query_table) q `shouldBe` Alias.None
       it "query joins" $ (length . query_joins) q `shouldBe` 2
       it "query 1st join type" $ (join_type . head . query_joins) q `shouldBe` Inner
       it "query 1st join table" $ (join_table . head . query_joins) q `shouldBe` "infos"
@@ -63,7 +65,8 @@ querySpec =
                (order . query_orderBy) q `shouldBe` Desc
                (clause . query_conditions) q `shouldBe` "released <> ? AND released IS NOT NULL"
                (bindings . query_conditions) q `shouldBe` [""]
-               query_table q `shouldBe` "albums"
+               (table_name . query_table) q `shouldBe` "albums"
+               (table_alias . query_table) q `shouldBe` Alias.None
                query_type q `shouldBe` "SELECT"
                query_limit q `shouldBe` Nothing
                query_limit (q <> Limit 18) `shouldBe` Just 18
@@ -91,7 +94,8 @@ querySpec =
            let q = foldl' (<>) defaultQuery queries
            it ("testing permutation: " ++ showQueries queries) $ do
                query_type q `shouldBe` "INSERT"
-               query_table q `shouldBe` "users"
+               (table_name . query_table) q `shouldBe` "users"
+               (table_alias . query_table) q `shouldBe` Alias.None
                (clause . query_values) q `shouldBe` "(?, ?), (?, ?), (?, ?)"
                (bindings . query_values) q `shouldBe` ["1", "akane", "2", "ayumi", "3", "ayami"]
            prop ("testing permutation: " ++ showQueries queries) $ do

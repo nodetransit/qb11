@@ -23,6 +23,7 @@ import Control.Applicative
 import QueryBuilder.Alias as Alias
 import QueryBuilder.Column
 import QueryBuilder.Condition hiding (lift, liftIO)
+import QueryBuilder.QueryTable
 import QueryBuilder.QueryOrder
 import QueryBuilder.QueryOrder as Order
 import QueryBuilder.JoinTable
@@ -34,56 +35,46 @@ data Query = EmptyQuery
            | Update
            | Delete
            | Table Text
-        -- | TableAlias Text Alias
+           | TableAlias Text Alias
            | Distinct
            | Columns [Column]
            | Values [[Text]]
            | GroupBy [Column]
            | Having QueryCondition
            | Join JoinType Text QueryCondition
-        -- | InnerJoin Text QueryCondition
-        -- | LeftJoin Text QueryCondition
-        -- | RightJoin Text QueryCondition
-        -- | OuterJoin Text QueryCondition
-        -- | CrossJoin Text
            | JoinAlias JoinType Text Alias QueryCondition
-        -- | InnerJoinAlias Text Alias QueryCondition
-        -- | LeftJoinAlias Text Alias QueryCondition
-        -- | RightJoinAlias Text Alias QueryCondition
-        -- | OuterJoinAlias Text Alias QueryCondition
-        -- | CrossJoinAlias Text Alias
            | Where QueryCondition
            | OrderBy [Column] Order
            | Limit Int
            | Comment [Text]
-           | Query { query_type       :: Text
-                   , query_table      :: Text
-                   , query_distinct   :: Bool
-                   , query_columns    :: [Column]
-                   , query_values     :: QueryCondition
-                   , query_groupBy    :: [Column]
-                   , query_having     :: QueryCondition
-                   , query_joins      :: [JoinTable]
-                   , query_conditions :: QueryCondition
-                   , query_orderBy    :: QueryOrder
-                   , query_limit      :: Maybe Int
-                   , query_comments   :: [Text]
+           | Query { query_type        :: Text
+                   , query_table       :: QueryTable
+                   , query_distinct    :: Bool
+                   , query_columns     :: [Column]
+                   , query_values      :: QueryCondition
+                   , query_groupBy     :: [Column]
+                   , query_having      :: QueryCondition
+                   , query_joins       :: [JoinTable]
+                   , query_conditions  :: QueryCondition
+                   , query_orderBy     :: QueryOrder
+                   , query_limit       :: Maybe Int
+                   , query_comments    :: [Text]
                }
             deriving Show
 
 -- | Default Query with empty values
-defaultQuery = Query { query_type       = ""
-                     , query_table      = ""
-                     , query_distinct   = False
-                     , query_columns    = []
-                     , query_values     = mempty
-                     , query_groupBy    = []
-                     , query_having     = mempty
-                     , query_joins      = []
-                     , query_conditions = mempty
-                     , query_orderBy    = QueryOrder[] Order.None
-                     , query_limit      = Nothing
-                     , query_comments   = []
+defaultQuery = Query { query_type        = mempty
+                     , query_table       = QueryTable mempty Alias.None
+                     , query_distinct    = False
+                     , query_columns     = []
+                     , query_values      = mempty
+                     , query_groupBy     = []
+                     , query_having      = mempty
+                     , query_joins       = []
+                     , query_conditions  = mempty
+                     , query_orderBy     = QueryOrder[] Order.None
+                     , query_limit       = Nothing
+                     , query_comments    = []
                      }
 
 -- | Concatenate Queries
@@ -101,7 +92,8 @@ modify_query = mq
     mq q@(Query {})         Insert              = q { query_type = "INSERT" }
     mq q@(Query {})         Update              = q { query_type = "UPDATE" }
     mq q@(Query {})         Delete              = q { query_type = "DELETE" }
-    mq q@(Query {})         (Table t)           = q { query_table = t }
+    mq q@(Query {})         (Table t)           = q { query_table = QueryTable t Alias.None }
+    mq q@(Query {})         (TableAlias t a)    = q { query_table = QueryTable t a }
     mq q@(Query {})         (Columns c)         = q { query_columns = c }
     mq q@(Query {})         (Where c)           = q { query_conditions = c }
     mq q@(Query {})         (OrderBy c o)       = q { query_orderBy = QueryOrder c o }
@@ -117,7 +109,8 @@ modify_query = mq
     mq Insert               q                   = defaultQuery { query_type = "INSERT" } <> q
     mq Update               q                   = defaultQuery { query_type = "UPDATE" } <> q
     mq Delete               q                   = defaultQuery { query_type = "DELETE" } <> q
-    mq (Table t)            q                   = defaultQuery { query_table = t } <> q
+    mq (Table t)            q                   = defaultQuery { query_table = QueryTable t Alias.None } <> q
+    mq (TableAlias t a)     q                   = defaultQuery { query_table = QueryTable t a } <> q
     mq (Columns c)          q                   = defaultQuery { query_columns = c } <> q
     mq (Where c)            q                   = defaultQuery { query_conditions = c } <> q
     mq (OrderBy c o)        q                   = defaultQuery { query_orderBy = QueryOrder c o } <> q
@@ -148,22 +141,23 @@ makeJoinTable utype table alias cond = JoinTable
 
 -- | Merge Queries
 coalesceQuery :: Query -> Query -> Query
-coalesceQuery qL qR = Query { query_type       = queryType
-                            , query_table      = queryTable
-                            , query_distinct   = queryDistinct
-                            , query_columns    = queryColumns
-                            , query_values     = queryValues
-                            , query_groupBy    = queryGroups
-                            , query_having     = queryHaving
-                            , query_joins      = queryJoins
-                            , query_conditions = queryConditions
-                            , query_orderBy    = queryOrder
-                            , query_limit      = queryLimit
-                            , query_comments   = queryComments
+coalesceQuery qL qR = Query { query_type        = queryType
+                            , query_table       = queryTable
+                            , query_distinct    = queryDistinct
+                            , query_columns     = queryColumns
+                            , query_values      = queryValues
+                            , query_groupBy     = queryGroups
+                            , query_having      = queryHaving
+                            , query_joins       = queryJoins
+                            , query_conditions  = queryConditions
+                            , query_orderBy     = queryOrder
+                            , query_limit       = queryLimit
+                            , query_comments    = queryComments
                             }
   where
     coalesce f g = if (f . g) qL /= 0 then g qL else g qR
 
+    queryTableLen = T.length . table_name
     conditionLen = T.length . clause
     orderByLen = Prelude.length . columns
     distinctLen b = if b == True then 1 else 0
@@ -171,7 +165,7 @@ coalesceQuery qL qR = Query { query_type       = queryType
     limitLen _       = 1
 
     queryType       = coalesce T.length       query_type
-    queryTable      = coalesce T.length       query_table
+    queryTable      = coalesce queryTableLen  query_table
     queryColumns    = coalesce Prelude.length query_columns
     queryConditions = coalesce conditionLen   query_conditions
     queryOrder      = coalesce orderByLen     query_orderBy

@@ -18,7 +18,9 @@ import System.IO.Unsafe
 import Spec.Util
 
 import QueryBuilder.Query
+import QueryBuilder.Alias as Alias
 import QueryBuilder.Column
+import QueryBuilder.QueryTable
 
 queryTSpec :: Spec
 queryTSpec =
@@ -28,7 +30,8 @@ queryTSpec =
       let q = testQueryTransformer
       it "using identity monad" $ do
         query_type q `shouldBe` "SELECT"
-        query_table q `shouldBe` "users"
+        (table_name . query_table) q `shouldBe` "users"
+        (table_alias . query_table) q `shouldBe` Alias.None
       prop "using identity monad" $ do
         query_columns q `shouldBeTheSameColumns` [Column "id", Column "name", Column "level"]
 
