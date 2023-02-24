@@ -21,13 +21,13 @@ tableSpec =
 checkConcatSelectTable :: Bool
 checkConcatSelectTable = query_table q' == "users"
   where
-    q' = Select <> From "users"
+    q' = Select <> Table "users"
 
 -- |
 checkConcatInsertTable :: Bool
 checkConcatInsertTable = query_table q' == "emails"
   where
-    q' = Insert <> Into "emails"
+    q' = Insert <> Table "emails"
 
 -- |
 checkConcatUpdateTable :: Bool
@@ -39,4 +39,4 @@ checkConcatUpdateTable = query_table q' == "infos"
 checkConcatDeleteTable :: Bool
 checkConcatDeleteTable = query_table q' == "accounts"
   where
-    q' = Delete <> From "accounts"
+    q' = Delete <> Table "accounts"

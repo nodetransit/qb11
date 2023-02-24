@@ -20,10 +20,11 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Applicative
 
-import QueryBuilder
+import QueryBuilder.Alias as Alias
 import QueryBuilder.Column
 import QueryBuilder.Condition hiding (lift, liftIO)
 import QueryBuilder.QueryOrder
+import QueryBuilder.QueryOrder as Order
 import QueryBuilder.JoinTable
 
 
@@ -32,10 +33,8 @@ data Query = EmptyQuery
            | Insert
            | Update
            | Delete
-           | From Text
            | Table Text
         -- | TableAlias Text Alias
-           | Into Text
            | Distinct
            | Columns [Column]
            | Values [[Text]]
@@ -82,7 +81,7 @@ defaultQuery = Query { query_type       = ""
                      , query_having     = mempty
                      , query_joins      = []
                      , query_conditions = mempty
-                     , query_orderBy    = QueryOrder[] None
+                     , query_orderBy    = QueryOrder[] Order.None
                      , query_limit      = Nothing
                      , query_comments   = []
                      }
@@ -95,44 +94,42 @@ defaultQuery = Query { query_type       = ""
 modify_query :: Query -> Query -> Query
 modify_query = mq
   where
-    mq EmptyQuery         EmptyQuery        = EmptyQuery
-    mq EmptyQuery         q                 = defaultQuery <> q
-    mq q                  EmptyQuery        = defaultQuery <> q
-    mq q@(Query {})       Select            = q { query_type = "SELECT" }
-    mq q@(Query {})       Insert            = q { query_type = "INSERT" }
-    mq q@(Query {})       Update            = q { query_type = "UPDATE" }
-    mq q@(Query {})       Delete            = q { query_type = "DELETE" }
-    mq q@(Query {})       (From t)          = q { query_table = t }
-    mq q@(Query {})       (Table t)         = q { query_table = t }
-    mq q@(Query {})       (Into t)          = q { query_table = t }
-    mq q@(Query {})       (Columns c)       = q { query_columns = c }
-    mq q@(Query {})       (Where c)         = q { query_conditions = c }
-    mq q@(Query {})       (OrderBy c o)     = q { query_orderBy = QueryOrder c o }
-    mq q@(Query {})       (GroupBy g)       = q { query_groupBy = g }
-    mq q@(Query {})       (Having c)        = q { query_having = c }
-    mq q@(Query {})       Distinct          = q { query_distinct = True }
-    mq q@(Query {})       (Limit n)         = q { query_limit = Just n }
-    mq q@(Query {})       (Values v)        = q { query_values = makeValues v }
-    mq q@(Query {})       (Join u t c)      = q { query_joins = [makeJoinTable u t c] }
-    mq q@(Query {})       (Comment t)       = q { query_comments = t }
-    mq Select             q                 = defaultQuery { query_type = "SELECT" } <> q
-    mq Insert             q                 = defaultQuery { query_type = "INSERT" } <> q
-    mq Update             q                 = defaultQuery { query_type = "UPDATE" } <> q
-    mq Delete             q                 = defaultQuery { query_type = "DELETE" } <> q
-    mq (From t)           q                 = defaultQuery { query_table = t } <> q
-    mq (Table t)          q                 = defaultQuery { query_table = t } <> q
-    mq (Into t)           q                 = defaultQuery { query_table = t } <> q
-    mq (Columns c)        q                 = defaultQuery { query_columns = c } <> q
-    mq (Where c)          q                 = defaultQuery { query_conditions = c } <> q
-    mq (OrderBy c o)      q                 = defaultQuery { query_orderBy = QueryOrder c o } <> q
-    mq (GroupBy g)        q                 = defaultQuery { query_groupBy = g } <> q
-    mq (Having c)         q                 = defaultQuery { query_having = c } <> q
-    mq Distinct           q                 = defaultQuery { query_distinct = True } <> q
-    mq (Limit n)          q                 = defaultQuery { query_limit = Just n } <> q
-    mq (Values v)         q                 = defaultQuery { query_values = makeValues v } <> q
-    mq (Join u t c)       q                 = defaultQuery { query_joins = [makeJoinTable u t c] } <> q
-    mq (Comment t)        q                 = defaultQuery { query_comments = t }
-    mq qL                 qR                = coalesceQuery qL qR
+    mq EmptyQuery           EmptyQuery          = EmptyQuery
+    mq EmptyQuery           q                   = defaultQuery <> q
+    mq q                    EmptyQuery          = defaultQuery <> q
+    mq q@(Query {})         Select              = q { query_type = "SELECT" }
+    mq q@(Query {})         Insert              = q { query_type = "INSERT" }
+    mq q@(Query {})         Update              = q { query_type = "UPDATE" }
+    mq q@(Query {})         Delete              = q { query_type = "DELETE" }
+    mq q@(Query {})         (Table t)           = q { query_table = t }
+    mq q@(Query {})         (Columns c)         = q { query_columns = c }
+    mq q@(Query {})         (Where c)           = q { query_conditions = c }
+    mq q@(Query {})         (OrderBy c o)       = q { query_orderBy = QueryOrder c o }
+    mq q@(Query {})         (GroupBy g)         = q { query_groupBy = g }
+    mq q@(Query {})         (Having c)          = q { query_having = c }
+    mq q@(Query {})         Distinct            = q { query_distinct = True }
+    mq q@(Query {})         (Limit n)           = q { query_limit = Just n }
+    mq q@(Query {})         (Values v)          = q { query_values = makeValues v }
+    mq q@(Query {})         (Join u t c)        = q { query_joins = [makeJoinTable u t Alias.None c] }
+    mq q@(Query {})         (JoinAlias u t a c) = q { query_joins = [makeJoinTable u t a c] }
+    mq q@(Query {})         (Comment t)         = q { query_comments = t }
+    mq Select               q                   = defaultQuery { query_type = "SELECT" } <> q
+    mq Insert               q                   = defaultQuery { query_type = "INSERT" } <> q
+    mq Update               q                   = defaultQuery { query_type = "UPDATE" } <> q
+    mq Delete               q                   = defaultQuery { query_type = "DELETE" } <> q
+    mq (Table t)            q                   = defaultQuery { query_table = t } <> q
+    mq (Columns c)          q                   = defaultQuery { query_columns = c } <> q
+    mq (Where c)            q                   = defaultQuery { query_conditions = c } <> q
+    mq (OrderBy c o)        q                   = defaultQuery { query_orderBy = QueryOrder c o } <> q
+    mq (GroupBy g)          q                   = defaultQuery { query_groupBy = g } <> q
+    mq (Having c)           q                   = defaultQuery { query_having = c } <> q
+    mq Distinct             q                   = defaultQuery { query_distinct = True } <> q
+    mq (Limit n)            q                   = defaultQuery { query_limit = Just n } <> q
+    mq (Values v)           q                   = defaultQuery { query_values = makeValues v } <> q
+    mq (Join u t c)         q                   = defaultQuery { query_joins = [makeJoinTable u t Alias.None c] } <> q
+    mq (JoinAlias u t a c)  q                   = defaultQuery { query_joins = [makeJoinTable u t a c] } <> q
+    mq (Comment t)          q                   = defaultQuery { query_comments = t }
+    mq qL                   qR                  = coalesceQuery qL qR
 
 makeValues ll = rawQueryCondition clause values
   where
@@ -142,10 +139,10 @@ makeValues ll = rawQueryCondition clause values
     group q = "(" <> q <> ")"
     clause = join $ Prelude.map (group . join . replacewith) ll
 
-makeJoinTable utype table cond = JoinTable
+makeJoinTable utype table alias cond = JoinTable
     { join_table      = table
     , join_type       = utype
-    , join_alias      = mempty
+    , join_alias      = alias
     , join_conditions = cond
     }
 

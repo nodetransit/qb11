@@ -15,6 +15,7 @@ import Prelude hiding (and, or, null, not, Left, Right)
 
 import QueryBuilder.Internal.Query
 import QueryBuilder.JoinTable
+import QueryBuilder.Alias as Alias
 import QueryBuilder.Condition
 import QueryBuilder.QueryOrder
 
@@ -35,10 +36,14 @@ querySpec =
       it "query joins" $ (length . query_joins) q `shouldBe` 2
       it "query 1st join type" $ (join_type . head . query_joins) q `shouldBe` Inner
       it "query 1st join table" $ (join_table . head . query_joins) q `shouldBe` "infos"
+      it "query 1st join alias" $ (join_alias  . head . query_joins) q `shouldBe` Alias.None
       it "query 1st join condition" $ (clause . join_conditions . head . query_joins) q `shouldBe` "users.id = infos.uid AND users.disabled <> ? AND infos.deleted IS NOT NULL"
       it "query 1st join condition" $ (bindings . join_conditions . head . query_joins) q `shouldBe` ["0"]
-      it "query 1st join condition" $ (clause . join_conditions . head . tail . query_joins) q `shouldBe` "users.id = logs.uid AND logs.type = ?"
-      it "query 1st join condition" $ (bindings . join_conditions  . head . tail . query_joins) q `shouldBe` ["error"]
+      it "query 2nd join type" $ (join_type . head . tail . query_joins) q `shouldBe` Right
+      it "query 2nd join table" $ (join_table . head . tail . query_joins) q `shouldBe` "logs"
+      it "query 2nd join alias" $ (join_alias  . head . tail . query_joins) q `shouldBe` As "ul"
+      it "query 2nd join condition" $ (clause . join_conditions . head . tail . query_joins) q `shouldBe` "users.id = ul.uid AND ul.type = ?"
+      it "query 2nd join condition" $ (bindings . join_conditions  . head . tail . query_joins) q `shouldBe` ["error"]
       it "query columns" $ query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
       it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
       it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
@@ -102,15 +107,15 @@ checkSelectQuery =
     Select
     <> Distinct
     <> Columns [Column "id", Column "name"]
-    <> From "users"
+    <> Table "users"
     <> Join Inner "infos" (runConditionM $ do
         condition "users.id" (equalsRaw "infos.uid")
         and "users.disabled" (notEquals false)
         and "infos.deleted" isNotNull
        )
-    <> Join Right "logs" (runConditionM $ do
-        condition "users.id" (equalsRaw "logs.uid")
-        and "logs.type" (equals "error")
+    <> JoinAlias Right "logs" (As "ul") (runConditionM $ do
+        condition "users.id" (equalsRaw "ul.uid")
+        and "ul.type" (equals "error")
        )
     <> Where (runConditionM $ do
         condition "deleted" (notEquals "")
@@ -129,7 +134,7 @@ checkSelectQueryNotInOrder_pt1 :: [Query]
 checkSelectQueryNotInOrder_pt1 =
     [ Select
     , Columns [Column "id", Column "title"]
-    , From "albums"
+    , Table "albums"
     , Join Left "info" (runConditionM $ do
         condition "users.id" (equals "info.uid")
         and "deleted" isNotNull
@@ -150,7 +155,7 @@ checkSelectQueryNotInOrder_pt2 =
     [ Select
     , Distinct
     , Columns [Column "id", Column "title"]
-    , From "albums"
+    , Table "albums"
     , GroupBy [Column "genre"]
     , Having (runConditionM $ do
         condition "genre" (like "%prog%")
@@ -162,7 +167,7 @@ checkSelectQueryNotInOrder_pt2 =
 checkInsertQueryNotInOrder :: [Query]
 checkInsertQueryNotInOrder =
     [ Insert
-    , Into "users"
+    , Table "users"
     , Columns [Column "id", Column "name"]
     , Values [["1", "akane"], ["2", "ayumi"], ["3", "ayami"]]
     ]
