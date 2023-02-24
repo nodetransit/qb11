@@ -6,8 +6,8 @@ module QueryBuilder.QueryOrder
 import QueryBuilder.Column
 
 data QueryOrder = QueryOrder
-    { columns :: [Column]
-    , order   :: Order
+    { order_columns :: [Column]
+    , order         :: Order
     }
     deriving ( Show
              , Eq
