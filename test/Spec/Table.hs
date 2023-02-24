@@ -7,6 +7,7 @@ module Spec.Table
 
 import Test.Hspec
 import QueryBuilder.Internal.Query
+import QueryBuilder.QueryTable
 
 tableSpec :: Spec
 tableSpec =
@@ -19,24 +20,24 @@ tableSpec =
 
 -- |
 checkConcatSelectTable :: Bool
-checkConcatSelectTable = query_table q' == "users"
+checkConcatSelectTable = (table_name . query_table) q' == "users"
   where
     q' = Select <> Table "users"
 
 -- |
 checkConcatInsertTable :: Bool
-checkConcatInsertTable = query_table q' == "emails"
+checkConcatInsertTable = (table_name . query_table) q' == "emails"
   where
     q' = Insert <> Table "emails"
 
 -- |
 checkConcatUpdateTable :: Bool
-checkConcatUpdateTable = query_table q' == "infos"
+checkConcatUpdateTable = (table_name . query_table) q' == "infos"
   where
     q' = Update <> Table "infos"
 
 -- |
 checkConcatDeleteTable :: Bool
-checkConcatDeleteTable = query_table q' == "accounts"
+checkConcatDeleteTable = (table_name . query_table) q' == "accounts"
   where
     q' = Delete <> Table "accounts"
