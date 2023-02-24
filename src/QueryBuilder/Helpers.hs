@@ -24,9 +24,9 @@ insert_ = defaultQuery <> Insert
 update_ = defaultQuery <> Update
 delete_ = defaultQuery <> Delete
 
-from_  t = defaultQuery <> From  t
-into_  t = defaultQuery <> Into  t
 table_ t = defaultQuery <> Table t
+from_  t = defaultQuery <> Table t
+into_  t = defaultQuery <> Table t
 
 columns_ c = defaultQuery <> Columns c
 

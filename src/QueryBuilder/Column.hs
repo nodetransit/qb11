@@ -1,11 +1,10 @@
 module QueryBuilder.Column
     ( Column(..)
-    , Alias
     ) where
 
 import Data.Text (Text)
 
-import QueryBuilder
+import QueryBuilder.Alias
 
 data Column = Column         Text
             | ColumnAlias    Text Alias
