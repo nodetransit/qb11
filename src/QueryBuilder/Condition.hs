@@ -45,7 +45,9 @@ module QueryBuilder.Condition
     , notLike
     , notLikeRaw
     , and
+    , andBegin
     , or
+    , orBegin
     , null
     , true
     , false
@@ -230,12 +232,21 @@ and left right = do
     condition left right
 {-# INLINABLE and #-}
 
+andBegin :: (Monad m) => ConditionT m -> ConditionT m
+andBegin = begin and
+{-# INLINABLE andBegin #-}
+
 or :: (Monad m) => Text -> ConditionT m -> ConditionT m
 or left right = do
     Internal.ConditionT $ return (False, Internal.or)
     condition left right
 {-# INLINABLE or #-}
 
+orBegin :: (Monad m) => ConditionT m -> ConditionT m
+orBegin = begin or
+{-# INLINABLE orBegin #-}
+
+-- | basically just ignore the Text of a (Text -> CondT -> CondtT)
 begin :: (Monad m) => (Text -> ConditionT m -> ConditionT m) -> ConditionT m -> ConditionT m
 begin f c = uncurry f ("", grouped) 
   where

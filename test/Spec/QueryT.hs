@@ -52,7 +52,7 @@ testQueryTransformer = (runIdentity . runQueryT) createQuery
         columns [Column "id", Column "name", Column "level"]
         whereCondition $ do
             condition "deleted" isNull
-            and `begin` do
+            andBegin $ do
                 condition "registered" isNotNull
                 or "validated" (equals true)
             and "blocked" (equals false)
