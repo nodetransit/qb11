@@ -19,8 +19,14 @@ conditionTSpec =
     describe "condition transformer" $ do
       context "simple query" $ do
         it "using identity monad" $ do
-          clause testConditionTransformer `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
-          bindings testConditionTransformer `shouldBe` ["1", "", "0", "F", "%G%"]
+          let q = testConditionTransformer
+          clause q `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
+          bindings q `shouldBe` ["1", "", "0", "F", "%G%"]
+
+        it "using identity monad and andBegin" $ do
+          let q = testConditionTransformerAndBegin
+          clause q `shouldBe` "a = ? AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
+          bindings q `shouldBe` ["1", "", "0", "F", "%G%"]
 
         it "using maybe monad" $ do
           clause testConditionTransformerMaybe `shouldBe` "a = ? AND b IS NULL"
@@ -73,6 +79,20 @@ testConditionTransformer = (runIdentity .runConditionT) createQueryCondition
             condition "c" (notEquals "")
             or "c" isNotNull
             or `begin` do
+                condition "d" (notEquals false)
+                and "e" (isNot "F")
+        and "g" (like "%G%")
+
+testConditionTransformerAndBegin :: QueryCondition
+testConditionTransformerAndBegin = (runIdentity .runConditionT) createQueryCondition
+  where
+    createQueryCondition :: ConditionT Identity
+    createQueryCondition = do
+        condition "a" (equals true)
+        andBegin $ do
+            condition "c" (notEquals "")
+            or "c" isNotNull
+            orBegin $ do
                 condition "d" (notEquals false)
                 and "e" (isNot "F")
         and "g" (like "%G%")
