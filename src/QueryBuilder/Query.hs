@@ -12,6 +12,7 @@ module QueryBuilder.Query
     , update
     , insert
     , delete
+ -- , distinct
     , from
     , from_
     , table
@@ -19,6 +20,9 @@ module QueryBuilder.Query
     , into
     , into_
     , columns
+    , column
+    , column_
+ -- , values
     , join
     , join_
     , innerJoin
@@ -34,10 +38,16 @@ module QueryBuilder.Query
     , as
     , on
     , where_
+    , groupBy
+    , having
     , orderBy
+    , desc
+    , asc
+ -- , limit
+ -- , comment
     ) where
 
-import Data.Text as T
+import Data.Text as T hiding (groupBy)
 import Data.Text (Text)
 import Control.Monad hiding (join)
 import Control.Monad.Identity hiding (join)
@@ -48,6 +58,7 @@ import QueryBuilder.Alias as Alias
 import QueryBuilder.Column
 import QueryBuilder.Condition
 import QueryBuilder.QueryOrder
+import QueryBuilder.QueryOrder as Order
 import QueryBuilder.JoinTable
 import Prelude hiding (Left, Right)
 
@@ -113,6 +124,12 @@ columns c = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> Internal.Columns c)
 {-# INLINE columns #-}
 
+column = Column
+{-# INLINE column #-}
+
+column_ = ColumnAlias
+{-# INLINE column_ #-}
+
 where_ :: (Monad m) => ConditionM -> QueryT m
 where_ q = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> (Internal.Where $ runConditionM q))
@@ -122,6 +139,14 @@ orderBy :: (Monad m) => [Column] -> Order -> QueryT m
 orderBy c o = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> Internal.OrderBy c o)
 {-# INLINE orderBy #-}
+
+desc :: Order
+desc = Order.Desc
+{-# INLINE desc #-}
+
+asc :: Order
+asc = Order.Asc
+{-# INLINE asc #-}
 
 joinQuery :: (Monad m) => JoinType -> Alias -> Text -> (a -> a) -> ConditionM -> QueryT m
 joinQuery joinType alias table _ q = Internal.QueryT $ do
@@ -182,4 +207,14 @@ as t = As t
 
 on = id
 {-# INLINE on #-}
+
+groupBy :: (Monad m) => [Column] -> QueryT m
+groupBy c = Internal.QueryT $ do
+    return (True, Internal.defaultQuery <> Internal.GroupBy c)
+{-# INLINE groupBy #-}
+
+having :: (Monad m) => ConditionM -> QueryT m
+having q = Internal.QueryT $ do
+    return (True, Internal.defaultQuery <> (Internal.Having $ runConditionM q))
+{-# INLINE having #-}
 

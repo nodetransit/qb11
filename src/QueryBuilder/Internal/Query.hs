@@ -169,6 +169,7 @@ coalesceQuery qL qR = Query { query_type        = queryType
     limitLen Nothing = 0
     limitLen _       = 1
 
+    -- | here only joins are appended, everything else is coalesced
     queryType       = coalesce T.length       query_type
     queryTable      = coalesce queryTableLen  query_table
     queryColumns    = coalesce Prelude.length query_columns

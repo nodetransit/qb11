@@ -10,7 +10,7 @@ import Test.Hspec.QuickCheck
 import Test.QuickCheck hiding (on)
 
 import Prelude hiding (and, or, null, Left, Right)
-import Data.Text as T hiding (null, length, head, tail)
+import Data.Text as T hiding (null, length, head, tail, groupBy)
 import Control.Monad hiding (join)
 import Control.Monad.Identity hiding (join)
 import System.IO.Unsafe
@@ -81,6 +81,20 @@ queryTSpec =
         (clause . join_conditions . head . query_joins) q `shouldBe` "( c.id = ci.customer_id AND c.valid = ? )"
         (bindings . join_conditions . head . query_joins) q `shouldBe` ["1"]
 
+    context "query group by" $ do
+      let q = testQueryGroupBy
+      it "query" $ do
+        query_type q `shouldBe` "SELECT"
+        (table_name . query_table) q `shouldBe` "users"
+        (table_alias . query_table) q `shouldBe` Alias.None
+        query_groupBy q `shouldBe` [Column "country"]
+        (clause . query_having) q `shouldBe` "count >= ?"
+        (bindings . query_having) q `shouldBe` ["5"]
+      prop "query columns" $ do
+        query_columns q `shouldBeTheSameColumns` [ColumnAlias "COUNT(id)" (As "count"), Column "country"]
+      prop "query order by" $ do
+        (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "count"]
+
 testQueryTransformer :: Query
 testQueryTransformer = (runIdentity . runQueryT) createQuery
   where
@@ -88,14 +102,18 @@ testQueryTransformer = (runIdentity . runQueryT) createQuery
     createQuery = do
         select
         from "users"
-        columns [Column "id", Column "name", Column "level"]
+        columns [ column "id"
+                , column "name"
+                , column "level"]
         where_ $ do
             condition "deleted" isNull
             and_ $ do
                 condition "registered" isNotNull
                 or "validated" (equals true)
             and "blocked" (equals false)
-        orderBy [Column "registered_on", Column "last_login"] Desc
+        orderBy [ column "registered_on"
+                , column "last_login"
+                ] desc
 
 testQueryTransformerJoin :: Query
 testQueryTransformerJoin = (runIdentity . runQueryT) createQuery
@@ -104,7 +122,10 @@ testQueryTransformerJoin = (runIdentity . runQueryT) createQuery
     createQuery = do
         select
         from "artists"
-        columns [Column "artists.id", Column "sales.year", Column "infos.album"]
+        columns [ column "artists.id"
+                , column "sales.year"
+                , column "infos.album"
+                ]
         join "sales" on $ do
             condition "artists.id" (equalsRaw "sales.aid")
         leftJoin "infos" on $ do
@@ -118,8 +139,23 @@ testQueryTransformerJoinAs =
     runQuery $ do
         select
         from_ "customers" (as "c")
-        columns [Column "c.id", Column "c.name", Column "ci.address"]
+        columns [ column "c.id"
+                , column "c.name"
+                , column "ci.address"]
         rightJoin_ "infos" (as "ci") on $ do
             condition "c.id" (equalsRaw "ci.customer_id")
             and "c.valid" (equals true)
+
+testQueryGroupBy :: Query
+testQueryGroupBy =
+    runQuery $ do
+        select
+        from "users"
+        columns [ column_ "COUNT(id)" (as "count")
+                , column  "country"
+                ]
+        groupBy [column "country"]
+        having $ do
+            condition "count" (gte "5")
+        orderBy [column "count"] asc
 
