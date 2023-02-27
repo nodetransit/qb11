@@ -12,7 +12,7 @@ module QueryBuilder.Query
     , update
     , insert
     , delete
- -- , distinct
+    , distinct
     , from
     , from_
     , table
@@ -43,8 +43,9 @@ module QueryBuilder.Query
     , orderBy
     , desc
     , asc
- -- , limit
- -- , comment
+    , limit
+    , comment
+    , comments
     ) where
 
 import Data.Text as T hiding (groupBy)
@@ -91,6 +92,11 @@ delete :: (Monad m) => QueryT m
 delete = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> Internal.Delete)
 {-# INLINE delete #-}
+
+distinct :: (Monad m) => QueryT m
+distinct = Internal.QueryT $ do
+    return (True, Internal.defaultQuery <> Internal.Distinct)
+{-# INLINE distinct #-}
 
 from :: (Monad m) => Text -> QueryT m
 from t = Internal.QueryT $ do
@@ -217,4 +223,18 @@ having :: (Monad m) => ConditionM -> QueryT m
 having q = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> (Internal.Having $ runConditionM q))
 {-# INLINE having #-}
+
+limit :: (Monad m) => Int -> QueryT m
+limit n = Internal.QueryT $ do
+    return (True, Internal.defaultQuery <> Internal.Limit n)
+{-# INLINE limit #-}
+
+comments :: (Monad m) => [Text] -> QueryT m
+comments c = Internal.QueryT $ do
+    return (True, Internal.defaultQuery <> Internal.Comment c)
+{-# INLINE comments #-}
+
+comment :: (Monad m) => Text -> QueryT m
+comment c = comments [c]
+{-# INLINE comment #-}
 

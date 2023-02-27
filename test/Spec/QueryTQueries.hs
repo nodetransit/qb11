@@ -6,13 +6,14 @@ module Spec.QueryTQueries
     , testQueryTransformerJoin
     , testQueryTransformerJoinAs
     , testQueryGroupBy
+    , testDistinctLimitEtc
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
-import Data.Text as T hiding (null, length, head, tail, groupBy)
-import Control.Monad hiding (join)
+-- import Data.Text as T hiding (null, length, head, tail, groupBy)
+-- import Control.Monad hiding (join)
 import Control.Monad.Identity hiding (join)
-import System.IO.Unsafe
+-- import System.IO.Unsafe
 
 import Spec.Util
 
@@ -82,4 +83,16 @@ testQueryGroupBy =
             condition "count" (gte "5")
         orderBy [column "count"] asc
 
+testDistinctLimitEtc :: Query
+testDistinctLimitEtc =
+    runQuery $ do
+        comment "test query using distinct"
+        select
+        distinct
+        columns [ column_ "COUNT(id)" (as "count")
+                , column  "country"
+                ]
+        from "customers"
+        groupBy [column "country"]
+        limit 18
 
