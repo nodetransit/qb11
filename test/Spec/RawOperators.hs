@@ -21,9 +21,39 @@ rawOperatorSpec =
           clause q `shouldBe` "a = A"
           bindings q `shouldBe` mempty
 
+        it "eq" $ do
+          let q = runEqRaw
+          clause q `shouldBe` "aa = AA"
+          bindings q `shouldBe` mempty
+
         it "not equals" $ do
           let q = runNotEqualsRaw
           clause q `shouldBe` "b <> B"
+          bindings q `shouldBe` mempty
+
+        it "neq" $ do
+          let q = runNeqRaw
+          clause q `shouldBe` "bb <> BB"
+          bindings q `shouldBe` mempty
+
+        it "gt" $ do
+          let q = runGtRaw
+          clause q `shouldBe` "cc > CC"
+          bindings q `shouldBe` mempty
+
+        it "gte" $ do
+          let q = runGteRaw
+          clause q `shouldBe` "dd >= DD"
+          bindings q `shouldBe` mempty
+
+        it "lt" $ do
+          let q = runLtRaw
+          clause q `shouldBe` "ee < EE"
+          bindings q `shouldBe` mempty
+
+        it "lte" $ do
+          let q = runLteRaw
+          clause q `shouldBe` "ff <= FF"
           bindings q `shouldBe` mempty
 
         it "is" $ do
@@ -74,8 +104,26 @@ rawOperatorSpec =
 runEqualsRaw :: QueryCondition
 runEqualsRaw = (runIdentity . runConditionT) $ condition "a" (equalsRaw "A")
 
+runEqRaw :: QueryCondition
+runEqRaw = (runIdentity . runConditionT) $ condition "aa" (eqRaw "AA")
+
 runNotEqualsRaw :: QueryCondition
 runNotEqualsRaw = (runIdentity . runConditionT) $ condition "b" (notEqualsRaw "B")
+
+runNeqRaw :: QueryCondition
+runNeqRaw = (runIdentity . runConditionT) $ condition "bb" (neqRaw "BB")
+
+runGtRaw :: QueryCondition
+runGtRaw = (runIdentity . runConditionT) $ condition "cc" (gtRaw "CC")
+
+runGteRaw :: QueryCondition
+runGteRaw = (runIdentity . runConditionT) $ condition "dd" (gteRaw "DD")
+
+runLtRaw :: QueryCondition
+runLtRaw = (runIdentity . runConditionT) $ condition "ee" (ltRaw "EE")
+
+runLteRaw :: QueryCondition
+runLteRaw = (runIdentity . runConditionT) $ condition "ff" (lteRaw "FF")
 
 runIsRaw :: QueryCondition
 runIsRaw = (runIdentity . runConditionT) $ condition "'Akane'" (isRaw "'Love'")
