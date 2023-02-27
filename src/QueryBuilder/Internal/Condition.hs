@@ -18,6 +18,14 @@ module QueryBuilder.Internal.Condition
     , equalsRaw
     , notEquals
     , notEqualsRaw
+    , greaterThan
+    , greaterThanRaw
+    , greaterThanOrEquals
+    , greaterThanOrEqualsRaw
+    , lessThan
+    , lessThanRaw
+    , lessThanOrEquals
+    , lessThanOrEqualsRaw
     , is
     , isRaw
     , isNot
@@ -185,6 +193,38 @@ notEquals v = Condition "<> ?" [v]
 notEqualsRaw :: Text -> QueryCondition
 notEqualsRaw v = Condition ("<> " <> v) []
 {-# INLINABLE notEqualsRaw #-}
+
+greaterThan :: Text -> QueryCondition
+greaterThan v = Condition "> ?" [v]
+{-# INLINABLE greaterThan #-}
+
+greaterThanRaw :: Text -> QueryCondition
+greaterThanRaw v = Condition ("> " <> v) []
+{-# INLINABLE greaterThanRaw #-}
+
+greaterThanOrEquals :: Text -> QueryCondition
+greaterThanOrEquals v = Condition ">= ?" [v]
+{-# INLINABLE greaterThanOrEquals #-}
+
+greaterThanOrEqualsRaw :: Text -> QueryCondition
+greaterThanOrEqualsRaw v = Condition (">= " <> v) []
+{-# INLINABLE greaterThanOrEqualsRaw #-}
+
+lessThan :: Text -> QueryCondition
+lessThan v = Condition "< ?" [v]
+{-# INLINABLE lessThan #-}
+
+lessThanRaw :: Text -> QueryCondition
+lessThanRaw v = Condition ("< " <> v) []
+{-# INLINABLE lessThanRaw #-}
+
+lessThanOrEquals :: Text -> QueryCondition
+lessThanOrEquals v = Condition "<= ?" [v]
+{-# INLINABLE lessThanOrEquals #-}
+
+lessThanOrEqualsRaw :: Text -> QueryCondition
+lessThanOrEqualsRaw v = Condition ("<= " <> v) []
+{-# INLINABLE lessThanOrEqualsRaw #-}
 
 isNull :: QueryCondition
 isNull = Condition "IS NULL" []

@@ -19,10 +19,34 @@ operatorSpec =
         it "equals" $ do
           clause runEquals `shouldBe` "a = ?"
           bindings runEquals `shouldBe` ["A"]
+          clause runEq `shouldBe` "aa = ?"
+          bindings runEq `shouldBe` ["AA"]
 
         it "not equals" $ do
           clause runNotEquals `shouldBe` "b <> ?"
           bindings runNotEquals `shouldBe` ["C"]
+          clause runNotEq `shouldBe` "bb <> ?"
+          bindings runNotEq `shouldBe` ["CC"]
+
+        it "greater than" $ do
+          let q = runGreaterThan
+          clause q `shouldBe` "1 > ?"
+          bindings q `shouldBe` ["2"]
+
+        it "greater than or equals" $ do
+          let q = runGreaterThanOrEquals
+          clause q `shouldBe` "10 >= ?"
+          bindings q `shouldBe` ["20"]
+
+        it "less than" $ do
+          let q = runLessThan
+          clause q `shouldBe` "100 < ?"
+          bindings q `shouldBe` ["200"]
+
+        it "less than or equals" $ do
+          let q = runLessThanOrEquals
+          clause q `shouldBe` "1000 <= ?"
+          bindings q `shouldBe` ["2000"]
 
         it "is" $ do
           clause runIs `shouldBe` "this IS ?"
@@ -84,8 +108,26 @@ operatorSpec =
 runEquals :: QueryCondition
 runEquals = (runIdentity . runConditionT) $ condition "a" (equals "A")
 
+runEq :: QueryCondition
+runEq = (runIdentity . runConditionT) $ condition "aa" (eq "AA")
+
 runNotEquals :: QueryCondition
 runNotEquals = (runIdentity . runConditionT) $ condition "b" (notEquals "C")
+
+runNotEq :: QueryCondition
+runNotEq = (runIdentity . runConditionT) $ condition "bb" (neq "CC")
+
+runGreaterThan :: QueryCondition
+runGreaterThan = (runIdentity . runConditionT) $ condition "1" (gt "2")
+
+runGreaterThanOrEquals :: QueryCondition
+runGreaterThanOrEquals = (runIdentity . runConditionT) $ condition "10" (gte "20")
+
+runLessThan :: QueryCondition
+runLessThan = (runIdentity . runConditionT) $ condition "100" (lt "200")
+
+runLessThanOrEquals :: QueryCondition
+runLessThanOrEquals = (runIdentity . runConditionT) $ condition "1000" (lte "2000")
 
 runIs :: QueryCondition
 runIs = (runIdentity . runConditionT) $ condition "this" (is "that")
