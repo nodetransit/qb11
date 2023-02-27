@@ -136,8 +136,13 @@ makeJoinTable utype table alias cond = JoinTable
     { join_table      = table
     , join_type       = utype
     , join_alias      = alias
-    , join_conditions = cond
+    , join_conditions = grouped cond
     }
+  where
+    grouped q = open <> q <> close
+      where
+        open  = rawQueryCondition "(" []
+        close = rawQueryCondition ")" []
 
 -- | Merge Queries
 coalesceQuery :: Query -> Query -> Query
