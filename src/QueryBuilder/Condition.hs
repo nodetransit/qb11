@@ -45,9 +45,9 @@ module QueryBuilder.Condition
     , notLike
     , notLikeRaw
     , and
-    , andBegin
+    , and_
     , or
-    , orBegin
+    , or_
     , null
     , true
     , false
@@ -232,9 +232,9 @@ and left right = do
     condition left right
 {-# INLINABLE and #-}
 
-andBegin :: (Monad m) => ConditionT m -> ConditionT m
-andBegin = begin and
-{-# INLINABLE andBegin #-}
+and_ :: (Monad m) => ConditionT m -> ConditionT m
+and_ = begin and
+{-# INLINABLE and_ #-}
 
 or :: (Monad m) => Text -> ConditionT m -> ConditionT m
 or left right = do
@@ -242,9 +242,9 @@ or left right = do
     condition left right
 {-# INLINABLE or #-}
 
-orBegin :: (Monad m) => ConditionT m -> ConditionT m
-orBegin = begin or
-{-# INLINABLE orBegin #-}
+or_ :: (Monad m) => ConditionT m -> ConditionT m
+or_ = begin or
+{-# INLINABLE or_ #-}
 
 -- | basically just ignore the Text of a (Text -> CondT -> CondtT)
 begin :: (Monad m) => (Text -> ConditionT m -> ConditionT m) -> ConditionT m -> ConditionT m
