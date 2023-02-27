@@ -33,12 +33,14 @@ queryTSpec =
     context "simple query" $ do
       let q = testQueryTransformer
       it "using identity monad" $ do
+        query_distinct q `shouldBe` False
         query_type q `shouldBe` "SELECT"
         (table_name . query_table) q `shouldBe` "users"
         (table_alias . query_table) q `shouldBe` Alias.None
         (order . query_orderBy) q `shouldBe` Desc
         (clause . query_conditions) q `shouldBe` "deleted IS NULL AND ( registered IS NOT NULL OR validated = ? ) AND blocked = ?"
         (bindings . query_conditions) q `shouldBe` ["1", "0"]
+        query_limit q `shouldBe` Nothing
       prop "using identity monad" $ do
         (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "registered_on", Column "last_login"]
       prop "using identity monad" $ do
@@ -95,4 +97,16 @@ queryTSpec =
         query_columns q `shouldBeTheSameColumns` [ColumnAlias "COUNT(id)" (As "count"), Column "country"]
       prop "query order by" $ do
         (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "count"]
+
+    context "query distinct, limit, comment, etc" $ do
+      let q = testDistinctLimitEtc
+      it "query" $ do
+        query_distinct q `shouldBe` True
+        query_type q `shouldBe` "SELECT"
+        (table_name . query_table) q `shouldBe` "customers"
+        (table_alias . query_table) q `shouldBe` Alias.None
+        query_groupBy q `shouldBe` [Column "country"]
+        query_limit q `shouldBe` Just 18
+      prop "query columns" $ do
+        query_columns q `shouldBeTheSameColumns` [ColumnAlias "COUNT(id)" (As "count"), Column "country"]
 
