@@ -7,6 +7,7 @@ module Spec.QueryTQueries
     , testQueryTransformerJoinAs
     , testQueryGroupBy
     , testDistinctLimitEtc
+    , testInsertValues
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
@@ -95,4 +96,18 @@ testDistinctLimitEtc =
         from "customers"
         groupBy [column "country"]
         limit 18
+
+testInsertValues :: Query
+testInsertValues =
+    runQuery $ do
+        insert
+        into "customers"
+        columns [ column "name"
+                , column  "country"
+                , column  "address"
+                ]
+        values [ ["mark", "us", "12th elm"]
+               , ["james", "ja", "blk. 1"]
+               , ["john", "en", "lot. 18"]
+               ]
 

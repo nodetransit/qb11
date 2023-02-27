@@ -22,7 +22,7 @@ module QueryBuilder.Query
     , columns
     , column
     , column_
- -- , values
+    , values
     , join
     , join_
     , innerJoin
@@ -135,6 +135,11 @@ column = Column
 
 column_ = ColumnAlias
 {-# INLINE column_ #-}
+
+values :: (Monad m) => [[Text]] -> QueryT m
+values v = Internal.QueryT $ do
+    return (True, Internal.defaultQuery <> Internal.Values v)
+{-# INLINE values #-}
 
 where_ :: (Monad m) => ConditionM -> QueryT m
 where_ q = Internal.QueryT $ do
