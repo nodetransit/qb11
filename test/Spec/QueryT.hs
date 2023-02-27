@@ -9,7 +9,7 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck hiding (on)
 
-import Prelude hiding (and, or, null, Left)
+import Prelude hiding (and, or, null, Left, Right)
 import Data.Text as T hiding (null, length, head, tail)
 import Control.Monad hiding (join)
 import Control.Monad.Identity hiding (join)
@@ -56,14 +56,30 @@ queryTSpec =
         (join_type . head . query_joins) q `shouldBe` Inner
         (join_table . head . query_joins) q `shouldBe` "sales"
         (join_alias  . head . query_joins) q `shouldBe` Alias.None
-        (clause . join_conditions . head . query_joins) q `shouldBe` "artists.id = sales.aid"
+        (clause . join_conditions . head . query_joins) q `shouldBe` "( artists.id = sales.aid )"
         (bindings . join_conditions . head . query_joins) q `shouldBe` mempty
       it "2nd join" $ do
         (join_type . head . tail . query_joins) q `shouldBe` Left
         (join_table . head . tail . query_joins) q `shouldBe` "infos"
         (join_alias  . head . tail . query_joins) q `shouldBe` Alias.None
-        (clause . join_conditions . head . tail . query_joins) q `shouldBe` "artists.id = infos.aid AND infos.released = ?"
+        (clause . join_conditions . head . tail . query_joins) q `shouldBe` "( artists.id = infos.aid AND infos.released = ? )"
         (bindings . join_conditions . head . tail . query_joins) q `shouldBe` ["1"]
+
+    context "table joins with alias" $ do
+      let q = testQueryTransformerJoinAs
+      it "query" $ do
+        query_type q `shouldBe` "SELECT"
+        (table_name . query_table) q `shouldBe` "customers"
+        (table_alias . query_table) q `shouldBe` As "c"
+        (length . query_joins) q `shouldBe` 1
+        (clause . query_conditions) q `shouldBe` mempty
+        (bindings . query_conditions) q `shouldBe` mempty
+      it "query join" $ do
+        (join_type . head . query_joins) q `shouldBe` Right
+        (join_table . head . query_joins) q `shouldBe` "infos"
+        (join_alias  . head . query_joins) q `shouldBe` As "ci"
+        (clause . join_conditions . head . query_joins) q `shouldBe` "( c.id = ci.customer_id AND c.valid = ? )"
+        (bindings . join_conditions . head . query_joins) q `shouldBe` ["1"]
 
 testQueryTransformer :: Query
 testQueryTransformer = (runIdentity . runQueryT) createQuery
@@ -96,4 +112,14 @@ testQueryTransformerJoin = (runIdentity . runQueryT) createQuery
             and "infos.released" (equals true)
         where_ $ do
             condition "released" (equalsRaw "NOW()")
+
+testQueryTransformerJoinAs :: Query
+testQueryTransformerJoinAs =
+    runQuery $ do
+        select
+        from_ "customers" (as "c")
+        columns [Column "c.id", Column "c.name", Column "ci.address"]
+        rightJoin_ "infos" (as "ci") on $ do
+            condition "c.id" (equalsRaw "ci.customer_id")
+            and "c.valid" (equals true)
 
