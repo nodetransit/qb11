@@ -89,10 +89,10 @@ testConditionTransformerAndBegin = (runIdentity .runConditionT) createQueryCondi
     createQueryCondition :: ConditionT Identity
     createQueryCondition = do
         condition "a" (equals true)
-        andBegin $ do
+        and_ $ do
             condition "c" (notEquals "")
             or "c" isNotNull
-            orBegin $ do
+            or_ $ do
                 condition "d" (notEquals false)
                 and "e" (isNot "F")
         and "g" (like "%G%")
