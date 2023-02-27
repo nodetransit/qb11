@@ -110,3 +110,30 @@ queryTSpec =
       prop "query columns" $ do
         query_columns q `shouldBeTheSameColumns` [ColumnAlias "COUNT(id)" (As "count"), Column "country"]
 
+    context "insert values" $ do
+      let q = testInsertValues
+      it "query" $ do
+        query_type q `shouldBe` "INSERT"
+        (table_name . query_table) q `shouldBe` "customers"
+        (table_alias . query_table) q `shouldBe` Alias.None
+        (clause . query_values) q `shouldBe` "(?, ?, ?), (?, ?, ?), (?, ?, ?)"
+        (bindings . query_values) q `shouldBe` ["mark", "us", "12th elm", "james", "ja", "blk. 1", "john", "en", "lot. 18"]
+      prop "query columns" $ do
+        query_columns q `shouldBeTheSameColumns` [Column "name", Column "country", Column "address"]
+
+--    context "update values" $ do
+--      it "implement" $ do
+--        True `shouldBe` False
+--
+--    context "delete values" $ do
+--      it "implement" $ do
+--        True `shouldBe` False
+--
+--    context "maybe monad" $ do
+--      it "implement" $ do
+--        True `shouldBe` False
+--
+--    context "io monad" $ do
+--      it "implement" $ do
+--        True `shouldBe` False
+
