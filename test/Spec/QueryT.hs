@@ -121,19 +121,19 @@ queryTSpec =
       prop "query columns" $ do
         query_columns q `shouldBeTheSameColumns` [Column "name", Column "country", Column "address"]
 
---    context "update values" $ do
---      it "implement" $ do
---        True `shouldBe` False
---
---    context "delete values" $ do
---      it "implement" $ do
---        True `shouldBe` False
---
---    context "maybe monad" $ do
---      it "implement" $ do
---        True `shouldBe` False
---
---    context "io monad" $ do
---      it "implement" $ do
---        True `shouldBe` False
+    context "update values" $ do
+      it "implement" $ do
+        True `shouldBe` False
+
+    context "delete values" $ do
+      it "implement" $ do
+        True `shouldBe` False
+
+    context "maybe monad" $ do
+      it "implement" $ do
+        True `shouldBe` False
+
+    context "io monad" $ do
+      it "implement" $ do
+        True `shouldBe` False
 

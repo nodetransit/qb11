@@ -39,6 +39,7 @@ data Query = EmptyQuery
            | Distinct
            | Columns [Column]
            | Values [[Text]]
+           | Set [(Text, Text)]
            | GroupBy [Column]
            | Having QueryCondition
            | Join JoinType Text QueryCondition
@@ -52,6 +53,7 @@ data Query = EmptyQuery
                    , query_distinct    :: Bool
                    , query_columns     :: [Column]
                    , query_values      :: QueryCondition
+                   , query_set         :: [(Text, Text)]
                    , query_groupBy     :: [Column]
                    , query_having      :: QueryCondition
                    , query_joins       :: [JoinTable]
@@ -66,15 +68,16 @@ data Query = EmptyQuery
 defaultQuery = Query { query_type        = mempty
                      , query_table       = QueryTable mempty Alias.None
                      , query_distinct    = False
-                     , query_columns     = []
+                     , query_columns     = mempty
                      , query_values      = mempty
-                     , query_groupBy     = []
+                     , query_set         = mempty
+                     , query_groupBy     = mempty
                      , query_having      = mempty
-                     , query_joins       = []
+                     , query_joins       = mempty
                      , query_conditions  = mempty
-                     , query_orderBy     = QueryOrder[] Order.None
+                     , query_orderBy     = QueryOrder mempty Order.None
                      , query_limit       = Nothing
-                     , query_comments    = []
+                     , query_comments    = mempty
                      }
 
 -- | Concatenate Queries
@@ -95,6 +98,7 @@ modify_query = mq
     mq q@(Query {})         (Table t)           = q { query_table = QueryTable t Alias.None }
     mq q@(Query {})         (TableAlias t a)    = q { query_table = QueryTable t a }
     mq q@(Query {})         (Columns c)         = q { query_columns = c }
+    mq q@(Query {})         (Set p)             = q { query_set = p }
     mq q@(Query {})         (Where c)           = q { query_conditions = c }
     mq q@(Query {})         (OrderBy c o)       = q { query_orderBy = QueryOrder c o }
     mq q@(Query {})         (GroupBy g)         = q { query_groupBy = g }
@@ -112,6 +116,7 @@ modify_query = mq
     mq (Table t)            q                   = defaultQuery { query_table = QueryTable t Alias.None } <> q
     mq (TableAlias t a)     q                   = defaultQuery { query_table = QueryTable t a } <> q
     mq (Columns c)          q                   = defaultQuery { query_columns = c } <> q
+    mq (Set p)              q                   = defaultQuery { query_set = p } <> q
     mq (Where c)            q                   = defaultQuery { query_conditions = c } <> q
     mq (OrderBy c o)        q                   = defaultQuery { query_orderBy = QueryOrder c o } <> q
     mq (GroupBy g)          q                   = defaultQuery { query_groupBy = g } <> q
@@ -150,6 +155,7 @@ coalesceQuery qL qR = Query { query_type        = queryType
                             , query_table       = queryTable
                             , query_distinct    = queryDistinct
                             , query_columns     = queryColumns
+                            , query_set         = querySet
                             , query_values      = queryValues
                             , query_groupBy     = queryGroups
                             , query_having      = queryHaving
@@ -173,6 +179,7 @@ coalesceQuery qL qR = Query { query_type        = queryType
     queryType       = coalesce T.length       query_type
     queryTable      = coalesce queryTableLen  query_table
     queryColumns    = coalesce Prelude.length query_columns
+    querySet        = coalesce Prelude.length query_set
     queryConditions = coalesce conditionLen   query_conditions
     queryOrder      = coalesce orderByLen     query_orderBy
     queryGroups     = coalesce Prelude.length query_groupBy
