@@ -101,6 +101,18 @@ querySpec =
            prop ("testing permutation: " ++ showQueries queries) $ do
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
 
+    context "building an update query in any order should be valid" $ do
+      forM_ (permutations checkUpdateQueryNotInOrder) $
+        \queries -> do
+           let q = foldl' (<>) defaultQuery queries
+           it ("testing permutation: " ++ showQueries queries) $ do
+               query_type q `shouldBe` "UPDATE"
+               (table_name . query_table) q `shouldBe` "users"
+               (table_alias . query_table) q `shouldBe` Alias.None
+               (clause . query_conditions) q `shouldBe` "id <= ?"
+               (bindings . query_conditions) q `shouldBe` ["18"]
+               query_set q `shouldBe` [("name", "a"), ("value", "a")]
+
 -- |
 getColumnCount :: Query -> Int
 getColumnCount = length . query_columns . (EmptyQuery <>)
@@ -174,5 +186,16 @@ checkInsertQueryNotInOrder =
     , Table "users"
     , Columns [Column "id", Column "name"]
     , Values [["1", "akane"], ["2", "ayumi"], ["3", "ayami"]]
+    ]
+
+-- |
+checkUpdateQueryNotInOrder :: [Query]
+checkUpdateQueryNotInOrder =
+    [ Update
+    , Table "users"
+    , Set [("name", "a"), ("value", "a")]
+    , Where (runConditionM $ do
+          condition "id" (lte "18")
+      )
     ]
 

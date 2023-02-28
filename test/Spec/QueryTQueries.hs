@@ -111,3 +111,15 @@ testInsertValues =
                , ["john", "en", "lot. 18"]
                ]
 
+-- testUpdateTable :: Query
+-- testUpdateTable =
+--     runQuery $ do
+--         update
+--         table "customers"
+--         set [ ("name", "ac")
+--             , ("country", "uk")
+--             , ("address", "1st st.")
+--             ]
+--         where_ $ do
+--             condition "id" (isIn ["1", "2", "3"])
+

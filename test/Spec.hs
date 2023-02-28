@@ -8,6 +8,7 @@ import Spec.Table        as Run
 import Spec.ToText       as Run
 import Spec.Operators    as Run
 import Spec.RawOperators as Run
+import Spec.Set          as Run
 
 main :: IO ()
 main = do
@@ -22,4 +23,4 @@ main = do
         Run.conditionTSpec
         Run.operatorSpec
         Run.rawOperatorSpec
-
+        Run.setSpec

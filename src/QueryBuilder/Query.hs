@@ -16,12 +16,11 @@ module QueryBuilder.Query
     , from
     , from_
     , table
-    , table_
     , into
-    , into_
     , columns
     , column
     , column_
+    , set
     , values
     , join
     , join_
@@ -113,17 +112,9 @@ table :: (Monad m) => Text -> QueryT m
 table = from
 {-# INLINE table #-}
 
-table_ :: (Monad m) => Text -> Alias -> QueryT m
-table_ = from_
-{-# INLINE table_ #-}
-
 into :: (Monad m) => Text -> QueryT m
 into = from
 {-# INLINE into #-}
-
-into_ :: (Monad m) => Text -> Alias -> QueryT m
-into_ = from_
-{-# INLINE into_ #-}
 
 columns :: (Monad m) => [Column] -> QueryT m
 columns c = Internal.QueryT $ do
@@ -140,6 +131,11 @@ values :: (Monad m) => [[Text]] -> QueryT m
 values v = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> Internal.Values v)
 {-# INLINE values #-}
+
+set :: (Monad m) => [(Text, Text)] -> QueryT m
+set v = Internal.QueryT $ do
+    return (True, Internal.defaultQuery <> Internal.Set v)
+{-# INLINE set #-}
 
 where_ :: (Monad m) => ConditionM -> QueryT m
 where_ q = Internal.QueryT $ do
