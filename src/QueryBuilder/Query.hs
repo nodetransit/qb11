@@ -49,6 +49,7 @@ module QueryBuilder.Query
 
 import Data.Text as T hiding (groupBy)
 import Data.Text (Text)
+import Data.Semigroup
 import Control.Monad hiding (join)
 import Control.Monad.Identity hiding (join)
 import Control.Applicative

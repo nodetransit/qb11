@@ -60,6 +60,7 @@ module QueryBuilder.Internal.Condition
 
 import Data.Text as T hiding (null)
 import Data.Text (Text)
+import Data.Semigroup
 import Control.Monad
 import Control.Monad.Fail as Fail
 import Control.Monad.IO.Class
@@ -79,15 +80,16 @@ data
 
 type QueryCondition = Condition Text [Text]
 
-instance (Monoid a, Monoid b) => Semigroup (Condition a b) where
+instance (Semigroup a, Semigroup b, Monoid a, Monoid b) => Semigroup (Condition a b) where
     (<>) (Condition aL bL) (Condition aR bR) = Condition (join aL aR) (bL <> bR)
       where
         join "" b  = b
         join a  "" = a
         join a  b  = a <> " " <> b
 
-instance (Monoid a, Monoid b) => Monoid (Condition a b) where
-    mempty = Condition mempty mempty
+instance (Semigroup a, Semigroup b, Monoid a, Monoid b) => Monoid (Condition a b) where
+    mempty  = Condition mempty mempty
+    mappend = (<>)
 
 -- instance Functor (Condition a) where
 --     fmap :: (b1 -> b2) -> Condition a b1 -> Condition a b2
@@ -116,7 +118,7 @@ instance (Functor m) => Functor (ConditionT a m) where
         mapConditionT f m = ConditionT $ f (runConditionT m)
     {-# INLINE fmap #-}
 
-instance (Monoid a, Applicative m) => Applicative (ConditionT a m) where
+instance (Semigroup a, Monoid a, Applicative m) => Applicative (ConditionT a m) where
     pure a = ConditionT $ pure (a, mempty)
     {-# INLINE pure #-}
 
@@ -128,21 +130,21 @@ instance (Monoid a, Applicative m) => Applicative (ConditionT a m) where
         v' = runConditionT v
     {-# INLINE (<*>) #-}
 
--- instance (Monoid c, Alternative m) => Alternative (ConditionT c m) where
+-- instance (Semigroup c, Monoid c, Alternative m) => Alternative (ConditionT c m) where
 --     empty = ConditionT Control.Applicative.empty
 --     {-# INLINE empty #-}
 --
 --     (<|>) m n = ConditionT $ runConditionT m <|> runConditionT n
 --     {-# INLINE (<|>) #-}
 
--- instance (Monoid w, MonadPlus m) => MonadPlus (ConditionT w m) where
+-- instance (Semigroup w, Monoid w, MonadPlus m) => MonadPlus (ConditionT w m) where
 --     mzero = ConditionT mzero
 --     {-# INLINE mzero #-}
 --
 --     mplus left right = ConditionT $ mplus (runConditionT left) (runConditionT right)
 --     {-# INLINE mplus #-}
 
-instance (Monoid a, Monad m) => Monad (ConditionT a m) where
+instance (Semigroup a, Monoid a, Monad m) => Monad (ConditionT a m) where
     return :: b -> ConditionT a m b
     -- return b = ConditionT $ \b -> return (b, mempty)
     return b = do
@@ -156,15 +158,15 @@ instance (Monoid a, Monad m) => Monad (ConditionT a m) where
         return (b', a <> a')
     {-# INLINE (>>=) #-}
 
--- instance (Monoid c, Fail.MonadFail m) => Fail.MonadFail (ConditionT c m) where
+-- instance (Semigroup c, Monoid c, Fail.MonadFail m) => Fail.MonadFail (ConditionT c m) where
 --     fail msg = ConditionT $ Fail.fail msg
 --     {-# INLINE fail #-}
 
-instance (Monoid c, MonadIO m) => MonadIO (ConditionT c m) where
+instance (Semigroup c, Monoid c, MonadIO m) => MonadIO (ConditionT c m) where
     liftIO = lift . liftIO
     {-# INLINE liftIO #-}
 
-instance (Monoid c) => MonadTrans (ConditionT c) where
+instance (Semigroup c, Monoid c) => MonadTrans (ConditionT c) where
     lift m = ConditionT $ do
         a <- m
         return (a, mempty)

@@ -10,6 +10,7 @@ module Spec.Util
 -- import Data.Text as T hiding (map, length, all, zipWith)
 -- import Data.Text (Text)
 import Data.List
+import Data.Semigroup
 import Test.QuickCheck
 import QueryBuilder.Internal.Query
 

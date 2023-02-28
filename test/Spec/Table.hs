@@ -6,6 +6,7 @@ module Spec.Table
     ) where
 
 import Test.Hspec
+import Data.Semigroup
 import QueryBuilder.Internal.Query
 import QueryBuilder.QueryTable
 

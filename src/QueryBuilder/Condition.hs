@@ -68,6 +68,7 @@ module QueryBuilder.Condition
 
 import Data.Text as T hiding (null)
 import Data.Text (Text)
+import Data.Semigroup
 import Control.Monad
 import Control.Monad.Identity
 import qualified Control.Monad.IO.Class as MIO

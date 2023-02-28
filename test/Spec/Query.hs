@@ -8,6 +8,7 @@ module Spec.Query
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck
+import Data.Semigroup
 import Spec.Util
 import Control.Monad
 import Data.List hiding (and, or)

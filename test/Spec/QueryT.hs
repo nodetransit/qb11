@@ -11,6 +11,7 @@ import Test.QuickCheck hiding (on)
 
 import Prelude hiding (and, or, null, Left, Right)
 import Data.Text as T hiding (null, length, head, tail, groupBy)
+import Data.Semigroup
 import Control.Monad hiding (join)
 import Control.Monad.Identity hiding (join)
 import System.IO.Unsafe

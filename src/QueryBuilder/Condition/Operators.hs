@@ -9,6 +9,7 @@ module QueryBuilder.Condition.Operators
 
 import Data.Text as T
 import Data.Text (Text)
+import Data.Semigroup
 import Control.Monad
 import Prelude hiding ((&&), (||))
 
