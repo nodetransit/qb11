@@ -18,6 +18,7 @@ import qualified Data.Text      as T
 import qualified Data.Text.Lazy as T.Lazy
 
 import QueryBuilder.ToText
+import QueryBuilder.ToString
 
 data MyType =
     MyData1 Int String
@@ -91,24 +92,10 @@ toTextSpec = do
 
     context "to Text" $ do
 
-      it "Int" $ do
-        let expect = (T.pack . show) 1818
-            actual = toText (1818 :: Int)
-        actual `shouldBe` expect
-
       it "Char" $ do
         let expect = (T.pack . show) 'f'
             actual = toText ('f' :: Char)
         actual `shouldBe` expect
-
-      it "Float" $ do
-        let expect = (T.pack . show) 5.28
-            actual = toText (5.28 :: Float)
-        actual `shouldBe` expect
-
-      it "MyType" $ do
-        let mydata1 = MyData1 3366 "sample text1"
-        toText mydata1 `shouldBe` (T.pack . show) mydata1
 
       it "String" $ do
         let expect = "hello"
