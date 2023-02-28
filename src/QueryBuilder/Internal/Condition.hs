@@ -71,7 +71,7 @@ import Prelude hiding (and, or, null, not, (&&), (||))
 data
     -- (Monoid clause, Monoid bindings) =>
     Condition a b = Condition
-        { clause :: Text
+        { clause   :: Text
         , bindings :: b
         }
         deriving ( Show

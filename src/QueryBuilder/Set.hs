@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module QueryBuilder.Set
-    ( X(..)
+    ( SetValue(..)
     , clause
     , bindings
     ) where
@@ -9,19 +9,26 @@ module QueryBuilder.Set
 import Data.Text as T hiding (map, filter)
 import Data.Semigroup
 
-data X = X Text Text
-       | XRaw Text Text
+data SetValue = SetValue Text Text
+              | SetValueRaw Text Text
 
-clause :: [X] -> Text
+clause :: [SetValue] -> Text
 clause a = T.intercalate "," $ map g a
   where
-    g (X c _) = c <> " = ?"
-    g (XRaw c v) = c <> " = " <> v
+    g (SetValue c _) = c <> " = ?"
+    g (SetValueRaw c v) = c <> " = " <> v
 
-bindings :: [X] -> [Text]
+bindings :: [SetValue] -> [Text]
 bindings a = map f $ filter g a
   where
-    g (X _ _) = True
-    g (XRaw _ _) = False
+    g (SetValue _ _) = True
+    g (SetValueRaw _ _) = False
 
-    f (X _ v) = v
+    f (SetValue _ v) = v
+
+-- (:=) :: Text -> Text -> SetValue
+-- (:=) col val = SetValue col val
+
+-- (!=) :: Text -> Text -> SetValue
+-- (!=) col val = SetValueRaw col val
+

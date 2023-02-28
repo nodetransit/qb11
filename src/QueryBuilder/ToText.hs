@@ -5,8 +5,8 @@
 {-# LANGUAGE IncoherentInstances #-}
 
 module QueryBuilder.ToText
-    ( ToString(..)
-    , ToText(..)
+    ( ToText(..)
+    , Raw(..)
     ) where
 
 import qualified Data.ByteString       as B
@@ -22,80 +22,51 @@ import qualified Data.Text.Lazy          as TL
 import qualified Data.Text.Encoding      as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 
-data TrueType
+import Data.String
 
-data FalseType
-
-type family TypeEqF a b where
-    TypeEqF a a = TrueType
-    TypeEqF a b = FalseType
-
-type TypeNeq a b = TypeEqF a b ~ FalseType
-
-class ToString a where
-    toString :: a -> String
-
-instance ToString String where
-    toString = id
-
-instance ToString B.Char8.ByteString where
-    toString = B.Char8.unpack
-
-instance ToString BL.Char8.ByteString where
-    toString = BL.Char8.unpack
-
-instance ToString BS.Short.ShortByteString where
-    toString = toString . BS.Short.fromShort
-
-instance ToString T.Text where
-    toString = T.unpack
-
-instance ToString TL.Text where
-    toString = TL.unpack
-
--- (All Show instances can be ToString)
-instance ( Show a
-         , TypeNeq a String
-         , TypeNeq a B.Char8.ByteString
-         , TypeNeq a BL.Char8.ByteString
-         , TypeNeq a BS.Short.ShortByteString
-         , TypeNeq a T.Text
-         , TypeNeq a TL.Text
-         ) => ToString a
-      where
-        toString = show 
-
-
-class ToText a where
+class (Show a) => ToText a where
     toText :: a -> T.Text
+    toBind :: a -> T.Text
+
+instance ToText Char where
+    toText = T.pack . show
+    toBind _ = T.pack ""
 
 instance ToText String where
     toText = T.pack
+    toBind _ = T.pack ""
 
 instance ToText B.Char8.ByteString where
     toText = TE.decodeUtf8
+    toBind _ = T.pack ""
 
 instance ToText BL.Char8.ByteString where
     toText = TE.decodeUtf8 . B.concat . BL.toChunks
+    toBind _ = T.pack ""
 
 instance ToText BS.Short.ShortByteString where
     toText = toText . BS.Short.fromShort
+    toBind _ = T.pack ""
 
 instance ToText T.Text where
     toText = id
+    toBind _ = T.pack ""
 
 instance ToText TL.Text where
     toText = TL.toStrict
+    toBind _ = T.pack ""
 
--- (All Show instances can be ToText)
-instance ( Show a
-         , TypeNeq a String
-         , TypeNeq a B.Char8.ByteString
-         , TypeNeq a BL.Char8.ByteString
-         , TypeNeq a BS.Short.ShortByteString
-         , TypeNeq a T.Text
-         , TypeNeq a TL.Text
-         ) => ToText a
-      where
-        toText = T.pack . show 
+-- instance (Show a, Num a) => ToText a where
+--     toText = T.pack . show
+--     toBind _ = T.pack ""
+
+instance ToText Raw where
+    toText _ = T.pack "?"
+    toBind (Raw t) = t
+
+data Raw = Raw T.Text
+         deriving Show
+
+instance IsString (Raw) where
+    fromString = Raw . T.pack
 
