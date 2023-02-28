@@ -7,6 +7,7 @@ module QueryBuilder.Set
     ) where
 
 import Data.Text as T hiding (map, filter)
+import Data.Semigroup
 
 data X = X Text Text
        | XRaw Text Text

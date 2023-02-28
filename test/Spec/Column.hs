@@ -7,6 +7,7 @@ module Spec.Column
 
 import Test.Hspec
 import Test.Hspec.QuickCheck
+import Data.Semigroup
 import Spec.Util
 
 import QueryBuilder.Internal.Query

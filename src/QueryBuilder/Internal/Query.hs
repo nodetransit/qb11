@@ -14,6 +14,7 @@ module QueryBuilder.Internal.Query
 
 import Data.Text as T
 import Data.Text (Text)
+import Data.Semigroup
 import Control.Monad
 import Control.Monad.Fail as Fail
 import Control.Monad.IO.Class
@@ -209,7 +210,7 @@ instance (Functor m) => Functor (QueryT a m) where
         mapQueryT f m = QueryT $ f (runQueryT m)
     {-# INLINE fmap #-}
 
-instance (Monoid a, Applicative m) => Applicative (QueryT a m) where
+instance (Semigroup a, Monoid a, Applicative m) => Applicative (QueryT a m) where
     pure a = QueryT $ pure (a, mempty)
     {-# INLINE pure #-}
 
@@ -221,21 +222,21 @@ instance (Monoid a, Applicative m) => Applicative (QueryT a m) where
         v' = runQueryT v
     {-# INLINE (<*>) #-}
 
--- instance (Monoid c, Alternative m) => Alternative (QueryT c m) where
+-- instance (Semigroup c, Monoid c, Alternative m) => Alternative (QueryT c m) where
 --     empty = QueryT Control.Applicative.empty
 --     {-# INLINE empty #-}
 --
 --     (<|>) m n = QueryT $ runQueryT m <|> runQueryT n
 --     {-# INLINE (<|>) #-}
 
--- instance (Monoid w, MonadPlus m) => MonadPlus (QueryT w m) where
+-- instance (Semigroup w, Monoid w, MonadPlus m) => MonadPlus (QueryT w m) where
 --     mzero = QueryT mzero
 --     {-# INLINE mzero #-}
 --
 --     mplus left right = QueryT $ mplus (runQueryT left) (runQueryT right)
 --     {-# INLINE mplus #-}
 
-instance (Monoid a, Monad m) => Monad (QueryT a m) where
+instance (Semigroup a, Monoid a, Monad m) => Monad (QueryT a m) where
     return :: b -> QueryT a m b
     -- return b = QueryT $ \b -> return (b, mempty)
     return b = do
@@ -249,15 +250,15 @@ instance (Monoid a, Monad m) => Monad (QueryT a m) where
         return (b', a <> a')
     {-# INLINE (>>=) #-}
 
--- instance (Monoid c, Fail.MonadFail m) => Fail.MonadFail (QueryT c m) where
+-- instance (Semigroup c, Monoid c, Fail.MonadFail m) => Fail.MonadFail (QueryT c m) where
 --     fail msg = QueryT $ Fail.fail msg
 --     {-# INLINE fail #-}
 
-instance (Monoid c, MonadIO m) => MonadIO (QueryT c m) where
+instance (Semigroup c, Monoid c, MonadIO m) => MonadIO (QueryT c m) where
     liftIO = lift . liftIO
     {-# INLINE liftIO #-}
 
-instance (Monoid c) => MonadTrans (QueryT c) where
+instance (Semigroup c, Monoid c) => MonadTrans (QueryT c) where
     lift m = QueryT $ do
         a <- m
         return (a, mempty)

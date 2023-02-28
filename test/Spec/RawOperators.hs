@@ -6,6 +6,7 @@ module Spec.RawOperators
 
 import Prelude hiding (and, or, null, not, (&&), (||))
 import Data.Text as T hiding (null)
+import Data.Semigroup
 import Test.Hspec
 import Control.Monad.Identity
 

@@ -1,8 +1,23 @@
+# GHC 7.8.3  lts-0.0   -> lts-0.7
+# GHC 7.8.4  lts-1.0   -> lts-2.22
+# GHC 7.10.2 lts-3.0   -> lts-3.22
+# GHC 7.10.3 lts-4.0   -> lts-6.35
+# GHC 8.0.1  lts-7.0   -> lts-7.24
+# GHC 8.0.2  lts-8.0   -> lts-9.21
+# GHC 8.2.2  lts-10.0  -> lts-10.3
+# GHC 8.6.5  lts-13.27 -> lts-13.30
+# GHC 9.0.2  lts-19.10
+# GHC 9.2.5  lts-20.5  -> lts-20.12
+
+
+resolver: lts-7.24
 # resolver: lts-3.5
 # resolver: nightly-2015-09-21
 # resolver: ghc-7.10.2
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/10.yaml
+
+# resolver: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/10.yaml
+# resolver: lts-19.10
 
 packages:
 - .

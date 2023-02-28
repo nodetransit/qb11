@@ -6,6 +6,7 @@ module Spec.Condition
 
 import Prelude hiding (and, or, null, (&&), (||))
 import Data.Text as T hiding (null)
+import Data.Semigroup
 import Test.Hspec
 import Control.Monad.Identity
 

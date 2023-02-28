@@ -12,6 +12,7 @@ module Spec.QueryTQueries
 
 import Prelude hiding (and, or, null, Left, Right)
 -- import Data.Text as T hiding (null, length, head, tail, groupBy)
+import Data.Semigroup
 -- import Control.Monad hiding (join)
 import Control.Monad.Identity hiding (join)
 -- import System.IO.Unsafe
@@ -111,15 +112,15 @@ testInsertValues =
                , ["john", "en", "lot. 18"]
                ]
 
--- testUpdateTable :: Query
--- testUpdateTable =
---     runQuery $ do
---         update
---         table "customers"
---         set [ ("name", "ac")
---             , ("country", "uk")
---             , ("address", "1st st.")
---             ]
---         where_ $ do
---             condition "id" (isIn ["1", "2", "3"])
+testUpdateTable :: Query
+testUpdateTable =
+    runQuery $ do
+        update
+        table "customers"
+        set [ ("name", "ac")
+            , ("country", "uk")
+            , ("address", "1st st.")
+            ]
+        where_ $ do
+            condition "id" (isIn ["1", "2", "3"])
 
