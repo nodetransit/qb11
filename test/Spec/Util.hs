@@ -2,6 +2,7 @@
 
 module Spec.Util
     ( isEmptyQuery
+    , shouldBeImplemented
     , shouldBeTheSameColumns
     , showQuery
     , showQueries
@@ -37,6 +38,10 @@ showQuery q = f q
 
 showQueries qs = intercalate ", " $ map showQuery qs
 
+-- | 
+shouldBeImplemented :: Property
+shouldBeImplemented = property $ False
+
 -- | check if query is an EmptyQuery
 isEmptyQuery :: Query -> Bool
 isEmptyQuery EmptyQuery = True
@@ -45,7 +50,7 @@ isEmptyQuery _          = True
 -- | compare if the array is similar
 shouldBeTheSameColumns :: [Column] -> [Column] -> Property
 shouldBeTheSameColumns csL csR | length csL /= length csR = property $ False
-                      | otherwise                = property $ all (==True) $ zipWith compareColumn csL csR
+                               | otherwise                = property $ all (==True) $ zipWith compareColumn csL csR
                     where
                       compareColumn :: Column -> Column -> Bool
                       compareColumn (Column cl)            (Column cr)            = cl == cr

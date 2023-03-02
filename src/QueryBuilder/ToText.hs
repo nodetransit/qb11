@@ -6,7 +6,6 @@
 
 module QueryBuilder.ToText
     ( ToText(..)
-    , Raw(..)
     ) where
 
 import qualified Data.ByteString       as B
@@ -22,51 +21,45 @@ import qualified Data.Text.Lazy          as TL
 import qualified Data.Text.Encoding      as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 
-import Data.String
+import QueryBuilder.Raw
 
 class (Show a) => ToText a where
     toText :: a -> T.Text
-    toBind :: a -> T.Text
+    toBind :: a -> [T.Text]
 
 instance ToText Char where
     toText = T.pack . show
-    toBind _ = T.pack ""
+    toBind _ = []
 
 instance ToText String where
     toText = T.pack
-    toBind _ = T.pack ""
+    toBind _ = []
 
 instance ToText B.Char8.ByteString where
     toText = TE.decodeUtf8
-    toBind _ = T.pack ""
+    toBind _ = []
 
 instance ToText BL.Char8.ByteString where
     toText = TE.decodeUtf8 . B.concat . BL.toChunks
-    toBind _ = T.pack ""
+    toBind _ = []
 
 instance ToText BS.Short.ShortByteString where
     toText = toText . BS.Short.fromShort
-    toBind _ = T.pack ""
+    toBind _ = []
 
 instance ToText T.Text where
     toText = id
-    toBind _ = T.pack ""
+    toBind _ = []
 
 instance ToText TL.Text where
     toText = TL.toStrict
-    toBind _ = T.pack ""
+    toBind _ = []
 
 -- instance (Show a, Num a) => ToText a where
 --     toText = T.pack . show
---     toBind _ = T.pack ""
+--     toBind _ = []
 
 instance ToText Raw where
     toText _ = T.pack "?"
-    toBind (Raw t) = t
-
-data Raw = Raw T.Text
-         deriving Show
-
-instance IsString (Raw) where
-    fromString = Raw . T.pack
+    toBind (Raw t) = [t]
 
