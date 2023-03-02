@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS -Wno-missing-fields #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 module Spec.Query
     ( querySpec
@@ -20,6 +21,8 @@ import QueryBuilder.Alias as Alias
 import QueryBuilder.Condition
 import QueryBuilder.QueryTable
 import QueryBuilder.QueryOrder
+import QueryBuilder.Set
+import QueryBuilder.Raw
 
 querySpec :: Spec
 querySpec =
@@ -97,8 +100,8 @@ querySpec =
                query_type q `shouldBe` "INSERT"
                (table_name . query_table) q `shouldBe` "users"
                (table_alias . query_table) q `shouldBe` Alias.None
-               (clause . query_values) q `shouldBe` "(?, ?), (?, ?), (?, ?)"
-               (bindings . query_values) q `shouldBe` ["1", "akane", "2", "ayumi", "3", "ayami"]
+               (clause . query_values) q `shouldBe` "(?, akane), (2, ?), (?, ?)"
+               (bindings . query_values) q `shouldBe` ["1", "ayumi", "3", "ayami"]
            prop ("testing permutation: " ++ showQueries queries) $ do
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
 
@@ -112,7 +115,8 @@ querySpec =
                (table_alias . query_table) q `shouldBe` Alias.None
                (clause . query_conditions) q `shouldBe` "id <= ?"
                (bindings . query_conditions) q `shouldBe` ["18"]
-               query_set q `shouldBe` [("name", "a"), ("value", "a")]
+               (set_clause . query_set) q `shouldBe` "name = ?, value = ?, register = NOW()"
+               (set_bindings . query_set) q `shouldBe` ["a", "v"]
 
 -- |
 getColumnCount :: Query -> Int
@@ -186,7 +190,10 @@ checkInsertQueryNotInOrder =
     [ Insert
     , Table "users"
     , Columns [Column "id", Column "name"]
-    , Values [["1", "akane"], ["2", "ayumi"], ["3", "ayami"]]
+    , Values [ [Value "" "1" , Value "akane" ""]
+             , [Value "2" ""  , Value "" "ayumi"]
+             , [Value "" "3"  , Value "" "ayami"]
+             ]
     ]
 
 -- |
@@ -194,7 +201,10 @@ checkUpdateQueryNotInOrder :: [Query]
 checkUpdateQueryNotInOrder =
     [ Update
     , Table "users"
-    , Set [("name", "a"), ("value", "a")]
+    , Set [ SetValue "name" "" "a"
+          , SetValue "value" "" "v"
+          , SetValue "register" "NOW()" ""
+          ]
     , Where (runConditionM $ do
           condition "id" (lte "18")
       )

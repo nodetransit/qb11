@@ -21,6 +21,7 @@ module QueryBuilder.Query
     , column
     , column_
     , set
+    , value
     , values
     , join
     , join_
@@ -47,6 +48,7 @@ module QueryBuilder.Query
     , comments
     ) where
 
+import Prelude hiding (Left, Right)
 import Data.Text as T hiding (groupBy)
 import Data.Text (Text)
 import Data.Semigroup
@@ -61,7 +63,9 @@ import QueryBuilder.Condition
 import QueryBuilder.QueryOrder
 import QueryBuilder.QueryOrder as Order
 import QueryBuilder.JoinTable
-import Prelude hiding (Left, Right)
+import QueryBuilder.Raw
+import QueryBuilder.Set
+import QueryBuilder.ToText
 
 type Query = Internal.Query
 type QueryT m = Internal.QueryT Query m Bool
@@ -128,12 +132,18 @@ column = Column
 column_ = ColumnAlias
 {-# INLINE column_ #-}
 
-values :: (Monad m) => [[Text]] -> QueryT m
+values :: (Monad m) => [[Value]] -> QueryT m
 values v = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> Internal.Values v)
 {-# INLINE values #-}
 
-set :: (Monad m) => [(Text, Text)] -> QueryT m
+value :: (ToText t) => t -> Value
+value t = Value v b
+  where
+    v = toText t
+    b = toBind t
+
+set :: (Monad m) => [SetValue] -> QueryT m
 set v = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> Internal.Set v)
 {-# INLINE set #-}

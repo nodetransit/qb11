@@ -26,46 +26,46 @@ toTextSpec = do
 
       it "Char" $ do
         let expect = (T.pack . show) 'f'
-            actual = toText ('f' :: Char)
+            actual = toBind ('f' :: Char)
         actual `shouldBe` expect
 
       it "String" $ do
         let expect = "hello"
-            actual = toText ("hello" :: String)
+            actual = toBind ("hello" :: String)
         actual `shouldBe` expect
 
       it "ByteString" $ do
         let expect = "hello"
-            actual = toText ("hello" :: BS.Char8.ByteString)
+            actual = toBind ("hello" :: BS.Char8.ByteString)
         actual `shouldBe` expect
 
       it "Lazy ByteString" $ do
         let expect = "hello"
-            actual = toText ("hello" :: BS.Lazy.Char8.ByteString)
+            actual = toBind ("hello" :: BS.Lazy.Char8.ByteString)
         actual `shouldBe` expect
 
       it "Short ByteString" $ do
         let expect = "hello"
-            actual = toText ("hello" :: BS.Short.ShortByteString)
+            actual = toBind ("hello" :: BS.Short.ShortByteString)
         actual `shouldBe` expect
 
       it "UTF8 ByteString" $ do
         let expect = "hello"
-            actual = toText ("hello" :: BS.UTF8.ByteString)
+            actual = toBind ("hello" :: BS.UTF8.ByteString)
         actual `shouldBe` expect
 
       it "UTF8 Lazy ByteString" $ do
         let expect = "hello"
-            actual = toText ("hello" :: BS.Lazy.UTF8.ByteString)
+            actual = toBind ("hello" :: BS.Lazy.UTF8.ByteString)
         actual `shouldBe` expect
 
       it "Text" $ do
         let expect = "hello"
-            actual = toText ("hello" :: T.Text)
+            actual = toBind ("hello" :: T.Text)
         actual `shouldBe` expect
 
       it "Lazy Text" $ do
         let expect = "hello"
-            actual = toText ("hello" :: T.Lazy.Text)
+            actual = toBind ("hello" :: T.Lazy.Text)
         actual `shouldBe` expect
 

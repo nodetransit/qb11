@@ -42,9 +42,9 @@ teq l r = TQuery clause bindg
     clause = tl <> " TEQ " <> tr
 
     bindg  :: [Text]
-    bindg  = bl <> br
+    bindg  = filter (\b -> b /= mempty) $ [bl] <> [br]
 
 f :: TQuery
-f = "akane" `teq` ("love" :: Raw)
+f = ("akane" :: Raw) `teq` "love"
 
 

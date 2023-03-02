@@ -6,6 +6,7 @@
 
 module QueryBuilder.ToText
     ( ToText(..)
+    , module QueryBuilder.Raw
     ) where
 
 import qualified Data.ByteString       as B
@@ -25,41 +26,45 @@ import QueryBuilder.Raw
 
 class (Show a) => ToText a where
     toText :: a -> T.Text
-    toBind :: a -> [T.Text]
+    toBind :: a -> T.Text
 
 instance ToText Char where
-    toText = T.pack . show
-    toBind _ = []
+    toText _ = T.pack "?"
+    toBind = T.pack . show
 
 instance ToText String where
-    toText = T.pack
-    toBind _ = []
+    toText _ = T.pack "?"
+    toBind = T.pack
 
 instance ToText B.Char8.ByteString where
-    toText = TE.decodeUtf8
-    toBind _ = []
+    toText _ = T.pack "?"
+    toBind = TE.decodeUtf8
 
 instance ToText BL.Char8.ByteString where
-    toText = TE.decodeUtf8 . B.concat . BL.toChunks
-    toBind _ = []
+    toText _ = T.pack "?"
+    toBind = TE.decodeUtf8 . B.concat . BL.toChunks
 
 instance ToText BS.Short.ShortByteString where
-    toText = toText . BS.Short.fromShort
-    toBind _ = []
+    toText _ = T.pack "?"
+    toBind = TE.decodeUtf8 . BS.Short.fromShort
 
 instance ToText T.Text where
-    toText = id
-    toBind _ = []
+    toText _ = T.pack "?"
+    toBind = id
 
 instance ToText TL.Text where
-    toText = TL.toStrict
-    toBind _ = []
+    toText _ = T.pack "?"
+    toBind = TL.toStrict
 
 -- instance (Show a, Num a) => ToText a where
+--     toBind _ = T.pack "?"
 --     toText = T.pack . show
---     toBind _ = []
 
 instance ToText Raw where
-    toText _ = T.pack "?"
-    toBind (Raw t) = [t]
+    toText (Raw t) = t
+    toBind _ = T.pack ""
+
+instance ToText Value where
+    toText (Value t _) = t
+    toBind (Value _ b) = b
 
