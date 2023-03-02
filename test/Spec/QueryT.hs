@@ -117,20 +117,20 @@ queryTSpec =
         query_type q `shouldBe` "INSERT"
         (table_name . query_table) q `shouldBe` "customers"
         (table_alias . query_table) q `shouldBe` Alias.None
-        (clause . query_values) q `shouldBe` "(?, ?, ?), (?, ?, ?), (?, ?, ?)"
+        (clause . query_values) q `shouldBe` "(?, ?, ?, NOW()), (?, ?, ?, NOW()), (?, ?, ?, NOW())"
         (bindings . query_values) q `shouldBe` ["mark", "us", "12th elm", "james", "ja", "blk. 1", "john", "en", "lot. 18"]
       prop "query columns" $ do
-        query_columns q `shouldBeTheSameColumns` [Column "name", Column "country", Column "address"]
+        query_columns q `shouldBeTheSameColumns` [Column "name", Column "country", Column "address", Column "register"]
 
-    context "update values" $ do
-      it "update" $ shouldBeImplemented
+--    context "update values" $ do
+--      it "update" $ shouldBeImplemented
 
-    context "delete values" $ do
-      it "delete" $ shouldBeImplemented
+--    context "delete values" $ do
+--      it "delete" $ shouldBeImplemented
 
-    context "maybe monad" $ do
-      it "transform with maybe monad" $ shouldBeImplemented
+--    context "maybe monad" $ do
+--      it "transform with maybe monad" $ shouldBeImplemented
 
-    context "io monad" $ do
-      it "transform with io monad" $ shouldBeImplemented
+--    context "io monad" $ do
+--      it "transform with io monad" $ shouldBeImplemented
 

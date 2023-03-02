@@ -2,33 +2,35 @@
 
 module QueryBuilder.Set
     ( SetValue(..)
-    , clause
-    , bindings
+    , set_clause
+    , set_bindings
+    , (.=)
     ) where
 
-import Data.Text as T hiding (map, filter)
+import Data.Text as T hiding (length, map, filter, foldl)
 import Data.Semigroup
 
-data SetValue = SetValue Text Text
-              | SetValueRaw Text Text
+import QueryBuilder.ToText
 
-clause :: [SetValue] -> Text
-clause a = T.intercalate "," $ map g a
+data SetValue = SetValue Text Text Text
+              deriving Show
+
+set_clause :: [SetValue] -> Text
+set_clause a = T.intercalate ", " $ map g a
   where
-    g (SetValue c _) = c <> " = ?"
-    g (SetValueRaw c v) = c <> " = " <> v
+    g (SetValue c v b) = c <> " = " <> (if b == mempty then v else "?")
 
-bindings :: [SetValue] -> [Text]
-bindings a = map f $ filter g a
+set_bindings :: [SetValue] -> [Text]
+set_bindings a = foldl f [] $ filter g a
   where
-    g (SetValue _ _) = True
-    g (SetValueRaw _ _) = False
+    g (SetValue _ _ v) = v /= mempty
 
-    f (SetValue _ v) = v
+    f ax (SetValue _ _ v) = ax <> [v]
 
--- (:=) :: Text -> Text -> SetValue
--- (:=) col val = SetValue col val
-
--- (!=) :: Text -> Text -> SetValue
--- (!=) col val = SetValueRaw col val
+infixl 8 .=
+(.=) :: (ToText t) => Text -> t -> SetValue
+(.=) col v = SetValue col val bind
+  where
+    val  = toText v
+    bind = toBind v
 

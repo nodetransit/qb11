@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS -Wno-missing-fields #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 module Spec.QueryTQueries
     ( testQueryTransformer
@@ -106,10 +107,11 @@ testInsertValues =
         columns [ column "name"
                 , column  "country"
                 , column  "address"
+                , column  "register"
                 ]
-        values [ ["mark", "us", "12th elm"]
-               , ["james", "ja", "blk. 1"]
-               , ["john", "en", "lot. 18"]
+        values [ [value "mark", value "us", value "12th elm", value ("NOW()" :: Raw)]
+               , [value "james", value "ja", value "blk. 1", value ("NOW()" :: Raw)]
+               , [value "john", value "en", value "lot. 18", value ("NOW()" :: Raw)]
                ]
 
 testUpdateTable :: Query
@@ -117,9 +119,9 @@ testUpdateTable =
     runQuery $ do
         update
         table "customers"
-        set [ ("name", "ac")
-            , ("country", "uk")
-            , ("address", "1st st.")
+        set [ "name"    .= "ac"
+            , "country" .= ("uk" :: Raw)
+            , "address" .= "1st st."
             ]
         where_ $ do
             condition "id" (isIn ["1", "2", "3"])

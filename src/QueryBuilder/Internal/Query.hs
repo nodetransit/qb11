@@ -28,6 +28,8 @@ import QueryBuilder.QueryTable
 import QueryBuilder.QueryOrder
 import QueryBuilder.QueryOrder as Order
 import QueryBuilder.JoinTable
+import QueryBuilder.ToText
+import QueryBuilder.Set
 
 
 data Query = EmptyQuery
@@ -39,8 +41,8 @@ data Query = EmptyQuery
            | TableAlias Text Alias
            | Distinct
            | Columns [Column]
-           | Values [[Text]]
-           | Set [(Text, Text)]
+           | Values [[Value]]
+           | Set [SetValue]
            | GroupBy [Column]
            | Having QueryCondition
            | Join JoinType Text QueryCondition
@@ -54,7 +56,7 @@ data Query = EmptyQuery
                    , query_distinct    :: Bool
                    , query_columns     :: [Column]
                    , query_values      :: QueryCondition
-                   , query_set         :: [(Text, Text)]
+                   , query_set         :: [SetValue]
                    , query_groupBy     :: [Column]
                    , query_having      :: QueryCondition
                    , query_joins       :: [JoinTable]
@@ -130,13 +132,26 @@ modify_query = mq
     mq (Comment t)          q                   = defaultQuery { query_comments = t }
     mq qL                   qR                  = coalesceQuery qL qR
 
-makeValues ll = rawQueryCondition clause values
+makeValues :: [[Value]] -> QueryCondition
+makeValues vl = rawQueryCondition clause bind
   where
-    values = Prelude.foldl (<>) [] ll
+    -- | flatten the list of lists
+    flatten = Prelude.foldl (\ax v -> ax <> v) []
+    -- | filter out the empty bindings
+    filterEmpty = Prelude.filter (\(Value _ b) -> b /= mempty)
+    -- | get the bindings
+    getBindings = Prelude.map (\(Value _ b) -> b)
+    -- |
+    bind = (getBindings . filterEmpty . flatten) vl
+
+    -- | join with comma
     join = T.intercalate ", "
-    replacewith = Prelude.map (const "?")
+    -- | get values
+    getValues = Prelude.map (\(Value v b) -> if b == mempty then v else "?")
+    -- | group value list
     group q = "(" <> q <> ")"
-    clause = join $ Prelude.map (group . join . replacewith) ll
+    -- |
+    clause = join $ Prelude.map (group . join . getValues) vl
 
 makeJoinTable utype table alias cond = JoinTable
     { join_table      = table
