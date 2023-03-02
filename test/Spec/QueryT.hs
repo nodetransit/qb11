@@ -123,18 +123,14 @@ queryTSpec =
         query_columns q `shouldBeTheSameColumns` [Column "name", Column "country", Column "address"]
 
     context "update values" $ do
-      it "implement" $ do
-        True `shouldBe` False
+      it "update" $ shouldBeImplemented
 
     context "delete values" $ do
-      it "implement" $ do
-        True `shouldBe` False
+      it "delete" $ shouldBeImplemented
 
     context "maybe monad" $ do
-      it "implement" $ do
-        True `shouldBe` False
+      it "transform with maybe monad" $ shouldBeImplemented
 
     context "io monad" $ do
-      it "implement" $ do
-        True `shouldBe` False
+      it "transform with io monad" $ shouldBeImplemented
 
