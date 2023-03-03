@@ -9,6 +9,8 @@ module Spec.QueryTQueries
     , testQueryGroupBy
     , testDistinctLimitEtc
     , testInsertValues
+    , testUpdateTable
+    , testUpdateTableAlt
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
@@ -125,4 +127,15 @@ testUpdateTable =
             ]
         where_ $ do
             condition "id" (isIn ["1", "2", "3"])
+
+testUpdateTableAlt :: Query
+testUpdateTableAlt =
+    runQuery $ do
+        update
+        table "users"
+        set [ setvalue "name" "ac"
+            , setvalue "deleted" ("NOW()" :: Raw)
+            ]
+        where_ $ do
+            condition "id" (isIn ["1", "2"])
 

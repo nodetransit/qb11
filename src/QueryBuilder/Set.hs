@@ -2,6 +2,7 @@
 
 module QueryBuilder.Set
     ( SetValue(..)
+    , setvalue
     , set_clause
     , set_bindings
     , (.=)
@@ -27,10 +28,13 @@ set_bindings a = foldl f [] $ filter g a
 
     f ax (SetValue _ _ v) = ax <> [v]
 
-infixl 8 .=
-(.=) :: (ToText t) => Text -> t -> SetValue
-(.=) col v = SetValue col val bind
+setvalue :: (ToText t) => Text -> t -> SetValue
+setvalue col v = SetValue col val bind
   where
     val  = toText v
     bind = toBind v
+
+infixl 8 .=
+(.=) :: (ToText t) => Text -> t -> SetValue
+(.=) = setvalue
 

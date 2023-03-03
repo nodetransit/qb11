@@ -26,6 +26,7 @@ import QueryBuilder.QueryTable
 import QueryBuilder.Condition
 import QueryBuilder.QueryOrder
 import QueryBuilder.JoinTable
+import QueryBuilder.Set
 
 queryTSpec :: Spec
 queryTSpec =
@@ -122,8 +123,25 @@ queryTSpec =
       prop "query columns" $ do
         query_columns q `shouldBeTheSameColumns` [Column "name", Column "country", Column "address", Column "register"]
 
---    context "update values" $ do
---      it "update" $ shouldBeImplemented
+    context "update values" $ do
+      let q = testUpdateTable
+      it "query" $ do
+        query_type q `shouldBe` "UPDATE"
+        (table_name . query_table) q `shouldBe` "customers"
+        (clause . query_conditions) q `shouldBe` "id IN (?, ?, ?)"
+        (bindings . query_conditions) q `shouldBe` ["1", "2", "3"]
+        (set_clause . query_set) q `shouldBe` "name = ?, country = uk, address = ?"
+        (set_bindings . query_set) q `shouldBe` ["ac", "1st st."]
+
+    context "update values alternate" $ do
+      let q = testUpdateTableAlt
+      it "query" $ do
+        query_type q `shouldBe` "UPDATE"
+        (table_name . query_table) q `shouldBe` "users"
+        (clause . query_conditions) q `shouldBe` "id IN (?, ?)"
+        (bindings . query_conditions) q `shouldBe` ["1", "2"]
+        (set_clause . query_set) q `shouldBe` "name = ?, deleted = NOW()"
+        (set_bindings . query_set) q `shouldBe` ["ac"]
 
 --    context "delete values" $ do
 --      it "delete" $ shouldBeImplemented
