@@ -11,6 +11,7 @@ module Spec.QueryTQueries
     , testInsertValues
     , testUpdateTable
     , testUpdateTableAlt
+    , testDelete
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
@@ -139,3 +140,11 @@ testUpdateTableAlt =
         where_ $ do
             condition "id" (isIn ["1", "2"])
 
+testDelete :: Query
+testDelete =
+    runQuery $ do
+        delete
+        from "users"
+        where_ $ do
+            condition "unregistered" (equals true)
+            or "disabled" (isNotNull)
