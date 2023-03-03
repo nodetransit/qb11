@@ -11,8 +11,6 @@ module QueryBuilder.Condition
     , ConditionM(..)
     , runConditionT
     , runConditionM
-    , lift
-    , liftIO
     , condition
     , QueryCondition
     , rawQueryCondition
@@ -96,14 +94,6 @@ runConditionT q = (return . snd) =<< Internal.runConditionT q
 
 runConditionM :: ConditionM -> QueryCondition
 runConditionM = snd . runIdentity . Internal.runConditionT
-
-lift ::(Monad m) => m a -> Internal.ConditionT QueryCondition m a
-lift = Internal.lift
-{-# INLINE lift #-}
-
-liftIO :: (MIO.MonadIO m) => IO a -> m a
-liftIO = Internal.liftIO
-{-# INLINE liftIO #-}
 
 clause    = Internal.clause
 bindings = Internal.bindings

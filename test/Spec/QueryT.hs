@@ -152,7 +152,13 @@ queryTSpec =
         (bindings . query_conditions) q `shouldBe` ["1"]
 
     context "maybe monad" $ do
-      it "transform with maybe monad" $ shouldBeImplemented
+      let q = testTransformWithMaybe
+      it "query" $ do
+        query_type q `shouldBe` "SELECT"
+        (table_name . query_table) q `shouldBe` "users"
+        (clause . query_conditions) q `shouldBe` "registered = ?"
+        (bindings . query_conditions) q `shouldBe` ["1"]
+        query_limit q `shouldBe` Just 18
 
     context "io monad" $ do
       it "transform with io monad" $ shouldBeImplemented

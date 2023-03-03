@@ -9,8 +9,6 @@
 module QueryBuilder.Internal.Condition
     ( ConditionT(..)
     , Condition(..)
-    , lift
-    , liftIO
     , condition
     , rawCondition
     , QueryCondition

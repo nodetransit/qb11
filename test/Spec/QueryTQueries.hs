@@ -12,13 +12,15 @@ module Spec.QueryTQueries
     , testUpdateTable
     , testUpdateTableAlt
     , testDelete
+    , testTransformWithMaybe
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
 -- import Data.Text as T hiding (null, length, head, tail, groupBy)
 import Data.Semigroup
--- import Control.Monad hiding (join)
 import Control.Monad.Identity hiding (join)
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
 -- import System.IO.Unsafe
 
 import Spec.Util
@@ -148,3 +150,31 @@ testDelete =
         where_ $ do
             condition "unregistered" (equals true)
             or "disabled" (isNotNull)
+
+testTransformWithMaybe :: Query
+testTransformWithMaybe = (runMaybe . runQueryT) createQuery
+  where
+    runMaybe :: (Monoid a) => Maybe a -> a
+    runMaybe (Just x) = x
+    runMaybe _        = mempty
+
+    createQuery :: QueryT Maybe
+    createQuery = do
+        select
+        from "users"
+        whereM_ $ do
+            isDel <- lift getDeleted
+            condition "registered" (equals true)
+            ifM isDel $
+                and "deleted" (equals true)
+        lim <- lift getLimit
+        ifM (lim > 0) $
+           limit lim
+
+    ifM b f = if b then f else return True
+
+    getDeleted :: Maybe Bool
+    getDeleted = Just False
+
+    getLimit :: Maybe Int
+    getLimit = Just 18
