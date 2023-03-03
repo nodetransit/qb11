@@ -10,6 +10,8 @@ import Data.Semigroup
 import Test.Hspec
 import Control.Monad
 import Control.Monad.Identity
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
 import System.IO.Unsafe
 
 import QueryBuilder.Condition
@@ -101,7 +103,7 @@ testConditionTransformerAndBegin = (runIdentity .runConditionT) createQueryCondi
 testConditionTransformerMaybe :: QueryCondition
 testConditionTransformerMaybe = (runMaybe . runConditionT) createMaybeQueryCondition
   where
-    runMaybe :: Maybe QueryCondition -> QueryCondition
+    runMaybe :: (Monoid a) => Maybe a -> a
     runMaybe (Just x) = x
     runMaybe _        = mempty
 

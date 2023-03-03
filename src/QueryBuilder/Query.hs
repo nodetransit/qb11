@@ -38,6 +38,7 @@ module QueryBuilder.Query
     , as
     , on
     , where_
+    , whereM_
     , groupBy
     , having
     , orderBy
@@ -54,12 +55,13 @@ import Data.Text (Text)
 import Data.Semigroup
 import Control.Monad hiding (join)
 import Control.Monad.Identity hiding (join)
+import qualified Control.Monad.IO.Class as MIO
 import Control.Applicative
 
 import qualified QueryBuilder.Internal.Query as Internal
 import QueryBuilder.Alias as Alias
 import QueryBuilder.Column
-import QueryBuilder.Condition
+import QueryBuilder.Condition hiding (lift, liftIO)
 import QueryBuilder.QueryOrder
 import QueryBuilder.QueryOrder as Order
 import QueryBuilder.JoinTable
@@ -152,6 +154,12 @@ where_ :: (Monad m) => ConditionM -> QueryT m
 where_ q = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> (Internal.Where $ runConditionM q))
 {-# INLINE where_ #-}
+
+whereM_ :: (Monad m) => ConditionT m -> QueryT m
+whereM_ q = Internal.QueryT $ do
+    queryCond <- runConditionT q
+    return (True, Internal.defaultQuery <> (Internal.Where $ queryCond))
+{-# INLINE whereM_ #-}
 
 orderBy :: (Monad m) => [Column] -> Order -> QueryT m
 orderBy c o = Internal.QueryT $ do
