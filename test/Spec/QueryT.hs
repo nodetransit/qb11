@@ -143,12 +143,17 @@ queryTSpec =
         (set_clause . query_set) q `shouldBe` "name = ?, deleted = NOW()"
         (set_bindings . query_set) q `shouldBe` ["ac"]
 
---    context "delete values" $ do
---      it "delete" $ shouldBeImplemented
+    context "delete values" $ do
+      let q = testDelete
+      it "query" $ do
+        query_type q `shouldBe` "DELETE"
+        (table_name . query_table) q `shouldBe` "users"
+        (clause . query_conditions) q `shouldBe` "unregistered = ? OR disabled IS NOT NULL"
+        (bindings . query_conditions) q `shouldBe` ["1"]
 
---    context "maybe monad" $ do
---      it "transform with maybe monad" $ shouldBeImplemented
+    context "maybe monad" $ do
+      it "transform with maybe monad" $ shouldBeImplemented
 
---    context "io monad" $ do
---      it "transform with io monad" $ shouldBeImplemented
+    context "io monad" $ do
+      it "transform with io monad" $ shouldBeImplemented
 
