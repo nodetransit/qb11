@@ -172,4 +172,6 @@ queryTSpec =
         (order . query_orderBy) q `shouldBe` Desc
       prop "query order by" $ do
         (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "id"]
+      prop "query columns" $ do
+        query_columns q `shouldBeTheSameColumns` [Column "id", Column "name", ColumnAlias "area" (As "land_area")]
 

@@ -186,9 +186,9 @@ testTransformWithIO = (unsafePerformIO . runQueryT) createQuery
     createQuery :: QueryT IO
     createQuery = do
         select
-        columns [ column "id"
-                , column "name"
-                , column "area"
+        columns [ "id"
+                , "name"
+                , column_ "area" "land_area"
                 ]
         from "countries"
         whereM_ $ do

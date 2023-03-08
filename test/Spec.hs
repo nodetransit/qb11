@@ -4,6 +4,7 @@ import Spec.ConditionT   as Run
 import Spec.Query        as Run
 import Spec.QueryT       as Run
 import Spec.Column       as Run
+import Spec.Alias        as Run
 import Spec.Table        as Run
 import Spec.ToText       as Run
 import Spec.Operators    as Run
@@ -22,6 +23,7 @@ main = do
         Run.queryTSpec
         Run.tableSpec
         Run.columnSpec
+        Run.aliasSpec
         Run.toTextSpec
         Run.conditionSpec
         Run.conditionTSpec
