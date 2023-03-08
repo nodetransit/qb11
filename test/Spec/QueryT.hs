@@ -95,6 +95,7 @@ queryTSpec =
         query_groupBy q `shouldBe` [Column "country"]
         (clause . query_having) q `shouldBe` "count >= ?"
         (bindings . query_having) q `shouldBe` ["5"]
+        (order . query_orderBy) q `shouldBe` Asc
       prop "query columns" $ do
         query_columns q `shouldBeTheSameColumns` [ColumnAlias "COUNT(id)" (As "count"), Column "country"]
       prop "query order by" $ do
@@ -161,5 +162,14 @@ queryTSpec =
         query_limit q `shouldBe` Just 18
 
     context "io monad" $ do
-      it "transform with io monad" $ shouldBeImplemented
+      let q = testTransformWithIO
+      it "query" $ do
+        query_type q `shouldBe` "SELECT"
+        (table_name . query_table) q `shouldBe` "countries"
+        (clause . query_conditions) q `shouldBe` "name LIKE ?"
+        (bindings . query_conditions) q `shouldBe` ["%ice%"]
+        query_limit q `shouldBe` Nothing
+        (order . query_orderBy) q `shouldBe` Desc
+      prop "query order by" $ do
+        (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "id"]
 
