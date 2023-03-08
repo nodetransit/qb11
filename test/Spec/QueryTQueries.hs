@@ -13,15 +13,16 @@ module Spec.QueryTQueries
     , testUpdateTableAlt
     , testDelete
     , testTransformWithMaybe
+    , testTransformWithIO
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
--- import Data.Text as T hiding (null, length, head, tail, groupBy)
+import Data.Text as T hiding (null, length, head, tail, groupBy)
 import Data.Semigroup
 import Control.Monad.Identity hiding (join)
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
--- import System.IO.Unsafe
+import System.IO.Unsafe
 
 import Spec.Util
 
@@ -178,3 +179,32 @@ testTransformWithMaybe = (runMaybe . runQueryT) createQuery
 
     getLimit :: Maybe Int
     getLimit = Just 18
+
+testTransformWithIO :: Query
+testTransformWithIO = (unsafePerformIO . runQueryT) createQuery
+  where
+    createQuery :: QueryT IO
+    createQuery = do
+        select
+        columns [ column "id"
+                , column "name"
+                , column "area"
+                ]
+        from "countries"
+        whereM_ $ do
+            inputName <- lift $ wrapWildCard =<< getName
+            condition "name" (like inputName)
+        inputAsc <- lift getIsAscending
+        if inputAsc
+           then orderBy [ column "id"] asc
+           else orderBy [ column "id"] desc
+
+    wrapWildCard :: String -> IO (Text)
+    wrapWildCard s = return $ T.pack $ "%" <> s <> "%"
+
+    getName :: IO String
+    getName = return "ice"
+
+    getIsAscending :: IO Bool
+    getIsAscending = return False
+
