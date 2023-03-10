@@ -23,24 +23,24 @@ conditionTSpec =
       context "simple query" $ do
         it "using identity monad" $ do
           let q = testConditionTransformer
-          clause q `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
-          bindings q `shouldBe` ["1", "", "0", "F", "%G%"]
+          condition_clause q `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
+          condition_bindings q `shouldBe` ["1", "", "0", "F", "%G%"]
 
         it "using identity monad and andBegin" $ do
           let q = testConditionTransformerAndBegin
-          clause q `shouldBe` "a = ? AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
-          bindings q `shouldBe` ["1", "", "0", "F", "%G%"]
+          condition_clause q `shouldBe` "a = ? AND ( c <> ? OR c IS NOT NULL OR ( d <> ? AND e IS NOT ? ) ) AND g LIKE ?"
+          condition_bindings q `shouldBe` ["1", "", "0", "F", "%G%"]
 
         it "using maybe monad" $ do
-          clause testConditionTransformerMaybe `shouldBe` "a = ? AND b IS NULL"
-          bindings testConditionTransformerMaybe `shouldBe` ["A"]
+          condition_clause testConditionTransformerMaybe `shouldBe` "a = ? AND b IS NULL"
+          condition_bindings testConditionTransformerMaybe `shouldBe` ["A"]
 
         it "using implicit identity monad" $ do
-          clause testCondition `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL )"
-          bindings testCondition `shouldBe` ["1", ""]
+          condition_clause testCondition `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL )"
+          condition_bindings testCondition `shouldBe` ["1", ""]
 
         -- it "alternative" $ do
-        --   clause testConditionTransformerAlternative `shouldBe` "x = ?"
+        --   condition_clause testConditionTransformerAlternative `shouldBe` "x = ?"
 
         -- it "monad plus" $ do
         --   "NOT IMPLEMENTED" `shouldNotBe` "NOT IMPLEMENTED"
@@ -49,16 +49,16 @@ conditionTSpec =
         --   "NOT IMPLEMENTED" `shouldNotBe` "NOT IMPLEMENTED"
 
         it "lift IO" $ do
-          clause testConditionTransformerIO `shouldBe` "a <> ?"
-          bindings testConditionTransformerIO `shouldBe` ["B"]
+          condition_clause testConditionTransformerIO `shouldBe` "a <> ?"
+          condition_bindings testConditionTransformerIO `shouldBe` ["B"]
 
         it "using operators" $ do
-          clause testConditionTransformerOperators `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d IS NOT ? AND f IS NOT ? ) ) AND h LIKE ?"
-          bindings testConditionTransformerOperators `shouldBe` ["1", "", "0", "g", "%H%"]
+          condition_clause testConditionTransformerOperators `shouldBe` "a = ? AND b IS NULL AND ( c <> ? OR c IS NOT NULL OR ( d IS NOT ? AND f IS NOT ? ) ) AND h LIKE ?"
+          condition_bindings testConditionTransformerOperators `shouldBe` ["1", "", "0", "g", "%H%"]
 
         it "raw queries" $ do
-          clause testRawConditionT `shouldBe` "a = true AND b is NULL"
-          bindings testRawConditionT `shouldBe` []
+          condition_clause testRawConditionT `shouldBe` "a = true AND b is NULL"
+          condition_bindings testRawConditionT `shouldBe` []
 
 testCondition:: QueryCondition
 testCondition= (runConditionM) createQueryCondition

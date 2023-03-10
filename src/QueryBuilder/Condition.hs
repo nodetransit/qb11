@@ -16,8 +16,8 @@ module QueryBuilder.Condition
     , rawQueryCondition
     , rawQueryConditionT
     , raw
-    , clause
-    , bindings
+    , condition_clause
+    , condition_bindings
     , equals
     , equalsRaw
     , notEquals
@@ -95,8 +95,8 @@ runConditionT q = (return . snd) =<< Internal.runConditionT q
 runConditionM :: ConditionM -> QueryCondition
 runConditionM = snd . runIdentity . Internal.runConditionT
 
-clause    = Internal.clause
-bindings = Internal.bindings
+condition_clause   = Internal.clause
+condition_bindings = Internal.bindings
 
 condition :: (Monad m) => Text -> ConditionT m -> ConditionT m
 condition left right = Internal.ConditionT $ do

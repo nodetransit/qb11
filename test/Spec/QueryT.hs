@@ -40,8 +40,8 @@ queryTSpec =
         (table_name . query_table) q `shouldBe` "users"
         (table_alias . query_table) q `shouldBe` Alias.None
         (order . query_orderBy) q `shouldBe` Desc
-        (clause . query_conditions) q `shouldBe` "deleted IS NULL AND ( registered IS NOT NULL OR validated = ? ) AND blocked = ?"
-        (bindings . query_conditions) q `shouldBe` ["1", "0"]
+        (condition_clause . query_conditions) q `shouldBe` "deleted IS NULL AND ( registered IS NOT NULL OR validated = ? ) AND blocked = ?"
+        (condition_bindings . query_conditions) q `shouldBe` ["1", "0"]
         query_limit q `shouldBe` Nothing
       prop "using identity monad" $ do
         (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "registered_on", Column "last_login"]
@@ -55,20 +55,20 @@ queryTSpec =
         (table_name . query_table) q `shouldBe` "artists"
         (table_alias . query_table) q `shouldBe` Alias.None
         (length . query_joins) q `shouldBe` 2
-        (clause . query_conditions) q `shouldBe` "released = NOW()"
-        (bindings . query_conditions) q `shouldBe` mempty
+        (condition_clause . query_conditions) q `shouldBe` "released = NOW()"
+        (condition_bindings . query_conditions) q `shouldBe` mempty
       it "first join" $ do
         (join_type . head . query_joins) q `shouldBe` Inner
         (join_table . head . query_joins) q `shouldBe` "sales"
         (join_alias  . head . query_joins) q `shouldBe` Alias.None
-        (clause . join_conditions . head . query_joins) q `shouldBe` "( artists.id = sales.aid )"
-        (bindings . join_conditions . head . query_joins) q `shouldBe` mempty
+        (condition_clause . join_conditions . head . query_joins) q `shouldBe` "( artists.id = sales.aid )"
+        (condition_bindings . join_conditions . head . query_joins) q `shouldBe` mempty
       it "2nd join" $ do
         (join_type . head . tail . query_joins) q `shouldBe` Left
         (join_table . head . tail . query_joins) q `shouldBe` "infos"
         (join_alias  . head . tail . query_joins) q `shouldBe` Alias.None
-        (clause . join_conditions . head . tail . query_joins) q `shouldBe` "( artists.id = infos.aid AND infos.released = ? )"
-        (bindings . join_conditions . head . tail . query_joins) q `shouldBe` ["1"]
+        (condition_clause . join_conditions . head . tail . query_joins) q `shouldBe` "( artists.id = infos.aid AND infos.released = ? )"
+        (condition_bindings . join_conditions . head . tail . query_joins) q `shouldBe` ["1"]
 
     context "table joins with alias" $ do
       let q = testQueryTransformerJoinAs
@@ -77,14 +77,14 @@ queryTSpec =
         (table_name . query_table) q `shouldBe` "customers"
         (table_alias . query_table) q `shouldBe` As "c"
         (length . query_joins) q `shouldBe` 1
-        (clause . query_conditions) q `shouldBe` mempty
-        (bindings . query_conditions) q `shouldBe` mempty
+        (condition_clause . query_conditions) q `shouldBe` mempty
+        (condition_bindings . query_conditions) q `shouldBe` mempty
       it "query join" $ do
         (join_type . head . query_joins) q `shouldBe` Right
         (join_table . head . query_joins) q `shouldBe` "infos"
         (join_alias  . head . query_joins) q `shouldBe` As "ci"
-        (clause . join_conditions . head . query_joins) q `shouldBe` "( c.id = ci.customer_id AND c.valid = ? )"
-        (bindings . join_conditions . head . query_joins) q `shouldBe` ["1"]
+        (condition_clause . join_conditions . head . query_joins) q `shouldBe` "( c.id = ci.customer_id AND c.valid = ? )"
+        (condition_bindings . join_conditions . head . query_joins) q `shouldBe` ["1"]
 
     context "query group by" $ do
       let q = testQueryGroupBy
@@ -93,8 +93,8 @@ queryTSpec =
         (table_name . query_table) q `shouldBe` "users"
         (table_alias . query_table) q `shouldBe` Alias.None
         query_groupBy q `shouldBe` [Column "country"]
-        (clause . query_having) q `shouldBe` "count >= ?"
-        (bindings . query_having) q `shouldBe` ["5"]
+        (condition_clause . query_having) q `shouldBe` "count >= ?"
+        (condition_bindings . query_having) q `shouldBe` ["5"]
         (order . query_orderBy) q `shouldBe` Asc
       prop "query columns" $ do
         query_columns q `shouldBeTheSameColumns` [ColumnAlias "COUNT(id)" (As "count"), Column "country"]
@@ -119,8 +119,8 @@ queryTSpec =
         query_type q `shouldBe` "INSERT"
         (table_name . query_table) q `shouldBe` "customers"
         (table_alias . query_table) q `shouldBe` Alias.None
-        (clause . query_values) q `shouldBe` "(?, ?, ?, NOW()), (?, ?, ?, NOW()), (?, ?, ?, NOW())"
-        (bindings . query_values) q `shouldBe` ["mark", "us", "12th elm", "james", "ja", "blk. 1", "john", "en", "lot. 18"]
+        (condition_clause . query_values) q `shouldBe` "(?, ?, ?, NOW()), (?, ?, ?, NOW()), (?, ?, ?, NOW())"
+        (condition_bindings . query_values) q `shouldBe` ["mark", "us", "12th elm", "james", "ja", "blk. 1", "john", "en", "lot. 18"]
       prop "query columns" $ do
         query_columns q `shouldBeTheSameColumns` [Column "name", Column "country", Column "address", Column "register"]
 
@@ -129,8 +129,8 @@ queryTSpec =
       it "query" $ do
         query_type q `shouldBe` "UPDATE"
         (table_name . query_table) q `shouldBe` "customers"
-        (clause . query_conditions) q `shouldBe` "id IN (?, ?, ?)"
-        (bindings . query_conditions) q `shouldBe` ["1", "2", "3"]
+        (condition_clause . query_conditions) q `shouldBe` "id IN (?, ?, ?)"
+        (condition_bindings . query_conditions) q `shouldBe` ["1", "2", "3"]
         (set_clause . query_set) q `shouldBe` "name = ?, country = uk, address = ?"
         (set_bindings . query_set) q `shouldBe` ["ac", "1st st."]
 
@@ -139,8 +139,8 @@ queryTSpec =
       it "query" $ do
         query_type q `shouldBe` "UPDATE"
         (table_name . query_table) q `shouldBe` "users"
-        (clause . query_conditions) q `shouldBe` "id IN (?, ?)"
-        (bindings . query_conditions) q `shouldBe` ["1", "2"]
+        (condition_clause . query_conditions) q `shouldBe` "id IN (?, ?)"
+        (condition_bindings . query_conditions) q `shouldBe` ["1", "2"]
         (set_clause . query_set) q `shouldBe` "name = ?, deleted = NOW()"
         (set_bindings . query_set) q `shouldBe` ["ac"]
 
@@ -149,16 +149,16 @@ queryTSpec =
       it "query" $ do
         query_type q `shouldBe` "DELETE"
         (table_name . query_table) q `shouldBe` "users"
-        (clause . query_conditions) q `shouldBe` "unregistered = ? OR disabled IS NOT NULL"
-        (bindings . query_conditions) q `shouldBe` ["1"]
+        (condition_clause . query_conditions) q `shouldBe` "unregistered = ? OR disabled IS NOT NULL"
+        (condition_bindings . query_conditions) q `shouldBe` ["1"]
 
     context "maybe monad" $ do
       let q = testTransformWithMaybe
       it "query" $ do
         query_type q `shouldBe` "SELECT"
         (table_name . query_table) q `shouldBe` "users"
-        (clause . query_conditions) q `shouldBe` "registered = ?"
-        (bindings . query_conditions) q `shouldBe` ["1"]
+        (condition_clause . query_conditions) q `shouldBe` "registered = ?"
+        (condition_bindings . query_conditions) q `shouldBe` ["1"]
         query_limit q `shouldBe` Just 18
 
     context "io monad" $ do
@@ -166,8 +166,8 @@ queryTSpec =
       it "query" $ do
         query_type q `shouldBe` "SELECT"
         (table_name . query_table) q `shouldBe` "countries"
-        (clause . query_conditions) q `shouldBe` "name LIKE ?"
-        (bindings . query_conditions) q `shouldBe` ["%ice%"]
+        (condition_clause . query_conditions) q `shouldBe` "name LIKE ?"
+        (condition_bindings . query_conditions) q `shouldBe` ["%ice%"]
         query_limit q `shouldBe` Nothing
         (order . query_orderBy) q `shouldBe` Desc
       prop "query order by" $ do
