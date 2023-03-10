@@ -43,21 +43,21 @@ querySpec =
       it "query 1st join type" $ (join_type . head . query_joins) q `shouldBe` Inner
       it "query 1st join table" $ (join_table . head . query_joins) q `shouldBe` "infos"
       it "query 1st join alias" $ (join_alias  . head . query_joins) q `shouldBe` Alias.None
-      it "query 1st join condition" $ (clause . join_conditions . head . query_joins) q `shouldBe` "( users.id = infos.uid AND users.disabled <> ? AND infos.deleted IS NOT NULL )"
-      it "query 1st join condition" $ (bindings . join_conditions . head . query_joins) q `shouldBe` ["0"]
+      it "query 1st join condition" $ (condition_clause . join_conditions . head . query_joins) q `shouldBe` "( users.id = infos.uid AND users.disabled <> ? AND infos.deleted IS NOT NULL )"
+      it "query 1st join condition" $ (condition_bindings . join_conditions . head . query_joins) q `shouldBe` ["0"]
       it "query 2nd join type" $ (join_type . head . tail . query_joins) q `shouldBe` Right
       it "query 2nd join table" $ (join_table . head . tail . query_joins) q `shouldBe` "logs"
       it "query 2nd join alias" $ (join_alias  . head . tail . query_joins) q `shouldBe` As "ul"
-      it "query 2nd join condition" $ (clause . join_conditions . head . tail . query_joins) q `shouldBe` "( users.id = ul.uid AND ul.type = ? )"
-      it "query 2nd join condition" $ (bindings . join_conditions  . head . tail . query_joins) q `shouldBe` ["error"]
+      it "query 2nd join condition" $ (condition_clause . join_conditions . head . tail . query_joins) q `shouldBe` "( users.id = ul.uid AND ul.type = ? )"
+      it "query 2nd join condition" $ (condition_bindings . join_conditions  . head . tail . query_joins) q `shouldBe` ["error"]
       it "query columns" $ query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
-      it "query conditions" $ (clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
-      it "query conditions" $ (bindings . query_conditions) q `shouldBe` [""]
+      it "query conditions" $ (condition_clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+      it "query conditions" $ (condition_bindings . query_conditions) q `shouldBe` [""]
       it "query order by" $ (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "registered", Column "last_login"]
       it "query order by" $ (order . query_orderBy) q `shouldBe` Asc
       it "query group by" $ query_groupBy q `shouldBe` [Column "type", Column "access"]
-      it "query having conditions" $ (clause . query_having) q `shouldBe` "type LIKE ?"
-      it "query having conditions" $ (bindings . query_having) q `shouldBe` ["%admin%"]
+      it "query having conditions" $ (condition_clause . query_having) q `shouldBe` "type LIKE ?"
+      it "query having conditions" $ (condition_bindings . query_having) q `shouldBe` ["%admin%"]
       it "query limit" $ query_limit q `shouldBe` Just 12
       it "query comments" $ query_comments q `shouldBe` ["select user", "join with info and logs"]
 
@@ -67,8 +67,8 @@ querySpec =
            let q = foldl' (<>) defaultQuery queries
            it ("testing permutation: " ++ showQueries queries) $ do
                (order . query_orderBy) q `shouldBe` Desc
-               (clause . query_conditions) q `shouldBe` "released <> ? AND released IS NOT NULL"
-               (bindings . query_conditions) q `shouldBe` [""]
+               (condition_clause . query_conditions) q `shouldBe` "released <> ? AND released IS NOT NULL"
+               (condition_bindings . query_conditions) q `shouldBe` [""]
                (table_name . query_table) q `shouldBe` "albums"
                (table_alias . query_table) q `shouldBe` Alias.None
                query_type q `shouldBe` "SELECT"
@@ -88,8 +88,8 @@ querySpec =
            it ("testing permutation: " ++ showQueries queries) $ do
                query_distinct q `shouldBe` True
                query_groupBy q `shouldBe` [Column "genre"]
-               (clause . query_having) q `shouldBe` "genre LIKE ?"
-               (bindings . query_having) q `shouldBe` ["%prog%"]
+               (condition_clause . query_having) q `shouldBe` "genre LIKE ?"
+               (condition_bindings . query_having) q `shouldBe` ["%prog%"]
                query_comments q `shouldBe` ["select albums and associated info", "filter unreleased albums and non-prog genres"]
 
     context "building an insert query in any order should be valid" $ do
@@ -100,8 +100,8 @@ querySpec =
                query_type q `shouldBe` "INSERT"
                (table_name . query_table) q `shouldBe` "users"
                (table_alias . query_table) q `shouldBe` Alias.None
-               (clause . query_values) q `shouldBe` "(?, akane), (2, ?), (?, ?)"
-               (bindings . query_values) q `shouldBe` ["1", "ayumi", "3", "ayami"]
+               (condition_clause . query_values) q `shouldBe` "(?, akane), (2, ?), (?, ?)"
+               (condition_bindings . query_values) q `shouldBe` ["1", "ayumi", "3", "ayami"]
            prop ("testing permutation: " ++ showQueries queries) $ do
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
 
@@ -113,8 +113,8 @@ querySpec =
                query_type q `shouldBe` "UPDATE"
                (table_name . query_table) q `shouldBe` "users"
                (table_alias . query_table) q `shouldBe` Alias.None
-               (clause . query_conditions) q `shouldBe` "id <= ?"
-               (bindings . query_conditions) q `shouldBe` ["18"]
+               (condition_clause . query_conditions) q `shouldBe` "id <= ?"
+               (condition_bindings . query_conditions) q `shouldBe` ["18"]
                (set_clause . query_set) q `shouldBe` "name = ?, value = ?, register = NOW()"
                (set_bindings . query_set) q `shouldBe` ["a", "v"]
 

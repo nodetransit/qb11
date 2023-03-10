@@ -10,6 +10,7 @@ import Spec.ToText       as Run
 import Spec.Operators    as Run
 import Spec.RawOperators as Run
 import Spec.Raw          as Run
+import Spec.QueryBuilder as Run
 
 import Data.Text (Text)
 import QueryBuilder.ToText
@@ -30,4 +31,5 @@ main = do
         Run.operatorSpec
         Run.rawOperatorSpec
         Run.rawSpec
+        Run.queryBuilderSpec
 

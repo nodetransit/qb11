@@ -19,88 +19,88 @@ rawOperatorSpec =
 
         it "equals" $ do
           let q = runEqualsRaw
-          clause q `shouldBe` "a = A"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "a = A"
+          condition_bindings q `shouldBe` mempty
 
         it "eq" $ do
           let q = runEqRaw
-          clause q `shouldBe` "aa = AA"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "aa = AA"
+          condition_bindings q `shouldBe` mempty
 
         it "not equals" $ do
           let q = runNotEqualsRaw
-          clause q `shouldBe` "b <> B"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "b <> B"
+          condition_bindings q `shouldBe` mempty
 
         it "neq" $ do
           let q = runNeqRaw
-          clause q `shouldBe` "bb <> BB"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "bb <> BB"
+          condition_bindings q `shouldBe` mempty
 
         it "gt" $ do
           let q = runGtRaw
-          clause q `shouldBe` "cc > CC"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "cc > CC"
+          condition_bindings q `shouldBe` mempty
 
         it "gte" $ do
           let q = runGteRaw
-          clause q `shouldBe` "dd >= DD"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "dd >= DD"
+          condition_bindings q `shouldBe` mempty
 
         it "lt" $ do
           let q = runLtRaw
-          clause q `shouldBe` "ee < EE"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "ee < EE"
+          condition_bindings q `shouldBe` mempty
 
         it "lte" $ do
           let q = runLteRaw
-          clause q `shouldBe` "ff <= FF"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "ff <= FF"
+          condition_bindings q `shouldBe` mempty
 
         it "is" $ do
           let q = runIsRaw
-          clause q `shouldBe` "'Akane' IS 'Love'"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "'Akane' IS 'Love'"
+          condition_bindings q `shouldBe` mempty
 
         it "is not" $ do
           let q = runIsNotRaw
-          clause q `shouldBe` "'Akane' IS NOT 'Forever'"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "'Akane' IS NOT 'Forever'"
+          condition_bindings q `shouldBe` mempty
 
         it "not" $ do
           let q = runNotRaw
-          clause q `shouldBe` "a NOT b"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "a NOT b"
+          condition_bindings q `shouldBe` mempty
 
         it "is in" $ do
           let q = runIsInRaw
-          clause q `shouldBe` "language IN (c++, haskell)"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "language IN (c++, haskell)"
+          condition_bindings q `shouldBe` mempty
 
         it "is not in" $ do
           let q = runIsNotInRaw
-          clause q `shouldBe` "language NOT IN (php, java, c#)"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "language NOT IN (php, java, c#)"
+          condition_bindings q `shouldBe` mempty
 
         it "is between" $ do
           let q = runBetweenRaw
-          clause q `shouldBe` "'Kirsthy' BETWEEN A AND C"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "'Kirsthy' BETWEEN A AND C"
+          condition_bindings q `shouldBe` mempty
 
         it "is not between" $ do
           let q = runNotBetweenRaw
-          clause q `shouldBe` "d NOT BETWEEN a AND c"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "d NOT BETWEEN a AND c"
+          condition_bindings q `shouldBe` mempty
 
         it "like" $ do
           let q = runLikeRaw
-          clause q `shouldBe` "type LIKE %admin%"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "type LIKE %admin%"
+          condition_bindings q `shouldBe` mempty
 
         it "not like" $ do
           let q = runNotLikeRaw
-          clause q `shouldBe` "user NOT LIKE %guest%"
-          bindings q `shouldBe` mempty
+          condition_clause q `shouldBe` "user NOT LIKE %guest%"
+          condition_bindings q `shouldBe` mempty
 
 runEqualsRaw :: QueryCondition
 runEqualsRaw = (runIdentity . runConditionT) $ condition "a" (equalsRaw "A")
