@@ -3,7 +3,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 
 module Spec.QueryBuilderQueries
-    (
+    ( buildSelectUsers
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
@@ -17,4 +17,18 @@ import System.IO.Unsafe
 import Spec.Util
 
 import QueryBuilder
+
+buildSelectUsers :: Query
+buildSelectUsers = (runIdentity . runQueryT) $ do
+    select
+    from "users"
+    columns [ "id"
+            , column_ "CONCAT(firstname, ' ', lastname)" (as "full_name")
+            , "address"
+            ]
+    where_ $ do
+        condition "deleted" (equals false)
+    orderBy [ "registered"
+            , "age"
+            ] asc
 
