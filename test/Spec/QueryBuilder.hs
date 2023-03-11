@@ -23,6 +23,9 @@ import QueryBuilder
 
 queryBuilderSpec :: Spec
 queryBuilderSpec = 
-  describe "a" $ do
-    context "b" $ do
-      it "c" $ shouldBeImplemented
+  describe "query and bindings" $ do
+    context "create simple select" $ do
+      let q = buildSelectUsers
+      it "query" $ do
+        query q `shouldBe` "SELECT id, CONCAT(firstname, ' ', lastname) AS full_name, address FROM users WHERE deleted = ? ORDER BY registered, age ASC"
+
