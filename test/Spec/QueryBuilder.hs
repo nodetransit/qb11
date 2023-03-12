@@ -19,7 +19,7 @@ import Spec.Util
 import Spec.QueryBuilderQueries
 
 import QueryBuilder
-import QueryBuilder
+import QueryBuilder.PostgreSql
 
 queryBuilderSpec :: Spec
 queryBuilderSpec = 

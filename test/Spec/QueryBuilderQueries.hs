@@ -17,6 +17,7 @@ import System.IO.Unsafe
 import Spec.Util
 
 import QueryBuilder
+import QueryBuilder.PostgreSql
 
 buildSelectUsers :: Query
 buildSelectUsers = (runIdentity . runQueryT) $ do
