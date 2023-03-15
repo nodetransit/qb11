@@ -43,3 +43,6 @@ tests:
     - qb11
     - hspec
     - QuickCheck
+    - postgresql-simple
+  # - mysql-simple
+  # - sqlite-simple
