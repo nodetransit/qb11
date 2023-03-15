@@ -7,11 +7,15 @@ module QueryBuilder.Internal.QueryBuilder
     , column_query
     , iff
     , mapExec
+    , clause_comments
     , clause_query_type
     , clause_columns
     , clause_from_table
     , clause_where_condition
+    , clause_group_by
+    , clause_having
     , clause_order_by
+    , clause_limit
     ) where
 
 
@@ -60,6 +64,18 @@ iff p f = do
 mapExec :: (Traversable t, Monad m) => Query -> t (Query -> m w) -> m (t w)
 mapExec query = mapM (\f -> f query)
 
+clause_comments :: Clause
+clause_comments query = do
+    let comments = query_comments query
+    iff (comments /= mempty) $ do
+        mapM p comments
+        tell ""
+  where
+    p c = do
+        tell $ "-- "
+        tell $ c
+        tell $ "\n"
+
 clause_query_type :: Clause
 clause_query_type = tell . query_type
 
@@ -95,4 +111,29 @@ clause_order_by query = do
         if ord == Asc
           then tell $ " ASC"
           else tell $ " DESC"
+
+clause_group_by :: Clause
+clause_group_by query = do
+    let grpBy = (column_only . query_groupBy) query
+    iff (grpBy /= mempty) $ do
+        tell $ " GROUP BY "
+        tell $ column_query grpBy
+
+clause_having :: Clause
+clause_having query = do
+    let cond = (condition_clause . query_having) query
+    iff (cond /= mempty) $ do
+        tell $ " HAVING ("
+        tell $ cond
+        tell $ ")"
+
+clause_limit :: Clause
+clause_limit query = do
+    tell mempty
+    -- let limit = query_limit query
+    -- case limit of
+    --     Nothing -> tell mempty
+    --     Just n  -> do
+    --         tell $ " LIMIT "
+    --         tell $ show n
 

@@ -27,5 +27,12 @@ queryBuilderSpec =
     context "create simple select" $ do
       let q = buildSelectUsers
       it "query" $ do
-        query q `shouldBe` "SELECT id, CONCAT(firstname, ' ', lastname) AS full_name, address FROM users WHERE deleted = ? ORDER BY registered, age ASC"
+        query q `shouldBe` "-- test select query\n\
+                           \SELECT id, COUNT(id) AS count, CONCAT(firstname, ' ', lastname) AS full_name, country, address\
+                           \ FROM users\
+                           \ WHERE deleted = ?\
+                           \ ORDER BY registered, age ASC\
+                           \ GROUP BY country\
+                           \ HAVING (count >= ?)\
+                           \ LIMIT 18"
 

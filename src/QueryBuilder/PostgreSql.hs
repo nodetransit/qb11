@@ -41,11 +41,15 @@ bindings query      = if | query_type query == "SELECT" -> getBindings query
 
 createSelect :: Query -> Text
 createSelect query  = (snd . runWriter) $ do
-    mapExec query [ clause_query_type
+    mapExec query [ clause_comments
+                  , clause_query_type
                   , clause_columns
                   , clause_from_table
                   , clause_where_condition
                   , clause_order_by
+                  , clause_group_by
+                  , clause_having
+                  , clause_limit
                   ]
 
 createUpdate :: Query -> Text

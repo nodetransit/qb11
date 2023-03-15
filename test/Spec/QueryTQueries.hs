@@ -108,6 +108,9 @@ testDistinctLimitEtc =
 testInsertValues :: Query
 testInsertValues =
     runQuery $ do
+        comments [ "test insert query"
+                 , "insert raw and not raw values"
+                 ]
         insert
         into "customers"
         columns [ column "name"
