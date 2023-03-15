@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module QueryBuilder.Internal.QueryBuilder
     ( column_only
@@ -11,6 +12,7 @@ module QueryBuilder.Internal.QueryBuilder
     , clause_query_type
     , clause_columns
     , clause_from_table
+    , clause_join
     , clause_where_condition
     , clause_group_by
     , clause_having
@@ -25,12 +27,13 @@ import Control.Monad.Writer
 
 import QueryBuilder.Query
 import QueryBuilder.QueryTable
-import QueryBuilder.Alias
+import QueryBuilder.Alias as Alias
 import QueryBuilder.Column
 import QueryBuilder.Condition
 import QueryBuilder.ToText
 import QueryBuilder.Set
 import QueryBuilder.QueryOrder
+import QueryBuilder.JoinTable
 
 type Clause = Query -> Writer Text ()
 
@@ -69,7 +72,7 @@ clause_comments query = do
     let comments = query_comments query
     iff (comments /= mempty) $ do
         mapM p comments
-        tell ""
+        tell mempty
   where
     p c = do
         tell $ "-- "
@@ -101,6 +104,27 @@ clause_where_condition query = do
         tell $ " WHERE "
         tell $ cond
 
+clause_join :: Clause
+clause_join query = do
+    let joins = query_joins query
+    iff (joins /= mempty) $ do
+        mapM mkJoin joins
+        tell mempty
+  where
+    mkJoin q = do
+        tell $ " "
+        tell $ (T.pack . show . join_type) q
+        tell $ " JOIN "
+        tell $ join_table q
+        let alias = join_alias q
+        case alias of
+            Alias.None -> tell mempty
+            As a       -> do
+                tell $ " AS "
+                tell $ a
+        tell $ " ON "
+        tell $ (condition_clause . join_conditions) q
+
 clause_order_by :: Clause
 clause_order_by query = do
     let ordBy = (column_only . order_columns . query_orderBy) query
@@ -123,17 +147,17 @@ clause_having :: Clause
 clause_having query = do
     let cond = (condition_clause . query_having) query
     iff (cond /= mempty) $ do
-        tell $ " HAVING ("
+        tell $ " HAVING ( "
         tell $ cond
-        tell $ ")"
+        tell $ " )"
 
 clause_limit :: Clause
 clause_limit query = do
+    let limit = query_limit query
     tell mempty
-    -- let limit = query_limit query
-    -- case limit of
-    --     Nothing -> tell mempty
-    --     Just n  -> do
-    --         tell $ " LIMIT "
-    --         tell $ show n
+    case limit of
+        Nothing -> tell mempty
+        Just n  -> do
+            tell $ " LIMIT "
+            tell $ (T.pack . show) n
 

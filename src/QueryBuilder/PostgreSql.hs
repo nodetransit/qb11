@@ -45,10 +45,11 @@ createSelect query  = (snd . runWriter) $ do
                   , clause_query_type
                   , clause_columns
                   , clause_from_table
+                  , clause_join
                   , clause_where_condition
-                  , clause_order_by
                   , clause_group_by
                   , clause_having
+                  , clause_order_by
                   , clause_limit
                   ]
 

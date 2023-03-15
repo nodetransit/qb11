@@ -9,6 +9,7 @@ import Data.Text as T
 import Data.Text (Text)
 import Control.Monad
 
+import Prelude hiding (Left, Right)
 import QueryBuilder.Alias
 import QueryBuilder.Condition
 
@@ -27,7 +28,13 @@ data JoinType = Inner
               | Right
               | Outer
               | Cross
-              deriving ( Show
-                       , Eq
+              deriving ( Eq
                        )
+
+instance Show (JoinType) where
+    show (Inner) = "INNER"
+    show (Left)  = "LEFT"
+    show (Right) = "RIGHT"
+    show (Outer) = "OUTER"
+    show (Cross) = "CROSS"
 

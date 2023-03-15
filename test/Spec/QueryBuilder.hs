@@ -24,15 +24,37 @@ import QueryBuilder.PostgreSql
 queryBuilderSpec :: Spec
 queryBuilderSpec = 
   describe "query and bindings" $ do
-    context "create simple select" $ do
+    context "create full select" $ do
       let q = buildSelectUsers
       it "query" $ do
         query q `shouldBe` "-- test select query\n\
-                           \SELECT id, COUNT(id) AS count, CONCAT(firstname, ' ', lastname) AS full_name, country, address\
+                           \SELECT\
+                               \ users.id,\
+                               \ COUNT(id) AS count,\
+                               \ CONCAT(firstname, ' ', lastname) AS full_name,\
+                               \ users.country,\
+                               \ user_infos.address\
+                           \ FROM users\
+                           \ INNER JOIN user_infos\
+                               \ ON ( user_infos.uid = users.id AND user_infos.email IS NOT NULL )\
+                           \ WHERE deleted = ?\
+                           \ GROUP BY users.country\
+                           \ HAVING ( count >= ? )\
+                           \ ORDER BY\
+                               \ users.registered,\
+                               \ user_infos.age\
+                               \ ASC\
+                           \ LIMIT 18"
+
+    context "create select with grouping" $ do
+      let q = buildSelectUsersGroup
+      it "query" $ do
+        query q `shouldBe` "-- test select query\n\
+                           \SELECT COUNT(id) AS count, country\
                            \ FROM users\
                            \ WHERE deleted = ?\
-                           \ ORDER BY registered, age ASC\
                            \ GROUP BY country\
-                           \ HAVING (count >= ?)\
-                           \ LIMIT 18"
+                           \ HAVING ( count >= ? )\
+                           \ ORDER BY count DESC\
+                           \ LIMIT 10"
 

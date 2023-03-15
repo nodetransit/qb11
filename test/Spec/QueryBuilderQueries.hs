@@ -4,6 +4,7 @@
 
 module Spec.QueryBuilderQueries
     ( buildSelectUsers
+    , buildSelectUsersGroup
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
@@ -25,24 +26,46 @@ buildSelectUsers = (runIdentity . runQueryT) $ do
     select
     distinct
     from "users"
-    columns [ "id"
+    columns [ "users.id"
             , column_ "COUNT(id)" (as "count")
             , column_ "CONCAT(firstname, ' ', lastname)" (as "full_name")
-            , "country"
-            , "address"
+            , "users.country"
+            , "user_infos.address"
             ]
     where_ $ do
         condition "deleted" (equals false)
-    orderBy [ "registered"
-            , "age"
+    orderBy [ "users.registered"
+            , "user_infos.age"
             ]
             asc
-    groupBy [column "country"]
+    groupBy [column "users.country"]
     having $ do
         condition "count" (gte "5")
     limit 18
-    -- join
-    -- join as
+    join "user_infos" on $ do
+        condition "user_infos.uid" (equalsRaw "users.id")
+        and "user_infos.email" isNotNull
+    leftJoin_ "transactions" (as "tx") on $ do
+        condition "tx.uid" (equalsRaw "users.id")
+        and "tx.failed" (equals true)
+
+buildSelectUsersGroup :: Query
+buildSelectUsersGroup = (runIdentity . runQueryT) $ do
+    comment "test select query"
+    select
+    distinct
+    from "users"
+    columns [ column_ "COUNT(id)" (as "count")
+            , "country"
+            ]
+    where_ $ do
+        condition "deleted" (equals false)
+    orderBy [ "count" ]
+            desc
+    groupBy [column "country"]
+    having $ do
+        condition "count" (gte "3")
+    limit 10
 
 buildUpdate :: Query
 buildUpdate =
