@@ -18,6 +18,10 @@ module QueryBuilder.Internal.QueryBuilder
     , clause_having
     , clause_order_by
     , clause_limit
+
+    , bindings_join
+    , bindings_where_condition
+    , bindings_having
     ) where
 
 
@@ -36,6 +40,7 @@ import QueryBuilder.QueryOrder
 import QueryBuilder.JoinTable
 
 type Clause = Query -> Writer Text ()
+type Bindings = Query -> Writer [Text] ()
 
 column_only :: [Column] -> [Column]
 column_only = filter f
@@ -160,4 +165,24 @@ clause_limit query = do
         Just n  -> do
             tell $ " LIMIT "
             tell $ (T.pack . show) n
+
+
+bindings_join :: Bindings
+bindings_join query = do
+    let joins = query_joins query
+    iff (joins /= mempty) $ do
+        mapM mkJoinBindings joins
+        tell mempty
+  where
+    mkJoinBindings q = tell $ (condition_bindings . join_conditions) q
+
+bindings_where_condition :: Bindings
+bindings_where_condition query = do
+    let bindings = (condition_bindings . query_conditions) query
+    iff (bindings /= mempty) $ tell bindings
+
+bindings_having :: Bindings
+bindings_having query = do
+    let bindings = (condition_bindings . query_having) query
+    iff (bindings /= mempty) $ tell bindings
 

@@ -37,6 +37,8 @@ queryBuilderSpec =
                            \ FROM users\
                            \ INNER JOIN user_infos\
                                \ ON ( user_infos.uid = users.id AND user_infos.email IS NOT NULL )\
+                           \ LEFT JOIN transactions AS tx\
+                               \ ON ( tx.uid = users.id AND tx.failed = ? )\
                            \ WHERE deleted = ?\
                            \ GROUP BY users.country\
                            \ HAVING ( count >= ? )\
@@ -45,6 +47,10 @@ queryBuilderSpec =
                                \ user_infos.age\
                                \ ASC\
                            \ LIMIT 18"
+        bindings q `shouldBe` [ "1"
+                              , "0"
+                              , "5"
+                              ]
 
     context "create select with grouping" $ do
       let q = buildSelectUsersGroup
@@ -57,4 +63,7 @@ queryBuilderSpec =
                            \ HAVING ( count >= ? )\
                            \ ORDER BY count DESC\
                            \ LIMIT 10"
+        bindings q `shouldBe` [ "0"
+                              , "3"
+                              ]
 

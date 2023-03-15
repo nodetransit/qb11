@@ -33,10 +33,10 @@ query query      = if | query_type query == "SELECT" -> createSelect query
 
 bindings :: Query -> [Text]
 bindings EmptyQuery = []
-bindings query      = if | query_type query == "SELECT" -> getBindings query
-                         | query_type query == "UPDATE" -> getBindings query
-                         | query_type query == "INSERT" -> getBindings query
-                         | query_type query == "DELETE" -> getBindings query
+bindings query      = if | query_type query == "SELECT" -> getSelectBindings query
+                         | query_type query == "UPDATE" -> getUpdateBindings query
+                         | query_type query == "INSERT" -> getInsertBindings query
+                         | query_type query == "DELETE" -> getDeleteBindings query
                          | otherwise                    -> []
 
 createSelect :: Query -> Text
@@ -64,5 +64,19 @@ createDelete query = "d"
 
 
 
+getSelectBindings :: Query -> [Text]
+getSelectBindings query = (snd . runWriter) $ do
+    mapExec query [ bindings_join
+                  , bindings_where_condition
+                  , bindings_having
+                  ]
 
-getBindings _ = []
+getUpdateBindings :: Query -> [Text]
+getUpdateBindings _ = []
+
+getInsertBindings :: Query -> [Text]
+getInsertBindings _ = []
+
+getDeleteBindings :: Query -> [Text]
+getDeleteBindings _ = []
+
