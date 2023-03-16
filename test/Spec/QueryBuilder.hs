@@ -72,8 +72,8 @@ queryBuilderSpec =
     context "create select with bindings" $ do
       let q = buildSelectUsersWithBindings
       it "query" $ do
-        query q `shouldBe` "-- test\n\n\
-                           \select query bindings\n\
+        query q `shouldBe` "-- test\n\
+                           \-- select query bindings\n\
                            \SELECT\
                                \ COUNT(id) AS count,\
                                \ users.country,\
