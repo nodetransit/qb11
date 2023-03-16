@@ -68,3 +68,33 @@ queryBuilderSpec =
                               , "3"
                               ]
 
+    context "create select with bindings" $ do
+      let q = buildSelectUsersWithBindings
+      it "query" $ do
+        query q `shouldBe` "-- test\n\n\
+                           \select query bindings\n\
+                           \SELECT\
+                               \ COUNT(id) AS count,\
+                               \ users.country,\
+                               \ user_infos.address\
+                           \ FROM users\
+                           \ INNER JOIN user_infos\
+                               \ ON ( user_infos.uid = users.id\
+                                    \ AND user_infos.email <> ? )\
+                           \ RIGHT JOIN transactions AS tx\
+                               \ ON ( tx.uid = users.id\
+                                    \ AND ( tx.failed = ?\
+                                          \ OR tx.cancelled <> ?\
+                                        \ )\
+                                   \ )\
+                           \ WHERE users.country LIKE ?\
+                           \ GROUP BY users.country\
+                           \ HAVING ( count > ? AND count <= ? )"
+        bindings q `shouldBe` [ "''"
+                              , "1"
+                              , "''"
+                              , "'%ice%'"
+                              , "5"
+                              , "10"
+                              ]
+
