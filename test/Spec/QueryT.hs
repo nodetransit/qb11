@@ -35,7 +35,7 @@ queryTSpec =
     context "simple query" $ do
       let q = testQueryTransformer
       it "using identity monad" $ do
-        query_comments q `shouldBe` ["fail"]
+        query_comments q `shouldBe` mempty
         query_distinct q `shouldBe` False
         query_type q `shouldBe` "SELECT"
         (table_name . query_table) q `shouldBe` "users"
@@ -105,7 +105,7 @@ queryTSpec =
     context "query distinct, limit, comment, etc" $ do
       let q = testDistinctLimitEtc
       it "query" $ do
-        query_comments q `shouldBe` ["fail"]
+        query_comments q `shouldBe` ["test query using distinct"]
         query_distinct q `shouldBe` True
         query_type q `shouldBe` "SELECT"
         (table_name . query_table) q `shouldBe` "customers"
@@ -118,7 +118,7 @@ queryTSpec =
     context "insert values" $ do
       let q = testInsertValues
       it "query" $ do
-        query_comments q `shouldBe` ["fail"]
+        query_comments q `shouldBe` ["test insert query", "insert raw and not raw values"]
         query_type q `shouldBe` "INSERT"
         (table_name . query_table) q `shouldBe` "customers"
         (table_alias . query_table) q `shouldBe` Alias.None

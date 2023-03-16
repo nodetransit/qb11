@@ -111,7 +111,7 @@ modify_query = mq
     mq q@(Query {})         (Values v)          = q { query_values = makeValues v }
     mq q@(Query {})         (Join u t c)        = q { query_joins = [makeJoinTable u t Alias.None c] }
     mq q@(Query {})         (JoinAlias u t a c) = q { query_joins = [makeJoinTable u t a c] }
-    mq q@(Query {})         (Comment t)         = q { query_comments = t }
+    mq q@(Query {})         (Comment t)         = q { query_comments = makeComments t }
     mq Select               q                   = defaultQuery { query_type = "SELECT" } <> q
     mq Insert               q                   = defaultQuery { query_type = "INSERT" } <> q
     mq Update               q                   = defaultQuery { query_type = "UPDATE" } <> q
@@ -129,7 +129,7 @@ modify_query = mq
     mq (Values v)           q                   = defaultQuery { query_values = makeValues v } <> q
     mq (Join u t c)         q                   = defaultQuery { query_joins = [makeJoinTable u t Alias.None c] } <> q
     mq (JoinAlias u t a c)  q                   = defaultQuery { query_joins = [makeJoinTable u t a c] } <> q
-    mq (Comment t)          q                   = defaultQuery { query_comments = t }
+    mq (Comment t)          q                   = defaultQuery { query_comments = makeComments t }
     mq qL                   qR                  = coalesceQuery qL qR
 
 makeValues :: [[Value]] -> QueryCondition
@@ -164,6 +164,14 @@ makeJoinTable utype table alias cond = JoinTable
       where
         open  = rawQueryCondition "(" []
         close = rawQueryCondition ")" []
+
+makeComments :: [Text] -> [Text]
+makeComments = removeEmpty . splitN . splitR
+  where
+    split c t = Prelude.concat $ Prelude.map (T.splitOn c) t
+    splitN t = split "\n" t
+    splitR t = split "\r" t
+    removeEmpty = Prelude.filter (/= mempty)
 
 -- | Merge Queries
 coalesceQuery :: Query -> Query -> Query

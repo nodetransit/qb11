@@ -28,6 +28,7 @@ queryBuilderSpec =
       let q = buildSelectUsers
       it "query" $ do
         query q `shouldBe` "-- test select query\n\
+                           \-- test build order\n\
                            \SELECT\
                                \ users.id,\
                                \ COUNT(id) AS count,\

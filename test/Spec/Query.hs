@@ -90,7 +90,7 @@ querySpec =
                query_groupBy q `shouldBe` [Column "genre"]
                (condition_clause . query_having) q `shouldBe` "genre LIKE ?"
                (condition_bindings . query_having) q `shouldBe` ["%prog%"]
-               query_comments q `shouldBe` ["select albums and associated info", "filter unreleased albums and non-prog genres"]
+               query_comments q `shouldBe` ["select ", "albums and ", "associated info", "filter unreleased ", "albums and ", "non-prog genres"]
 
     context "building an insert query in any order should be valid" $ do
       forM_ (permutations checkInsertQueryNotInOrder) $
@@ -181,7 +181,7 @@ checkSelectQueryNotInOrder_pt2 =
     , Having (runConditionM $ do
         condition "genre" (like "%prog%")
     )
-    , Comment ["select albums and associated info", "filter unreleased albums and non-prog genres"]
+    , Comment ["select \nalbums and \n\rassociated info", "filter unreleased \ralbums and \r\nnon-prog genres"]
     ]
 
 -- |

@@ -22,7 +22,7 @@ import QueryBuilder.PostgreSql
 
 buildSelectUsers :: Query
 buildSelectUsers = (runIdentity . runQueryT) $ do
-    comment "test select query"
+    comment "test select query\n\ntest build order"
     select
     distinct
     from "users"
