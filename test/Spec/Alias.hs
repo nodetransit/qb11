@@ -6,9 +6,6 @@ module Spec.Alias
     ) where
 
 import Test.Hspec
-import Test.Hspec.QuickCheck
-import Data.Semigroup
-import Spec.Util
 
 import QueryBuilder.Alias
 

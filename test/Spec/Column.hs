@@ -11,7 +11,6 @@ import Data.Semigroup
 import Spec.Util
 
 import QueryBuilder.Internal.Query
-import QueryBuilder.Column
 import QueryBuilder.Alias
 
 columnSpec :: Spec
