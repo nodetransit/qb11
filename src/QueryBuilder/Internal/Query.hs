@@ -50,6 +50,7 @@ data Query = EmptyQuery
            | Where QueryCondition
            | OrderBy [Column] Order
            | Limit Int
+           | Offset Int
            | Comment [Text]
            | Query { query_type        :: Text
                    , query_table       :: QueryTable
@@ -63,6 +64,7 @@ data Query = EmptyQuery
                    , query_conditions  :: QueryCondition
                    , query_orderBy     :: QueryOrder
                    , query_limit       :: Maybe Int
+                   , query_offset      :: Maybe Int
                    , query_comments    :: [Text]
                }
             deriving Show
@@ -80,6 +82,7 @@ defaultQuery = Query { query_type        = mempty
                      , query_conditions  = mempty
                      , query_orderBy     = QueryOrder mempty Order.None
                      , query_limit       = Nothing
+                     , query_offset      = Nothing
                      , query_comments    = mempty
                      }
 
@@ -108,6 +111,7 @@ modify_query = mq
     mq q@(Query {})         (Having c)          = q { query_having = c }
     mq q@(Query {})         Distinct            = q { query_distinct = True }
     mq q@(Query {})         (Limit n)           = q { query_limit = Just n }
+    mq q@(Query {})         (Offset n)          = q { query_offset = Just n }
     mq q@(Query {})         (Values v)          = q { query_values = makeValues v }
     mq q@(Query {})         (Join u t c)        = q { query_joins = [makeJoinTable u t Alias.None c] }
     mq q@(Query {})         (JoinAlias u t a c) = q { query_joins = [makeJoinTable u t a c] }
@@ -126,6 +130,7 @@ modify_query = mq
     mq (Having c)           q                   = defaultQuery { query_having = c } <> q
     mq Distinct             q                   = defaultQuery { query_distinct = True } <> q
     mq (Limit n)            q                   = defaultQuery { query_limit = Just n } <> q
+    mq (Offset n)           q                   = defaultQuery { query_offset = Just n } <> q
     mq (Values v)           q                   = defaultQuery { query_values = makeValues v } <> q
     mq (Join u t c)         q                   = defaultQuery { query_joins = [makeJoinTable u t Alias.None c] } <> q
     mq (JoinAlias u t a c)  q                   = defaultQuery { query_joins = [makeJoinTable u t a c] } <> q
@@ -187,6 +192,7 @@ coalesceQuery qL qR = Query { query_type        = queryType
                             , query_conditions  = queryConditions
                             , query_orderBy     = queryOrder
                             , query_limit       = queryLimit
+                            , query_offset      = queryOffset
                             , query_comments    = queryComments
                             }
   where
@@ -198,6 +204,8 @@ coalesceQuery qL qR = Query { query_type        = queryType
     distinctLen b = if b == True then 1 else 0
     limitLen Nothing = 0
     limitLen _       = 1
+    offsetLen Nothing = 0
+    offsetLen _       = 1
 
     -- | here only joins are appended, everything else is coalesced
     queryType       = coalesce T.length       query_type
@@ -210,6 +218,7 @@ coalesceQuery qL qR = Query { query_type        = queryType
     queryHaving     = coalesce conditionLen   query_having
     queryDistinct   = coalesce distinctLen    query_distinct
     queryLimit      = coalesce limitLen       query_limit
+    queryOffset     = coalesce offsetLen      query_offset
     queryValues     = coalesce conditionLen   query_values
     queryJoins      = query_joins qL <> query_joins qR
     queryComments   = coalesce Prelude.length query_comments
@@ -286,3 +295,4 @@ instance (Semigroup c, Monoid c) => MonadTrans (QueryT c) where
         a <- m
         return (a, mempty)
     {-# INLINE lift #-}
+

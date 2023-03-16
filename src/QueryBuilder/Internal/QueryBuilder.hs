@@ -18,6 +18,7 @@ module QueryBuilder.Internal.QueryBuilder
     , clause_having
     , clause_order_by
     , clause_limit
+    , clause_offset
 
     , bindings_join
     , bindings_where_condition
@@ -164,6 +165,16 @@ clause_limit query = do
         Nothing -> tell mempty
         Just n  -> do
             tell $ " LIMIT "
+            tell $ (T.pack . show) n
+
+clause_offset :: Clause
+clause_offset query = do
+    let offset = query_offset query
+    tell mempty
+    case offset of
+        Nothing -> tell mempty
+        Just n  -> do
+            tell $ " OFFSET "
             tell $ (T.pack . show) n
 
 

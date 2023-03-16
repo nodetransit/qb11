@@ -5,6 +5,7 @@
 module Spec.QueryBuilderQueries
     ( buildSelectUsers
     , buildSelectUsersGroup
+    , buildSelectUsersWithBindings
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
@@ -41,7 +42,8 @@ buildSelectUsers = (runIdentity . runQueryT) $ do
     groupBy [column "users.country"]
     having $ do
         condition "count" (gte "5")
-    limit 18
+    limit 12
+    offset 18
     join "user_infos" on $ do
         condition "user_infos.uid" (equalsRaw "users.id")
         and "user_infos.email" isNotNull
@@ -66,6 +68,30 @@ buildSelectUsersGroup = (runIdentity . runQueryT) $ do
     having $ do
         condition "count" (gte "3")
     limit 10
+
+buildSelectUsersWithBindings :: Query
+buildSelectUsersWithBindings = (runIdentity . runQueryT) $ do
+    comment "test\n\nselect query bindings"
+    select
+    from "users"
+    columns [ column_ "COUNT(id)" (as "count")
+            , "users.country"
+            , "user_infos.address"
+            ]
+    where_ $ do
+        condition "users.country" (like "'%ice%'")
+    groupBy [column "users.country"]
+    having $ do
+        condition "count" (gt "5")
+        and "count" (lte "10")
+    join "user_infos" on $ do
+        condition "user_infos.uid" (equalsRaw "users.id")
+        and "user_infos.email" (notEquals "''")
+    rightJoin_ "transactions" (as "tx") on $ do
+        condition "tx.uid" (equalsRaw "users.id")
+        and_ $ do
+            condition "tx.failed" (equals true)
+            or "tx.cancelled" (notEquals "''")
 
 buildUpdate :: Query
 buildUpdate =

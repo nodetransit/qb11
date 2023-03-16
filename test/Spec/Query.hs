@@ -59,6 +59,7 @@ querySpec =
       it "query having conditions" $ (condition_clause . query_having) q `shouldBe` "type LIKE ?"
       it "query having conditions" $ (condition_bindings . query_having) q `shouldBe` ["%admin%"]
       it "query limit" $ query_limit q `shouldBe` Just 12
+      it "query offset" $ query_offset q `shouldBe` Just 3
       it "query comments" $ query_comments q `shouldBe` ["select user", "join with info and logs"]
 
     context "building a full query in any order should be valid" $ do
@@ -74,6 +75,8 @@ querySpec =
                query_type q `shouldBe` "SELECT"
                query_limit q `shouldBe` Nothing
                query_limit (q <> Limit 18) `shouldBe` Just 18
+               query_offset q `shouldBe` Nothing
+               query_offset (q <> Offset 12) `shouldBe` Just 12
                query_distinct q `shouldBe` False
                query_distinct (q <> Distinct) `shouldBe` True
            prop ("testing permutation: " ++ showQueries queries) $ do
@@ -148,6 +151,7 @@ checkSelectQuery =
     )
     <> OrderBy [Column "registered", Column "last_login"] Asc
     <> Limit 12
+    <> Offset 3
     <> Comment ["select user", "join with info and logs"]
 
 -- | basic query permutations 1

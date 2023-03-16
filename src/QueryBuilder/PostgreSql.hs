@@ -51,6 +51,7 @@ createSelect query  = (snd . runWriter) $ do
                   , clause_having
                   , clause_order_by
                   , clause_limit
+                  , clause_offset
                   ]
 
 createUpdate :: Query -> Text
