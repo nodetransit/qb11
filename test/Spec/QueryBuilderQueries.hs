@@ -41,7 +41,8 @@ buildSelectUsers = (runIdentity . runQueryT) $ do
     groupBy [column "users.country"]
     having $ do
         condition "count" (gte "5")
-    limit 18
+    limit 12
+    offset 18
     join "user_infos" on $ do
         condition "user_infos.uid" (equalsRaw "users.id")
         and "user_infos.email" isNotNull

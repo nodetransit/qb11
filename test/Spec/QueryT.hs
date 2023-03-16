@@ -44,6 +44,7 @@ queryTSpec =
         (condition_clause . query_conditions) q `shouldBe` "deleted IS NULL AND ( registered IS NOT NULL OR validated = ? ) AND blocked = ?"
         (condition_bindings . query_conditions) q `shouldBe` ["1", "0"]
         query_limit q `shouldBe` Nothing
+        query_offset q `shouldBe` Nothing
       prop "using identity monad" $ do
         (order_columns . query_orderBy) q `shouldBeTheSameColumns` [Column "registered_on", Column "last_login"]
       prop "using identity monad" $ do
@@ -112,6 +113,7 @@ queryTSpec =
         (table_alias . query_table) q `shouldBe` Alias.None
         query_groupBy q `shouldBe` [Column "country"]
         query_limit q `shouldBe` Just 18
+        query_offset q `shouldBe` Just 12
       prop "query columns" $ do
         query_columns q `shouldBeTheSameColumns` [ColumnAlias "COUNT(id)" (As "count"), Column "country"]
 

@@ -44,6 +44,7 @@ module QueryBuilder.Query
     , orderBy
     , desc
     , asc
+    , offset
     , limit
     , comment
     , comments
@@ -248,6 +249,11 @@ limit :: (Monad m) => Int -> QueryT m
 limit n = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> Internal.Limit n)
 {-# INLINE limit #-}
+
+offset :: (Monad m) => Int -> QueryT m
+offset n = Internal.QueryT $ do
+    return (True, Internal.defaultQuery <> Internal.Offset n)
+{-# INLINE offset #-}
 
 comments :: (Monad m) => [Text] -> QueryT m
 comments c = Internal.QueryT $ do

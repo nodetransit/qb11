@@ -103,6 +103,7 @@ testDistinctLimitEtc =
                 ]
         from "customers"
         groupBy [column "country"]
+        offset 12
         limit 18
 
 testInsertValues :: Query

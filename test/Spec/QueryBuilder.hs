@@ -46,7 +46,8 @@ queryBuilderSpec =
                                \ users.registered,\
                                \ user_infos.age\
                                \ ASC\
-                           \ LIMIT 18"
+                           \ LIMIT 12\
+                           \ OFFSET 18"
         bindings q `shouldBe` [ "1"
                               , "0"
                               , "5"
