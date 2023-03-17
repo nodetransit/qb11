@@ -6,7 +6,8 @@ module Spec.QueryBuilderQueries
     ( buildSelectUsers
     , buildSelectUsersGroup
     , buildSelectUsersWithBindings
-    , buildUpdate
+    , buildUpdateCustomers
+    , buildInsertCustomers
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
@@ -94,8 +95,8 @@ buildSelectUsersWithBindings = (runIdentity . runQueryT) $ do
             condition "tx.failed" (equals true)
             or "tx.cancelled" (notEquals "''")
 
-buildUpdate :: Query
-buildUpdate =
+buildUpdateCustomers :: Query
+buildUpdateCustomers =
     runQuery $ do
         comments [ "test build update query"
                  , "with raw and parameterized values"
@@ -110,9 +111,10 @@ buildUpdate =
         where_ $ do
             condition "id" (isIn ["1", "2", "3"])
 
-builddInsertCustomers :: Query
-builddInsertCustomers =
+buildInsertCustomers :: Query
+buildInsertCustomers =
     runQuery $ do
+        comment "test insert query"
         insert
         into "customers"
         columns [ "name"

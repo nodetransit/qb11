@@ -98,7 +98,7 @@ queryBuilderSpec =
                               ]
 
     context "build update" $ do
-      let q = buildUpdate
+      let q = buildUpdateCustomers
       it "simple update query" $ do
         query q `shouldBe` "-- test build update query\n\
                            \-- with raw and parameterized values\n\
@@ -118,4 +118,27 @@ queryBuilderSpec =
                               , "2"
                               , "3"
                               ]
+
+    context "build insert" $ do
+      let q = buildInsertCustomers
+      it "simple update query" $ do
+        query q `shouldBe` "-- test insert query\n\
+                           \INSERT INTO\
+                               \ customers\
+                               \ (name, country, address, register, updated)\
+                           \ VALUES\
+                               \ (?, ?, ?, NOW(), null),\
+                               \ (?, ?, ?, NOW(), null),\
+                               \ (?, ?, ?, NOW(), null)"
+        bindings q `shouldBe` [ "mark"
+                              , "us"
+                              , "12th elm"
+                              , "james"
+                              , "ja"
+                              , "blk. 1"
+                              , "john"
+                              , "en"
+                              , "lot. 18"
+                              ]
+
 

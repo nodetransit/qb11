@@ -14,6 +14,8 @@ module QueryBuilder.Internal.QueryBuilder
     , clause_from_table
     , clause_into_table
     , clause_update_table
+    , clause_insert_columns
+    , clause_insert_values
     , clause_set
     , clause_join
     , clause_where_condition
@@ -24,6 +26,7 @@ module QueryBuilder.Internal.QueryBuilder
     , clause_offset
 
     , bindings_join
+    , bindings_insert_values
     , bindings_set
     , bindings_where_condition
     , bindings_having
@@ -109,8 +112,19 @@ clause_into_table query = do
 
 clause_update_table :: Clause
 clause_update_table query = do
-    tell " "
+    tell $ " "
     tell $ (table_name . query_table) query
+
+clause_insert_columns :: Clause
+clause_insert_columns query = do
+    tell $ " ("
+    tell $ (column_query . column_only . query_columns) query
+    tell $ ")"
+
+clause_insert_values :: Clause
+clause_insert_values query = do
+    tell $ " VALUES "
+    tell $ (condition_clause . query_values) query
 
 clause_set :: Clause
 clause_set query = do
@@ -191,6 +205,10 @@ clause_offset query = do
         Just n  -> do
             tell $ " OFFSET "
             tell $ (T.pack . show) n
+
+bindings_insert_values :: Bindings
+bindings_insert_values query = do
+    tell $ (condition_bindings . query_values) query
 
 bindings_set :: Bindings
 bindings_set query = do
