@@ -6,6 +6,7 @@ module Spec.QueryBuilderQueries
     ( buildSelectUsers
     , buildSelectUsersGroup
     , buildSelectUsersWithBindings
+    , buildUpdate
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
@@ -96,12 +97,15 @@ buildSelectUsersWithBindings = (runIdentity . runQueryT) $ do
 buildUpdate :: Query
 buildUpdate =
     runQuery $ do
+        comments [ "test build update query"
+                 , "with raw and parameterized values"
+                 ]
         update
         table "customers"
         set [ "name"    .= "ac"
             , "country" .= "uk"
             , "address" .= "1st st."
-            , "updated" .= ("uk" :: Raw)
+            , "updated" .= ("NOW()" :: Raw)
             ]
         where_ $ do
             condition "id" (isIn ["1", "2", "3"])

@@ -24,9 +24,9 @@ import QueryBuilder.PostgreSql
 queryBuilderSpec :: Spec
 queryBuilderSpec = 
   describe "query and bindings" $ do
-    context "create full select" $ do
+    context "build select" $ do
       let q = buildSelectUsers
-      it "query" $ do
+      it "simple select query" $ do
         query q `shouldBe` "-- test select query\n\
                            \-- test build order\n\
                            \SELECT\
@@ -54,9 +54,8 @@ queryBuilderSpec =
                               , "5"
                               ]
 
-    context "create select with grouping" $ do
       let q = buildSelectUsersGroup
-      it "query" $ do
+      it "select with grouping" $ do
         query q `shouldBe` "-- test select query\n\
                            \SELECT COUNT(id) AS count, country\
                            \ FROM users\
@@ -69,9 +68,8 @@ queryBuilderSpec =
                               , "3"
                               ]
 
-    context "create select with bindings" $ do
       let q = buildSelectUsersWithBindings
-      it "query" $ do
+      it "select bindings" $ do
         query q `shouldBe` "-- test\n\
                            \-- select query bindings\n\
                            \SELECT\
@@ -97,5 +95,27 @@ queryBuilderSpec =
                               , "'%ice%'"
                               , "5"
                               , "10"
+                              ]
+
+    context "build update" $ do
+      let q = buildUpdate
+      it "simple update query" $ do
+        query q `shouldBe` "-- test build update query\n\
+                           \-- with raw and parameterized values\n\
+                           \UPDATE\
+                           \ customers\
+                           \ SET (\
+                               \name = ?, \
+                               \country = ?, \
+                               \address = ?, \
+                               \updated = NOW()\
+                           \)\
+                           \ WHERE id IN (?, ?, ?)"
+        bindings q `shouldBe` [ "ac"
+                              , "uk"
+                              , "1st st."
+                              , "1"
+                              , "2"
+                              , "3"
                               ]
 

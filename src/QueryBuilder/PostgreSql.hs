@@ -55,7 +55,13 @@ createSelect query  = (snd . runWriter) $ do
                   ]
 
 createUpdate :: Query -> Text
-createUpdate query = "u"
+createUpdate query = (snd . runWriter) $ do
+    mapExec query [ clause_comments
+                  , clause_query_type
+                  , clause_update_table
+                  , clause_set
+                  , clause_where_condition
+                  ]
 
 createInsert :: Query -> Text
 createInsert query = "i"
@@ -73,7 +79,10 @@ getSelectBindings query = (snd . runWriter) $ do
                   ]
 
 getUpdateBindings :: Query -> [Text]
-getUpdateBindings _ = []
+getUpdateBindings query = (snd . runWriter) $ do
+    mapExec query [ bindings_set
+                  , bindings_where_condition
+                  ]
 
 getInsertBindings :: Query -> [Text]
 getInsertBindings _ = []

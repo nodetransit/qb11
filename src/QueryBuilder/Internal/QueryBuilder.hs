@@ -12,6 +12,9 @@ module QueryBuilder.Internal.QueryBuilder
     , clause_query_type
     , clause_columns
     , clause_from_table
+    , clause_into_table
+    , clause_update_table
+    , clause_set
     , clause_join
     , clause_where_condition
     , clause_group_by
@@ -21,6 +24,7 @@ module QueryBuilder.Internal.QueryBuilder
     , clause_offset
 
     , bindings_join
+    , bindings_set
     , bindings_where_condition
     , bindings_having
     ) where
@@ -103,6 +107,17 @@ clause_into_table query = do
     tell $ " INTO "
     tell $ (table_name . query_table) query
 
+clause_update_table :: Clause
+clause_update_table query = do
+    tell " "
+    tell $ (table_name . query_table) query
+
+clause_set :: Clause
+clause_set query = do
+    tell $ " SET ("
+    tell $ (set_clause . query_set) query
+    tell $ ")"
+
 clause_where_condition :: Clause
 clause_where_condition query = do
     let cond = (condition_clause . query_conditions) query
@@ -177,6 +192,9 @@ clause_offset query = do
             tell $ " OFFSET "
             tell $ (T.pack . show) n
 
+bindings_set :: Bindings
+bindings_set query = do
+    tell $ (set_bindings . query_set) query
 
 bindings_join :: Bindings
 bindings_join query = do
