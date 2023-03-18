@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS public.t_users CASCADE;
 CREATE TABLE IF NOT EXISTS public.t_users
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY,
-    lid integer NOT NULL,
+    level_id integer NOT NULL,
     email character varying(128) NOT NULL,
     registered timestamp without time zone NOT NULL,
     deleted timestamp without time zone,
@@ -18,7 +18,7 @@ DROP TABLE IF EXISTS public.t_user_infos CASCADE;
 CREATE TABLE IF NOT EXISTS public.t_user_infos
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY,
-    uid integer NOT NULL,
+    user_id integer NOT NULL,
     name character varying(24) NOT NULL,
     country character varying(52),
     address character varying(52),
@@ -31,8 +31,8 @@ DROP TABLE IF EXISTS public.t_jobs CASCADE;
 CREATE TABLE IF NOT EXISTS public.t_jobs
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY,
-    jtid integer NOT NULL,
-    uid integer NOT NULL,
+    job_type_id integer NOT NULL,
+    user_id integer NOT NULL,
     date timestamp without time zone NOT NULL,
     successful boolean,
     retries integer,
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS public.t_tags
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS public.m_levels CASCADE;
+DROP TABLE IF EXISTS public.m_levels;
 
 CREATE TABLE IF NOT EXISTS public.m_levels
 (
@@ -78,68 +78,68 @@ DROP TABLE IF EXISTS public.t_jobs_tags CASCADE;
 CREATE TABLE IF NOT EXISTS public.t_jobs_tags
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY,
-    jid integer NOT NULL,
-    tid integer NOT NULL,
+    job_id integer NOT NULL,
+    tag_id integer NOT NULL,
     PRIMARY KEY (id)
 );
 
 ALTER TABLE IF EXISTS public.t_users
-    ADD FOREIGN KEY (lid)
+    ADD FOREIGN KEY (level_id)
     REFERENCES public.m_levels (id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE RESTRICT
     NOT VALID;
 CREATE INDEX IF NOT EXISTS t_users_m_levels_fk_index
-    ON public.t_users(lid);
+    ON public.t_users(level_id);
 
 
 ALTER TABLE IF EXISTS public.t_user_infos
-    ADD FOREIGN KEY (uid)
+    ADD FOREIGN KEY (user_id)
     REFERENCES public.t_users (id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE CASCADE
     NOT VALID;
 CREATE INDEX IF NOT EXISTS t_users_t_user_infos_fk_index
-    ON public.t_user_infos(uid);
+    ON public.t_user_infos(user_id);
 
 
 ALTER TABLE IF EXISTS public.t_jobs
-    ADD FOREIGN KEY (uid)
+    ADD FOREIGN KEY (user_id)
     REFERENCES public.t_users (id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE CASCADE
     NOT VALID;
 CREATE INDEX IF NOT EXISTS t_jobs_t_users_fk_index
-    ON public.t_jobs(uid);
+    ON public.t_jobs(user_id);
 
 
 ALTER TABLE IF EXISTS public.t_jobs
-    ADD FOREIGN KEY (jtid)
+    ADD FOREIGN KEY (job_type_id)
     REFERENCES public.m_job_types (id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE RESTRICT
     NOT VALID;
 CREATE INDEX IF NOT EXISTS t_jobs_m_jobs_types_fk_index
-    ON public.t_jobs(jtid);
+    ON public.t_jobs(job_type_id);
 
 
 ALTER TABLE IF EXISTS public.t_jobs_tags
-    ADD FOREIGN KEY (jid)
+    ADD FOREIGN KEY (job_id)
     REFERENCES public.t_jobs (id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE CASCADE
     NOT VALID;
 CREATE INDEX IF NOT EXISTS t_jobs_t_jobs_tags_fk_index
-    ON public.t_jobs_tags(jid);
+    ON public.t_jobs_tags(job_id);
 
 
 ALTER TABLE IF EXISTS public.t_jobs_tags
-    ADD FOREIGN KEY (jid)
+    ADD FOREIGN KEY (job_id)
     REFERENCES public.t_tags (id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE CASCADE
     NOT VALID;
 CREATE INDEX IF NOT EXISTS t_job_tags_t_jobs_fk_index
-    ON public.t_jobs_tags(jid);
+    ON public.t_jobs_tags(job_id);
 
 END;
