@@ -43,6 +43,7 @@ tests:
     - qb11
     - hspec
     - QuickCheck
+    - time
     - postgresql-simple
   # - mysql-simple
   # - sqlite-simple

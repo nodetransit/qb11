@@ -12,6 +12,8 @@ import Spec.RawOperators as Run
 import Spec.Raw          as Run
 import Spec.QueryBuilder as Run
 
+import Spec.Engines.Postgre as Run
+
 import Data.Text (Text)
 import QueryBuilder.ToText
 import Data.Semigroup
@@ -32,4 +34,6 @@ main = do
         Run.rawOperatorSpec
         Run.rawSpec
         Run.queryBuilderSpec
+
+        Run.postgreSpec
 
