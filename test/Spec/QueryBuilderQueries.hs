@@ -8,6 +8,7 @@ module Spec.QueryBuilderQueries
     , buildSelectUsersWithBindings
     , buildUpdateCustomers
     , buildInsertCustomers
+    , buildDeleteUsers
     ) where
 
 import Prelude hiding (and, or, null, Left, Right)
@@ -128,9 +129,10 @@ buildInsertCustomers =
                , [value "john" , value "en", value "lot. 18" , value ("NOW()" :: Raw), value ("null" :: Raw)]
                ]
 
-buildDelete :: Query
-buildDelete =
+buildDeleteUsers :: Query
+buildDeleteUsers =
     runQuery $ do
+        comment "test delete query"
         delete
         from "users"
         where_ $ do

@@ -73,9 +73,12 @@ createInsert query = (snd . runWriter) $ do
                   ]
 
 createDelete :: Query -> Text
-createDelete query = "d"
-
-
+createDelete query = (snd . runWriter) $ do
+    mapExec query [ clause_comments
+                  , clause_query_type
+                  , clause_from_table
+                  , clause_where_condition
+                  ]
 
 getSelectBindings :: Query -> [Text]
 getSelectBindings query = (snd . runWriter) $ do
@@ -96,5 +99,7 @@ getInsertBindings query = (snd . runWriter) $ do
                   ]
 
 getDeleteBindings :: Query -> [Text]
-getDeleteBindings _ = []
+getDeleteBindings query = (snd . runWriter) $ do
+    mapExec query [ bindings_where_condition
+                  ]
 

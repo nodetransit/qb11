@@ -141,4 +141,14 @@ queryBuilderSpec =
                               , "lot. 18"
                               ]
 
+    context "build delete" $ do
+      let q = buildDeleteUsers
+      it "simple delete query" $ do
+        query q `shouldBe` "-- test delete query\n\
+                           \DELETE FROM\
+                               \ users\
+                           \ WHERE unregistered = ?\
+                                 \ OR disabled IS NOT NULL"
+        bindings q `shouldBe` ["1"]
+
 
