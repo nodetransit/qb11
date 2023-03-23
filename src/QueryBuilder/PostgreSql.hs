@@ -64,12 +64,21 @@ createUpdate query = (snd . runWriter) $ do
                   ]
 
 createInsert :: Query -> Text
-createInsert query = "i"
+createInsert query = (snd . runWriter) $ do
+    mapExec query [ clause_comments
+                  , clause_query_type
+                  , clause_into_table
+                  , clause_insert_columns
+                  , clause_insert_values
+                  ]
 
 createDelete :: Query -> Text
-createDelete query = "d"
-
-
+createDelete query = (snd . runWriter) $ do
+    mapExec query [ clause_comments
+                  , clause_query_type
+                  , clause_from_table
+                  , clause_where_condition
+                  ]
 
 getSelectBindings :: Query -> [Text]
 getSelectBindings query = (snd . runWriter) $ do
@@ -85,8 +94,12 @@ getUpdateBindings query = (snd . runWriter) $ do
                   ]
 
 getInsertBindings :: Query -> [Text]
-getInsertBindings _ = []
+getInsertBindings query = (snd . runWriter) $ do
+    mapExec query [ bindings_insert_values
+                  ]
 
 getDeleteBindings :: Query -> [Text]
-getDeleteBindings _ = []
+getDeleteBindings query = (snd . runWriter) $ do
+    mapExec query [ bindings_where_condition
+                  ]
 
