@@ -79,6 +79,7 @@ querySpec =
                query_offset (q <> Offset 12) `shouldBe` Just 12
                query_distinct q `shouldBe` False
                query_distinct (q <> Distinct) `shouldBe` True
+               query_comments q `shouldBe` ["test comment"]
            prop ("testing permutation: " ++ showQueries queries) $ do
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "title"]
            prop ("testing permutation :" ++ showQueries queries) $ do
@@ -169,6 +170,7 @@ checkSelectQueryNotInOrder_pt1 =
           and "released" isNotNull
       )
     , OrderBy [Column "rating", Column "artist"] Desc
+    , Comment ["test comment"]
     ]
 
 -- | basic query permutations 2

@@ -134,7 +134,7 @@ modify_query = mq
     mq (Values v)           q                   = defaultQuery { query_values = makeValues v } <> q
     mq (Join u t c)         q                   = defaultQuery { query_joins = [makeJoinTable u t Alias.None c] } <> q
     mq (JoinAlias u t a c)  q                   = defaultQuery { query_joins = [makeJoinTable u t a c] } <> q
-    mq (Comment t)          q                   = defaultQuery { query_comments = makeComments t }
+    mq (Comment t)          q                   = defaultQuery { query_comments = makeComments t } <> q
     mq qL                   qR                  = coalesceQuery qL qR
 
 makeValues :: [[Value]] -> QueryCondition
