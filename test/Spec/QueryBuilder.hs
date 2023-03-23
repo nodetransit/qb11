@@ -27,7 +27,7 @@ queryBuilderSpec =
     context "build select" $ do
       let q = buildSelectUsers
       it "simple select query" $ do
-        query q `shouldBe` "-- test select query\n\
+        structuredQuery q `shouldBe` "-- test select query\n\
                            \-- test build order\n\
                            \SELECT\
                                \ users.id,\
@@ -56,7 +56,7 @@ queryBuilderSpec =
 
       let q = buildSelectUsersGroup
       it "select with grouping" $ do
-        query q `shouldBe` "-- test select query\n\
+        structuredQuery q `shouldBe` "-- test select query\n\
                            \SELECT COUNT(id) AS count, country\
                            \ FROM users\
                            \ WHERE deleted = ?\
@@ -70,7 +70,7 @@ queryBuilderSpec =
 
       let q = buildSelectUsersWithBindings
       it "select bindings" $ do
-        query q `shouldBe` "-- test\n\
+        structuredQuery q `shouldBe` "-- test\n\
                            \-- select query bindings\n\
                            \SELECT\
                                \ COUNT(id) AS count,\
@@ -100,7 +100,7 @@ queryBuilderSpec =
     context "build update" $ do
       let q = buildUpdateCustomers
       it "simple update query" $ do
-        query q `shouldBe` "-- test build update query\n\
+        structuredQuery q `shouldBe` "-- test build update query\n\
                            \-- with raw and parameterized values\n\
                            \UPDATE\
                            \ customers\
@@ -122,7 +122,7 @@ queryBuilderSpec =
     context "build insert" $ do
       let q = buildInsertCustomers
       it "simple update query" $ do
-        query q `shouldBe` "-- test insert query\n\
+        structuredQuery q `shouldBe` "-- test insert query\n\
                            \INSERT INTO\
                                \ customers\
                                \ (name, country, address, register, updated)\
@@ -144,7 +144,7 @@ queryBuilderSpec =
     context "build delete" $ do
       let q = buildDeleteUsers
       it "simple delete query" $ do
-        query q `shouldBe` "-- test delete query\n\
+        structuredQuery q `shouldBe` "-- test delete query\n\
                            \DELETE FROM\
                                \ users\
                            \ WHERE unregistered = ?\

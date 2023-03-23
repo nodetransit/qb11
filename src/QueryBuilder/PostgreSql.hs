@@ -2,13 +2,16 @@
 {-# LANGUAGE MultiWayIf #-}
 
 module QueryBuilder.PostgreSql
-    ( query
+    ( structuredQuery
     , bindings
     ) where
 
 
 import Data.Text as T hiding (map, filter, foldl)
+import Data.Text.Encoding as T
 import Data.Text (Text)
+import Data.ByteString as B
+import Data.ByteString (ByteString)
 -- import Control.Monad.Trans.Writer.Lazy
 import Control.Monad.Writer
 
@@ -22,6 +25,8 @@ import QueryBuilder.Set
 import QueryBuilder.QueryOrder
 import QueryBuilder.Internal.QueryBuilder
 
+structuredQuery :: Query -> ByteString
+structuredQuery = T.encodeUtf8 . query
 
 query :: Query -> Text
 query EmptyQuery = ""
