@@ -1,9 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS -Wno-missing-fields #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# Language DuplicateRecordFields #-}
 
 module Spec.Engines.PostgreQueries
-    ( 
+    ( User(..)
+    , UserInfo(..)
+    , Job(..)
+    , createInsertUsers
     ) where
 
 import Data.Text (Text)
@@ -22,9 +26,47 @@ data User = User
     , deleted    :: Maybe LocalTime
     }
 
-createInsertUser :: [User] -> Query
-createInsertUser users = runQuery $ do
+type Users = [User]
+
+data UserInfo = UserInfo
+    { id        :: Int
+    , user_id   :: Int
+    , name      :: Text
+    , country   :: Maybe Text
+    , address   :: Maybe Text
+    , telephone :: Maybe Text
+    }
+
+data Job = Job
+    { id            :: Int
+    , job_type_id   :: Int
+    , user_id       :: Int
+    , date          :: LocalTime
+    , successfull   :: Maybe Bool
+    , retries       :: Maybe Int
+    , cancelled     :: Maybe LocalTime
+    , cancel_reason :: Maybe Text
+    , failed        :: Maybe LocalTime
+    , fail_reason   :: Maybe Text
+    }
+
+createInsertUsers :: Users -> Query
+createInsertUsers users = runQuery $ do
     comment $ "insert users: " <> userEmails
+    insert
+    into "t_users"
+    columns [ "level_id"
+            , "email"
+            , "registered"
+            ]
+    values userValues
+    returning "id"
   where
     userEmails = T.intercalate ", " $ map email users
+    userValues = map toInsertValues users
+    toInsertValues u = [ value $ (T.pack . show . level_id) u
+                       , value $ (T.pack . show . email) u
+                       , value ("current_timestamp" :: Raw)
+                       ]
 
+-- createInsertUserInfo :: User -> UserInfo -> Query
