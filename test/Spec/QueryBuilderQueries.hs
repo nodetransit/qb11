@@ -128,6 +128,7 @@ buildInsertCustomers =
                , [value "james", value "ja", value "blk. 1"  , value ("NOW()" :: Raw), value ("null" :: Raw)]
                , [value "john" , value "en", value "lot. 18" , value ("NOW()" :: Raw), value ("null" :: Raw)]
                ]
+        returning "id"
 
 buildDeleteUsers :: Query
 buildDeleteUsers =
@@ -138,4 +139,5 @@ buildDeleteUsers =
         where_ $ do
             condition "unregistered" (equals true)
             or "disabled" (isNotNull)
+        returning "id"
 

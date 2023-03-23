@@ -46,6 +46,7 @@ module QueryBuilder.Query
     , asc
     , offset
     , limit
+    , returning
     , comment
     , comments
     ) where
@@ -254,6 +255,11 @@ offset :: (Monad m) => Int -> QueryT m
 offset n = Internal.QueryT $ do
     return (True, Internal.defaultQuery <> Internal.Offset n)
 {-# INLINE offset #-}
+
+returning :: (Monad m) => Text -> QueryT m
+returning r = Internal.QueryT $ do
+    return (True, Internal.defaultQuery <> Internal.Returning r)
+{-# INLINE returning #-}
 
 comments :: (Monad m) => [Text] -> QueryT m
 comments c = Internal.QueryT $ do

@@ -129,7 +129,8 @@ queryBuilderSpec =
                            \ VALUES\
                                \ (?, ?, ?, NOW(), null),\
                                \ (?, ?, ?, NOW(), null),\
-                               \ (?, ?, ?, NOW(), null)"
+                               \ (?, ?, ?, NOW(), null)\
+                               \ RETURNING id"
         bindings q `shouldBe` [ "mark"
                               , "us"
                               , "12th elm"
@@ -148,7 +149,8 @@ queryBuilderSpec =
                            \DELETE FROM\
                                \ users\
                            \ WHERE unregistered = ?\
-                                 \ OR disabled IS NOT NULL"
+                                 \ OR disabled IS NOT NULL\
+                            \ RETURNING id"
         bindings q `shouldBe` ["1"]
 
 

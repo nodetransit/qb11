@@ -75,6 +75,7 @@ createInsert query = (snd . runWriter) $ do
                   , clause_into_table
                   , clause_insert_columns
                   , clause_insert_values
+                  , clause_returning
                   ]
 
 createDelete :: Query -> Text
@@ -83,6 +84,7 @@ createDelete query = (snd . runWriter) $ do
                   , clause_query_type
                   , clause_from_table
                   , clause_where_condition
+                  , clause_returning
                   ]
 
 getSelectBindings :: Query -> [Text]

@@ -24,6 +24,7 @@ module QueryBuilder.Internal.QueryBuilder
     , clause_order_by
     , clause_limit
     , clause_offset
+    , clause_returning
 
     , bindings_join
     , bindings_insert_values
@@ -205,6 +206,13 @@ clause_offset query = do
         Just n  -> do
             tell $ " OFFSET "
             tell $ (T.pack . show) n
+
+clause_returning :: Clause
+clause_returning query = do
+    let ret = query_returning query
+    iff (ret /= mempty) $ do
+        tell " RETURNING "
+        tell ret
 
 bindings_insert_values :: Bindings
 bindings_insert_values query = do
