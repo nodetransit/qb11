@@ -66,6 +66,7 @@ createUpdate query = (snd . runWriter) $ do
                   , clause_update_table
                   , clause_set
                   , clause_where_condition
+                  , clause_returning
                   ]
 
 createInsert :: Query -> Text

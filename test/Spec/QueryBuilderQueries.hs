@@ -111,6 +111,7 @@ buildUpdateCustomers =
             ]
         where_ $ do
             condition "id" (isIn ["1", "2", "3"])
+        returning "id"
 
 buildInsertCustomers :: Query
 buildInsertCustomers =

@@ -110,7 +110,8 @@ queryBuilderSpec =
                                \address = ?, \
                                \updated = NOW()\
                            \)\
-                           \ WHERE id IN (?, ?, ?)"
+                           \ WHERE id IN (?, ?, ?)\
+                           \ RETURNING id"
         bindings q `shouldBe` [ "ac"
                               , "uk"
                               , "1st st."
