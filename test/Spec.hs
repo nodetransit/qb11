@@ -35,5 +35,5 @@ main = do
         Run.rawSpec
         Run.queryBuilderSpec
 
-        -- Run.postgreSpec
+        Run.postgreSpec
 

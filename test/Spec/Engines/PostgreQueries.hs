@@ -8,6 +8,7 @@ module Spec.Engines.PostgreQueries
     , UserInfo(..)
     , Job(..)
     , createInsertUsers
+    , createInsertUserInfo
     ) where
 
 import Data.Text (Text)
@@ -65,8 +66,19 @@ createInsertUsers users = runQuery $ do
     userEmails = T.intercalate ", " $ map email users
     userValues = map toInsertValues users
     toInsertValues u = [ value $ (T.pack . show . level_id) u
-                       , value $ (T.pack . show . email) u
+                       , value $ (email) u
                        , value ("current_timestamp" :: Raw)
                        ]
 
--- createInsertUserInfo :: User -> UserInfo -> Query
+createInsertUserInfo :: UserInfo -> Query
+createInsertUserInfo ui = runQuery $ do
+    comment $ "insert user info"
+    insert
+    into "t_user_infos"
+    columns [ "user_id"
+            , "name"
+            ]
+    values [[ value $ (T.pack . show . (user_id :: UserInfo -> Int)) ui
+            , value $ (name) ui
+            ]]
+
