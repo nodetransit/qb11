@@ -104,12 +104,11 @@ queryBuilderSpec =
                            \-- with raw and parameterized values\n\
                            \UPDATE\
                            \ customers\
-                           \ SET (\
+                           \ SET \
                                \name = ?, \
                                \country = ?, \
                                \address = ?, \
                                \updated = NOW()\
-                           \)\
                            \ WHERE id IN (?, ?, ?)\
                            \ RETURNING id"
         bindings q `shouldBe` [ "ac"

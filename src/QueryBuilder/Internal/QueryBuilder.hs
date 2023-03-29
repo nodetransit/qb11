@@ -129,9 +129,8 @@ clause_insert_values query = do
 
 clause_set :: Clause
 clause_set query = do
-    tell $ " SET ("
+    tell $ " SET "
     tell $ (set_clause . query_set) query
-    tell $ ")"
 
 clause_where_condition :: Clause
 clause_where_condition query = do
