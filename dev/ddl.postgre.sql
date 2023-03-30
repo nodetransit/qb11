@@ -73,9 +73,9 @@ CREATE TABLE IF NOT EXISTS public.m_job_types
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS public.t_jobs_tags CASCADE;
+DROP TABLE IF EXISTS public.t_job_tags CASCADE;
 
-CREATE TABLE IF NOT EXISTS public.t_jobs_tags
+CREATE TABLE IF NOT EXISTS public.t_job_tags
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY,
     job_id integer NOT NULL,
@@ -123,23 +123,23 @@ CREATE INDEX IF NOT EXISTS t_jobs_m_jobs_types_fk_index
     ON public.t_jobs(job_type_id);
 
 
-ALTER TABLE IF EXISTS public.t_jobs_tags
+ALTER TABLE IF EXISTS public.t_job_tags
     ADD FOREIGN KEY (job_id)
     REFERENCES public.t_jobs (id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE CASCADE
     NOT VALID;
 CREATE INDEX IF NOT EXISTS t_jobs_t_jobs_tags_fk_index
-    ON public.t_jobs_tags(job_id);
+    ON public.t_job_tags(job_id);
 
 
-ALTER TABLE IF EXISTS public.t_jobs_tags
-    ADD FOREIGN KEY (job_id)
+ALTER TABLE IF EXISTS public.t_job_tags
+    ADD FOREIGN KEY (tag_id)
     REFERENCES public.t_tags (id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE CASCADE
     NOT VALID;
 CREATE INDEX IF NOT EXISTS t_job_tags_t_jobs_fk_index
-    ON public.t_jobs_tags(job_id);
+    ON public.t_job_tags(tag_id);
 
 END;
