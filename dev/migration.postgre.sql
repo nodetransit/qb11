@@ -1,38 +1,18 @@
-INSERT
-  INTO m_levels
-    ("name", "description")
-  VALUES
-    ('guest', null),
-    ('member', null),
-    ('prime member', null),
-    ('staff', null),
-    ('admin', null),
-    ('developer', null),
-    ('tester', null);
-
-UPDATE m_levels SET "description" = 'member with additional privileges' WHERE "name" = 'prime member';
-UPDATE m_levels SET "description" = 'full access for developers'        WHERE "name" = 'developer';
-UPDATE m_levels SET "description" = 'read only access for testers'      WHERE "name" = 'tester';
-
-INSERT
-  INTO m_job_types
-    ("name", "description")
-  VALUES
-    ('start', null),
-    ('stop', null),
-    ('restart', null),
-    ('send', null),
-    ('resend', null),
-    ('receive', null),
-    ('verify', null),
-    ('clear', null),
-    ('review', null),
-    ('abort', null),
-    ('retry', null),
-    ('terminate', null);
-
--- INSERT INTO t_users ("level_id", "email", "registered") VALUES (1, 'test@email.com', current_timestamp);
--- INSERT INTO t_user_infos ("user_id", "name") VALUES (2, 'test');
-
 GRANT ALL PRIVILEGES ON DATABASE qb11 TO testdata;
 GRANT ALL PRIVILEGES ON ALL TABLES in SCHEMA public TO testdata;
+ALTER TABLE m_levels OWNER TO testdata;
+ALTER TABLE m_job_types OWNER TO testdata;
+ALTER TABLE t_users OWNER TO testdata;
+ALTER TABLE t_user_infos OWNER TO testdata;
+ALTER TABLE t_jobs OWNER TO testdata;
+ALTER TABLE t_job_tags OWNER TO testdata;
+ALTER TABLE t_tags OWNER TO testdata;
+
+-- SELECT SETVAL(pg_get_serial_sequence('t_user_infos', 'id'), (SELECT MAX(id) FROM t_user_infos));
+alter table t_users alter column id restart with 100
+alter table t_user_infos alter column id restart with 100
+alter table t_jobs alter column id restart with 100
+alter table t_job_tags alter column id restart with 100
+alter table t_tags alter column id restart with 100
+alter table m_levels alter column id restart with 100
+alter table m_job_types alter column id restart with 100

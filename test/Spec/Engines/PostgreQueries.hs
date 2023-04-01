@@ -73,6 +73,7 @@ createInsertUsers users = runQuery $ do
 createInsertUserInfo :: UserInfo -> Query
 createInsertUserInfo ui = runQuery $ do
     comment $ "insert user info"
+    returning "id"
     insert
     into "t_user_infos"
     columns [ "user_id"

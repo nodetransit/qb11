@@ -88,16 +88,6 @@ initializeData connStr = do
                                         \(10, 'abort'    , null), \
                                         \(11, 'retry'    , null), \
                                         \(12, 'terminate', null)"
-              , "-- just to make sure that the autoincrement counter does not start at 1\n\
-                \INSERT INTO t_users (\"level_id\", \"email\", \"registered\") VALUES\
-                                    \(1, 'test_guest@mail.com'        , CURRENT_TIMESTAMP), \
-                                    \(2, 'test_member@mail.com'       , CURRENT_TIMESTAMP), \
-                                    \(3, 'test_prime member@mail.com' , CURRENT_TIMESTAMP), \
-                                    \(4, 'test_staff@mail.com'        , CURRENT_TIMESTAMP), \
-                                    \(5, 'test_admin@mail.com'        , CURRENT_TIMESTAMP), \
-                                    \(6, 'test_developer@mail.com'    , CURRENT_TIMESTAMP), \
-                                    \(7, 'test_tester@mail.com'       , CURRENT_TIMESTAMP)"
-              , "truncate t_users cascade"
               , "INSERT INTO t_users (\"id\", \"level_id\", \"email\", \"registered\") OVERRIDING SYSTEM VALUE VALUES\
                                     \(1, 1, 'test_guest@mail.com'        , CURRENT_TIMESTAMP), \
                                     \(2, 2, 'test_member@mail.com'       , CURRENT_TIMESTAMP), \
@@ -112,8 +102,7 @@ initializeData connStr = do
                                          \(3, 7, 'shashee' , 'philippines'), \
                                          \(4, 4, 'son'     , 'thailand'   ), \
                                          \(5, 1, 'wanli'   , 'china'      ), \
-                                         \(6, 2, 'ayumi'   , 'japan'      ), \
-                                         \(7, 3, 'nana'    , 'japan'      )"
+                                         \(6, 2, 'ayumi'   , 'japan'      )"
               , "INSERT INTO t_jobs (\"id\", \"job_type_id\", \"user_id\", \"date\", \"successful\", \"retries\") OVERRIDING SYSTEM VALUE VALUES\
                                     \( 1,  1, 1, CURRENT_TIMESTAMP, true , null), \
                                     \( 2,  2, 1, CURRENT_TIMESTAMP, false,    5), \
@@ -171,6 +160,13 @@ initializeData connStr = do
                                         \(28, 16, 4), \
                                         \(29, 15, 5), \
                                         \(30, 16, 2)"
+              , "alter table t_users alter column id restart with 100"
+              , "alter table t_user_infos alter column id restart with 100"
+              , "alter table t_jobs alter column id restart with 100"
+              , "alter table t_job_tags alter column id restart with 100"
+              , "alter table t_tags alter column id restart with 100"
+              , "alter table m_levels alter column id restart with 100"
+              , "alter table m_job_types alter column id restart with 100"
               ]
 
 runInsertUsersSpec :: String -> Spec
@@ -189,28 +185,28 @@ runInsertUsersSpec connStr =
         ids <- execQuery conn q
         -- _ <- dropUsers conn
         Prelude.length ids `shouldBe` 3
+      where
+        buildInsertUsers = createInsertUsers users
+          where
+            users = [ User { level_id = 1 , email = "theurbanwanderess@nodetransit.com" }
+                    , User { level_id = 2 , email = "ayumi@nodetransit.com" }
+                    , User { level_id = 5 , email = "frostbane@nodetransit.com" }
+                    ]
 
 runInsertUserInfosSpec :: String -> Spec
 runInsertUserInfosSpec connStr =
   before (openConn connStr) $ do
     describe "postgresql insert infos" $ do
       it "insert user infos" $ \conn -> do
-        let q = createInsertUserInfo UserInfo { user_id = 1, name = "" }
-        structuredQuery q `shouldBe` "-- insert user infos\n\
-                                     \INSERT INTO t_user_infos (level_id, email, registered) \
-                                     \VALUES (?, ?, current_timestamp), \
-                                            \(?, ?, current_timestamp), \
-                                            \(?, ?, current_timestamp) \
+        let q = createInsertUserInfo UserInfo { user_id = 3, name = "nana" }
+        structuredQuery q `shouldBe` "-- insert user info\n\
+                                     \INSERT INTO t_user_infos (user_id, name) \
+                                     \VALUES (?, ?) \
                                      \RETURNING id"
+        ids <- execQuery conn q
+        Prelude.length ids `shouldBe` 1
 
 execQuery conn q = PG.query conn (PGT.Query $ structuredQuery q) (bindings q) :: IO [Only Int64]
-
-buildInsertUsers = createInsertUsers users
-  where
-    users = [ User { level_id = 1 , email = "theurbanwanderess@nodetransit.com" }
-            , User { level_id = 2 , email = "ayumi@nodetransit.com" }
-            , User { level_id = 5 , email = "frostbane@nodetransit.com" }
-            ]
 
 dropUsers conn = PG.execute_ conn "delete from t_users"
 
