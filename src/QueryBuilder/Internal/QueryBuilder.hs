@@ -4,13 +4,23 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module QueryBuilder.Internal.QueryBuilder
-    ( column_only
+    ( createSelect
+    , createUpdate
+    , createInsert
+    , createDelete
+    , getSelectBindings
+    , getUpdateBindings
+    , getInsertBindings
+    , getDeleteBindings
+
+    , column_only
     , column_query
     , iff
     , mapExec
     , clause_comments
     , clause_query_type
     , clause_columns
+    , clause_distinct
     , clause_from_table
     , clause_into_table
     , clause_update_table
@@ -81,6 +91,74 @@ iff p f = do
 mapExec :: (Traversable t, Monad m) => Query -> t (Query -> m w) -> m (t w)
 mapExec query = mapM (\f -> f query)
 
+createSelect :: Query -> Text
+createSelect query  = (snd . runWriter) $ do
+    mapExec query [ clause_comments
+                  , clause_query_type
+                  , clause_distinct
+                  , clause_columns
+                  , clause_from_table
+                  , clause_join
+                  , clause_where_condition
+                  , clause_group_by
+                  , clause_having
+                  , clause_order_by
+                  , clause_limit
+                  , clause_offset
+                  ]
+
+createUpdate :: Query -> Text
+createUpdate query = (snd . runWriter) $ do
+    mapExec query [ clause_comments
+                  , clause_query_type
+                  , clause_update_table
+                  , clause_set
+                  , clause_where_condition
+                  , clause_returning
+                  ]
+
+createInsert :: Query -> Text
+createInsert query = (snd . runWriter) $ do
+    mapExec query [ clause_comments
+                  , clause_query_type
+                  , clause_into_table
+                  , clause_insert_columns
+                  , clause_insert_values
+                  , clause_returning
+                  ]
+
+createDelete :: Query -> Text
+createDelete query = (snd . runWriter) $ do
+    mapExec query [ clause_comments
+                  , clause_query_type
+                  , clause_from_table
+                  , clause_where_condition
+                  , clause_returning
+                  ]
+
+getSelectBindings :: Query -> [Text]
+getSelectBindings query = (snd . runWriter) $ do
+    mapExec query [ bindings_join
+                  , bindings_where_condition
+                  , bindings_having
+                  ]
+
+getUpdateBindings :: Query -> [Text]
+getUpdateBindings query = (snd . runWriter) $ do
+    mapExec query [ bindings_set
+                  , bindings_where_condition
+                  ]
+
+getInsertBindings :: Query -> [Text]
+getInsertBindings query = (snd . runWriter) $ do
+    mapExec query [ bindings_insert_values
+                  ]
+
+getDeleteBindings :: Query -> [Text]
+getDeleteBindings query = (snd . runWriter) $ do
+    mapExec query [ bindings_where_condition
+                  ]
+
 clause_comments :: Clause
 clause_comments query = do
     let comments = query_comments query
@@ -100,6 +178,10 @@ clause_columns :: Clause
 clause_columns query = do
     tell $ " "
     tell $ (column_query . query_columns) query
+
+clause_distinct :: Clause
+clause_distinct _ = do
+    tell $ " DISTINCT"
 
 clause_from_table :: Clause
 clause_from_table query = do

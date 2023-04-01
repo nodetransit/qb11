@@ -29,7 +29,7 @@ queryBuilderSpec =
       it "simple select query" $ do
         structuredQuery q `shouldBe` "-- test select query\n\
                            \-- test build order\n\
-                           \SELECT\
+                           \SELECT DISTINCT\
                                \ users.id,\
                                \ COUNT(id) AS count,\
                                \ CONCAT(firstname, ' ', lastname) AS full_name,\
@@ -57,7 +57,7 @@ queryBuilderSpec =
       let q = buildSelectUsersGroup
       it "select with grouping" $ do
         structuredQuery q `shouldBe` "-- test select query\n\
-                           \SELECT COUNT(id) AS count, country\
+                           \SELECT DISTINCT COUNT(id) AS count, country\
                            \ FROM users\
                            \ WHERE deleted = ?\
                            \ GROUP BY country\
@@ -72,7 +72,7 @@ queryBuilderSpec =
       it "select bindings" $ do
         structuredQuery q `shouldBe` "-- test\n\
                            \-- select query bindings\n\
-                           \SELECT\
+                           \SELECT DISTINCT\
                                \ COUNT(id) AS count,\
                                \ users.country,\
                                \ user_infos.address\
