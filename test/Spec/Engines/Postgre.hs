@@ -11,6 +11,7 @@ import System.Environment
 import Prelude hiding (and, or, null, Left, Right)
 import Data.Text as T hiding (null, length, head, tail, groupBy, map, filter, foldl, foldr)
 import Data.Text.Encoding as T
+import Data.Time
 import Data.Semigroup
 import Data.Int
 import Control.Monad.Identity hiding (join)
@@ -26,10 +27,14 @@ import Spec.Engines.PostgreQueries
 import qualified Data.ByteString as BS
 
 import Database.PostgreSQL.Simple as PG
+import Database.PostgreSQL.Simple.Time
 import Database.PostgreSQL.Simple.Types as PGT
 
 import QueryBuilder
 import QueryBuilder.PostgreSql as QB
+
+queryQuery conn q = PG.query conn (PGT.Query $ structuredQuery q) (bindings q)
+execQuery conn q = PG.execute conn (PGT.Query $ structuredQuery q) (bindings q)
 
 -- | open a connection
 --
@@ -56,6 +61,7 @@ runPostgreSpec connStr = do
     runIO $ initializeData connStr
     runInsertUsersSpec connStr
     runInsertUserInfosSpec connStr
+    runSelectUsersJoinSpec connStr
 
 initializeData :: String -> IO ()
 initializeData connStr = do
@@ -182,7 +188,7 @@ runInsertUsersSpec connStr =
                                             \(?, ?, current_timestamp), \
                                             \(?, ?, current_timestamp) \
                                      \RETURNING id"
-        ids <- execQuery conn q
+        ids <- queryQuery conn q :: IO [Only Int64]
         -- _ <- dropUsers conn
         Prelude.length ids `shouldBe` 3
       where
@@ -203,11 +209,31 @@ runInsertUserInfosSpec connStr =
                                      \INSERT INTO t_user_infos (user_id, name) \
                                      \VALUES (?, ?) \
                                      \RETURNING id"
-        ids <- execQuery conn q
+        ids <- queryQuery conn q :: IO [Only Int64]
         Prelude.length ids `shouldBe` 1
-
-execQuery conn q = PG.query conn (PGT.Query $ structuredQuery q) (bindings q) :: IO [Only Int64]
 
 dropUsers conn = PG.execute_ conn "delete from t_users"
 
+runSelectUsersJoinSpec :: String -> Spec
+runSelectUsersJoinSpec connStr =
+  before (openConn connStr) $ do
+    describe "postgresql select users" $ do
+      it "with single join" $ \conn -> do
+        let q = createSelectUserWithInfo 3
+        structuredQuery q `shouldBe` "-- select users with user info\n\
+                                     \SELECT\
+                                         \ t_users.id AS user_id\
+                                        \, t_users.email\
+                                        \, t_user_infos.name\
+                                        \, t_users.registered \
+                                     \FROM t_users \
+                                     \LEFT JOIN t_user_infos \
+                                         \ON ( t_users.id = t_user_infos.user_id ) \
+                                     \ORDER BY user_id ASC \
+                                     \LIMIT 3"
+        users <- queryQuery conn q :: IO [(Int, String, Maybe String, LocalTimestamp)]
+        Prelude.length users `shouldBe` 3
+
+
 -- countUsers conn = PG.exe
+

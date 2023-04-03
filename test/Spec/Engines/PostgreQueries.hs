@@ -9,6 +9,7 @@ module Spec.Engines.PostgreQueries
     , Job(..)
     , createInsertUsers
     , createInsertUserInfo
+    , createSelectUserWithInfo
     ) where
 
 import Data.Text (Text)
@@ -82,4 +83,20 @@ createInsertUserInfo ui = runQuery $ do
     values [[ value $ (T.pack . show . (user_id :: UserInfo -> Int)) ui
             , value $ (name) ui
             ]]
+
+createSelectUserWithInfo :: Int -> Query
+createSelectUserWithInfo n = runQuery $ do
+    comment $ "select users with user info"
+    select
+    columns [ column_ "t_users.id" (as "user_id")
+            , "t_users.email"
+            , "t_user_infos.name"
+            , "t_users.registered"
+            ]
+    from "t_users"
+    leftJoin "t_user_infos" on $ do
+        condition "t_users.id" (eqRaw "t_user_infos.user_id")
+    orderBy ["user_id"]
+            asc
+    limit n
 
