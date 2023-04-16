@@ -42,6 +42,8 @@ tests:
     dependencies:
     - qb11
     - hspec
+  # - hspec-megaparsec
+    - hspec-discover
     - QuickCheck
     - time
     - postgresql-simple

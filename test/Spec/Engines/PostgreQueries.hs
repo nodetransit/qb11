@@ -6,12 +6,16 @@
 module Spec.Engines.PostgreQueries
     ( User(..)
     , UserInfo(..)
+    , JobType(..)
     , Job(..)
     , createInsertUsers
     , createInsertUserInfo
     , createSelectUserWithInfo
+    , createUserJob
+    , createTag
     ) where
 
+import Prelude hiding (id)
 import Data.Text (Text)
 import Data.Text as T hiding (null, length, head, tail, groupBy, map, filter, foldl)
 import Data.Semigroup
@@ -52,6 +56,12 @@ data Job = Job
     , fail_reason   :: Maybe Text
     }
 
+data JobType = JobType
+    { id          :: Int
+    , name        :: Maybe Text
+    , description :: Maybe Text
+    }
+
 createInsertUsers :: Users -> Query
 createInsertUsers users = runQuery $ do
     comment $ "insert users: " <> userEmails
@@ -81,7 +91,7 @@ createInsertUserInfo ui = runQuery $ do
             , "name"
             ]
     values [[ value $ (T.pack . show . (user_id :: UserInfo -> Int)) ui
-            , value $ (name) ui
+            , value $ (name :: UserInfo -> Text) ui
             ]]
 
 createSelectUserWithInfo :: Int -> Query
@@ -99,4 +109,31 @@ createSelectUserWithInfo n = runQuery $ do
     orderBy ["user_id"]
             asc
     limit n
+
+createUserJob :: User -> JobType -> Query
+createUserJob user job = runQuery $ do
+    comment $ "insert a job for a user"
+    insert
+    into "t_jobs"
+    columns [ column "job_type_id"
+            , column "user_id"
+            , column "date"
+            ]
+    values [ [ value $ (T.pack . show . (id :: JobType -> Int)) job
+             , value $ (T.pack . show . (id :: User -> Int)) user
+             , value ("CURRENT_TIMESTAMP" :: Raw)
+             ] ]
+
+createTag :: Int -> Text -> Query
+createTag id name = runQuery $ do
+    comment $ "insert job tag '" <> name <> "'"
+    insert
+    into "t_tags"
+    columns [ column "id"
+            , column "name"
+            ]
+    values [ [ value $ (T.pack .show) id
+             , value $ name
+             ] ]
+
 
