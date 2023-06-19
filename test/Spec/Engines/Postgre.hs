@@ -234,7 +234,7 @@ runSelectUsersJoinSpec connStr =
         users <- queryQuery conn q :: IO [(Int, String, Maybe String, LocalTimestamp)]
         Prelude.length users `shouldBe` 3
 
-runTransactionSpec ::
+-- runTransactionSpec ::
 
 
 -- countUsers conn = PG.exe
