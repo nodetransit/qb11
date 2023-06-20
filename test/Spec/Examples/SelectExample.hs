@@ -1,14 +1,10 @@
-# qb11 #
-
-> Query Builder
-
-## Select Query ##
-
-```
 {-# LANGUAGE OverloadedStrings #-}
 
+module Spec.Examples.SelectExample
+    ( buildSelectExample
+    ) where
+
 import Prelude hiding (and, or, null, Left, Right)
-import Data.Text as T hiding (null, length, head, tail, groupBy)
 import Control.Monad.Identity hiding (join)
 
 import QueryBuilder
@@ -43,8 +39,3 @@ buildSelectExample = (runIdentity . runQueryT) $ do
     leftJoin_ "transactions" (as "tx") on $ do
         condition "tx.uid" (equalsRaw "users.id")
         and "tx.failed" (equals true)
-```
-
-since it is a builder, the order doesn't really matter
-
-

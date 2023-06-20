@@ -3,6 +3,7 @@
 
 module QueryBuilder.MySql
     ( structuredQuery
+    , query
     , bindings
     ) where
 

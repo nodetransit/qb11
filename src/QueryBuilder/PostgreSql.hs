@@ -3,6 +3,7 @@
 
 module QueryBuilder.PostgreSql
     ( structuredQuery
+    , query
     , bindings
     ) where
 

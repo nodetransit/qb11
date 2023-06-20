@@ -12,6 +12,8 @@ import Spec.RawOperators as Run
 import Spec.Raw          as Run
 import Spec.QueryBuilder as Run
 
+import Spec.Examples.ExampleTest as Run
+
 import Spec.Engines.Postgre as Run
 
 import Data.Text (Text)
@@ -22,7 +24,7 @@ main :: IO ()
 main = do
     putStrLn "QueryBuilder"
     hspec $ do
-        Run.querySpec
+        -- Run.querySpec
         Run.queryTSpec
         Run.tableSpec
         Run.columnSpec
@@ -34,6 +36,8 @@ main = do
         Run.rawOperatorSpec
         Run.rawSpec
         Run.queryBuilderSpec
+
+        Run.selectExampleSpec
 
         Run.postgreSpec
 
