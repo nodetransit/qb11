@@ -11,6 +11,7 @@ module Spec.Engines.PostgreQueries
     , createInsertUsers
     , createInsertUserInfo
     , createSelectUserWithInfo
+    , createDeleteUserWithEmail
     , createUserJob
     , createTag
     ) where
@@ -109,6 +110,14 @@ createSelectUserWithInfo n = runQuery $ do
     orderBy ["user_id"]
             asc
     limit n
+
+createDeleteUserWithEmail :: String -> Query
+createDeleteUserWithEmail email = runQuery $ do
+    delete
+    from "t_users"
+    where_ $ do
+        condition "email" (equals $ T.pack email)
+    returning "'id'"
 
 createUserJob :: User -> JobType -> Query
 createUserJob user job = runQuery $ do

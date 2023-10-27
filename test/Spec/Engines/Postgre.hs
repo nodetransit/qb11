@@ -42,7 +42,10 @@ execQuery conn q = PG.execute conn (PGT.Query $ structuredQuery q) (bindings q)
 -- ```
 -- openConn "postgresql://testdata:a7a2E@testdata-persistence:5432/qb11"
 -- ```
+openConn :: String -> IO Connection
 openConn = connectPostgreSQL . T.encodeUtf8 . T.pack
+
+withConn :: String -> (Connection -> IO b) -> IO ()
 withConn connStr action =
     bracket
         (openConn connStr)
@@ -62,6 +65,7 @@ runPostgreSpec connStr = do
     runInsertUsersSpec connStr
     runInsertUserInfosSpec connStr
     runSelectUsersJoinSpec connStr
+    runTransactionSpec connStr
 
 initializeData :: String -> IO ()
 initializeData connStr = do
@@ -180,6 +184,9 @@ runInsertUsersSpec connStr =
   -- around (withConn connStr) $ do
   before (openConn connStr) $ do
     describe "postgresql insert users" $ do
+      -- "conn" here is the result of the action "before"
+      --    openConn :: String -> IO Connection
+      --    conn :: Connection
       it "insert users" $ \conn -> do
         let q = buildInsertUsers
         structuredQuery q `shouldBe` "-- insert users: theurbanwanderess@nodetransit.com, ayumi@nodetransit.com, frostbane@nodetransit.com\n\
@@ -234,7 +241,15 @@ runSelectUsersJoinSpec connStr =
         users <- queryQuery conn q :: IO [(Int, String, Maybe String, LocalTimestamp)]
         Prelude.length users `shouldBe` 3
 
-runTransactionSpec ::
+runTransactionSpec :: String -> Spec
+runTransactionSpec connStr =
+  before (openConn connStr) $ do
+    describe "postgresql drop users" $ do
+      it "with transaction" $ \conn -> do
+          PG.withTransaction conn $ do
+              let q1 = createDeleteUserWithEmail "ayumi@nodetransit.com"
+              structuredQuery q1 `shouldBe` "DELETE FROM t_users WHERE email = ? RETURNING 'id'"
+              pendingWith "not implemented"
 
 
 -- countUsers conn = PG.exe
