@@ -122,7 +122,7 @@ modify_query = mq
     mq q@(Query {})         (JoinAlias u t a c) = q { query_joins = [makeJoinTable u t a c] }
     mq q@(Query {})         (Comment t)         = q { query_comments = makeComments t }
     mq q@(Query {})         (Returning c)       = q { query_returning = Return.Into c }
-    mq q@(Query {})         (Returning_ t)      = q { query_returning = Return.Into [ColumnAlias t (Alias.As t)] }
+    mq q@(Query {})         (Returning_ t)      = q { query_returning = Return.Into [Column t] }
     mq Select               q                   = defaultQuery { query_type = "SELECT" } <> q
     mq Insert               q                   = defaultQuery { query_type = "INSERT" } <> q
     mq Update               q                   = defaultQuery { query_type = "UPDATE" } <> q
@@ -143,7 +143,7 @@ modify_query = mq
     mq (JoinAlias u t a c)  q                   = defaultQuery { query_joins = [makeJoinTable u t a c] } <> q
     mq (Comment t)          q                   = defaultQuery { query_comments = makeComments t } <> q
     mq (Returning c)        q                   = defaultQuery { query_returning = Return.Into c } <> q
-    mq (Returning_ t)       q                   = defaultQuery { query_returning = Return.Into [ColumnAlias t (Alias.As t)] } <> q
+    mq (Returning_ t)       q                   = defaultQuery { query_returning = Return.Into [Column t] } <> q
     mq qL                   qR                  = coalesceQuery qL qR
 
 makeValues :: [[Value]] -> QueryCondition

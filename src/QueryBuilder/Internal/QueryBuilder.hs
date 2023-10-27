@@ -291,6 +291,7 @@ clause_offset query = do
             tell $ " OFFSET "
             tell $ (T.pack . show) n
 
+{-- oracle syntax
 returning_columns :: [Column] -> Text
 returning_columns = join . getCols
   where
@@ -316,15 +317,32 @@ returning_alias = join . getAliases
     splitCols c = case c of
         Column t             -> t
         ColumnAlias _ (As a) -> a
+--}
+
+returning_query :: [Column] -> Text
+returning_query = join . getCols
+  where
+    getCols :: [Column] -> [Text]
+    getCols = map splitCols
+
+    join :: [Text] -> Text
+    join = T.intercalate ", "
+
+    splitCols c = case c of
+        Column t             -> t
+        ColumnAlias t (As a) -> t <> " AS " <> a
 
 clause_returning :: Clause
 clause_returning query = do
     let ret = query_returning query
     case ret of
         Returning.Into c -> do
-            tell $ returning_columns c
-            tell $ " INTO "
-            tell $ returning_alias c
+            tell $ " RETURNING "
+            -- oracle syntax
+            -- tell $ returning_columns c
+            -- tell $ " INTO "
+            -- tell $ returning_alias c
+            tell $ returning_query c
         _                -> tell mempty
 
 bindings_insert_values :: Bindings
