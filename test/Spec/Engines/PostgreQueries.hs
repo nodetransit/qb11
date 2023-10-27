@@ -72,7 +72,7 @@ createInsertUsers users = runQuery $ do
             , "registered"
             ]
     values userValues
-    returning "id"
+    returning ["id", "email"] ["inserted_id", "inserted_email"]
   where
     userEmails = T.intercalate ", " $ map email users
     userValues = map toInsertValues users
@@ -84,7 +84,7 @@ createInsertUsers users = runQuery $ do
 createInsertUserInfo :: UserInfo -> Query
 createInsertUserInfo ui = runQuery $ do
     comment $ "insert user info"
-    returning "id"
+    returning_ "id"
     insert
     into "t_user_infos"
     columns [ "user_id"

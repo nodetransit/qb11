@@ -187,7 +187,7 @@ runInsertUsersSpec connStr =
                                      \VALUES (?, ?, current_timestamp), \
                                             \(?, ?, current_timestamp), \
                                             \(?, ?, current_timestamp) \
-                                     \RETURNING id"
+                                     \RETURNING id, email INTO inserted_id, inserted_email"
         ids <- queryQuery conn q :: IO [Only Int64]
         -- _ <- dropUsers conn
         Prelude.length ids `shouldBe` 3
@@ -208,7 +208,7 @@ runInsertUserInfosSpec connStr =
         structuredQuery q `shouldBe` "-- insert user info\n\
                                      \INSERT INTO t_user_infos (user_id, name) \
                                      \VALUES (?, ?) \
-                                     \RETURNING id"
+                                     \RETURNING id INTO id"
         ids <- queryQuery conn q :: IO [Only Int64]
         Prelude.length ids `shouldBe` 1
 

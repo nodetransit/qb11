@@ -57,6 +57,7 @@ import QueryBuilder.ToText
 import QueryBuilder.Set
 import QueryBuilder.QueryOrder
 import QueryBuilder.JoinTable
+import qualified QueryBuilder.Returning as Returning
 
 type Clause = Query -> Writer Text ()
 type Bindings = Query -> Writer [Text] ()
@@ -290,12 +291,41 @@ clause_offset query = do
             tell $ " OFFSET "
             tell $ (T.pack . show) n
 
+returning_columns :: [Column] -> Text
+returning_columns = join . getCols
+  where
+    getCols :: [Column] -> [Text]
+    getCols = map splitCols
+
+    join :: [Text] -> Text
+    join = T.intercalate ", "
+
+    splitCols c = case c of
+        Column t        -> t
+        ColumnAlias t _ -> t
+
+returning_alias :: [Column] -> Text
+returning_alias = join . getAliases
+  where
+    getAliases :: [Column] -> [Text]
+    getAliases = map splitCols
+
+    join :: [Text] -> Text
+    join = T.intercalate ", "
+
+    splitCols c = case c of
+        Column t             -> t
+        ColumnAlias _ (As a) -> a
+
 clause_returning :: Clause
 clause_returning query = do
     let ret = query_returning query
-    iff (ret /= mempty) $ do
-        tell " RETURNING "
-        tell ret
+    case ret of
+        Returning.Into c -> do
+            tell $ returning_columns c
+            tell $ " INTO "
+            tell $ returning_alias c
+        _                -> tell mempty
 
 bindings_insert_values :: Bindings
 bindings_insert_values query = do

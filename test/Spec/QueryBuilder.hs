@@ -110,7 +110,7 @@ queryBuilderSpec =
                                \address = ?, \
                                \updated = NOW()\
                            \ WHERE id IN (?, ?, ?)\
-                           \ RETURNING id"
+                           \ RETURNING id INTO id"
         bindings q `shouldBe` [ "ac"
                               , "uk"
                               , "1st st."
@@ -130,7 +130,7 @@ queryBuilderSpec =
                                \ (?, ?, ?, NOW(), null),\
                                \ (?, ?, ?, NOW(), null),\
                                \ (?, ?, ?, NOW(), null)\
-                               \ RETURNING id"
+                               \ RETURNING id, name INTO inserted_id, inserted_name"
         bindings q `shouldBe` [ "mark"
                               , "us"
                               , "12th elm"
@@ -150,7 +150,7 @@ queryBuilderSpec =
                                \ users\
                            \ WHERE unregistered = ?\
                                  \ OR disabled IS NOT NULL\
-                            \ RETURNING id"
+                            \ RETURNING id INTO deleted_id"
         bindings q `shouldBe` ["1"]
 
 

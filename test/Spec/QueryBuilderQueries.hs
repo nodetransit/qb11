@@ -111,7 +111,7 @@ buildUpdateCustomers =
             ]
         where_ $ do
             condition "id" (isIn ["1", "2", "3"])
-        returning "id"
+        returning_ "id"
 
 buildInsertCustomers :: Query
 buildInsertCustomers =
@@ -129,7 +129,7 @@ buildInsertCustomers =
                , [value "james", value "ja", value "blk. 1"  , value ("NOW()" :: Raw), value ("null" :: Raw)]
                , [value "john" , value "en", value "lot. 18" , value ("NOW()" :: Raw), value ("null" :: Raw)]
                ]
-        returning "id"
+        returning ["id", "name"] ["inserted_id", "inserted_name"]
 
 buildDeleteUsers :: Query
 buildDeleteUsers =
@@ -140,5 +140,5 @@ buildDeleteUsers =
         where_ $ do
             condition "unregistered" (equals true)
             or "disabled" (isNotNull)
-        returning "id"
+        returning ["id"] ["deleted_id"]
 

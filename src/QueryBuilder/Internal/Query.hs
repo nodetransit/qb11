@@ -30,6 +30,7 @@ import QueryBuilder.QueryOrder as Order
 import QueryBuilder.JoinTable
 import QueryBuilder.ToText
 import QueryBuilder.Set
+import qualified QueryBuilder.Returning as Return
 
 
 data Query = EmptyQuery
@@ -51,7 +52,8 @@ data Query = EmptyQuery
            | OrderBy [Column] Order
            | Limit Int
            | Offset Int
-           | Returning Text
+           | Returning [Column]
+           | Returning_ Text
            | Comment [Text]
            | Query { query_type        :: Text
                    , query_table       :: QueryTable
@@ -66,7 +68,7 @@ data Query = EmptyQuery
                    , query_orderBy     :: QueryOrder
                    , query_limit       :: Maybe Int
                    , query_offset      :: Maybe Int
-                   , query_returning   :: Text
+                   , query_returning   :: Return.Returning
                    , query_comments    :: [Text]
                }
             deriving Show
@@ -85,7 +87,7 @@ defaultQuery = Query { query_type        = mempty
                      , query_orderBy     = QueryOrder mempty Order.None
                      , query_limit       = Nothing
                      , query_offset      = Nothing
-                     , query_returning   = mempty
+                     , query_returning   = Return.Nothing
                      , query_comments    = mempty
                      }
 
@@ -119,7 +121,8 @@ modify_query = mq
     mq q@(Query {})         (Join u t c)        = q { query_joins = [makeJoinTable u t Alias.None c] }
     mq q@(Query {})         (JoinAlias u t a c) = q { query_joins = [makeJoinTable u t a c] }
     mq q@(Query {})         (Comment t)         = q { query_comments = makeComments t }
-    mq q@(Query {})         (Returning r)       = q { query_returning = r }
+    mq q@(Query {})         (Returning c)       = q { query_returning = Return.Into c }
+    mq q@(Query {})         (Returning_ t)      = q { query_returning = Return.Into [ColumnAlias t (Alias.As t)] }
     mq Select               q                   = defaultQuery { query_type = "SELECT" } <> q
     mq Insert               q                   = defaultQuery { query_type = "INSERT" } <> q
     mq Update               q                   = defaultQuery { query_type = "UPDATE" } <> q
@@ -139,7 +142,8 @@ modify_query = mq
     mq (Join u t c)         q                   = defaultQuery { query_joins = [makeJoinTable u t Alias.None c] } <> q
     mq (JoinAlias u t a c)  q                   = defaultQuery { query_joins = [makeJoinTable u t a c] } <> q
     mq (Comment t)          q                   = defaultQuery { query_comments = makeComments t } <> q
-    mq (Returning r)        q                   = defaultQuery { query_returning = r } <> q
+    mq (Returning c)        q                   = defaultQuery { query_returning = Return.Into c } <> q
+    mq (Returning_ t)       q                   = defaultQuery { query_returning = Return.Into [ColumnAlias t (Alias.As t)] } <> q
     mq qL                   qR                  = coalesceQuery qL qR
 
 makeValues :: [[Value]] -> QueryCondition
@@ -212,6 +216,8 @@ coalesceQuery qL qR = Query { query_type        = queryType
     limitLen _       = 1
     offsetLen Nothing = 0
     offsetLen _       = 1
+    returnSomthing Return.Nothing = 0
+    returnSomthing _              = 1
 
     -- | here only joins are appended, everything else is coalesced
     queryType       = coalesce T.length       query_type
@@ -227,7 +233,7 @@ coalesceQuery qL qR = Query { query_type        = queryType
     queryOffset     = coalesce offsetLen      query_offset
     queryValues     = coalesce conditionLen   query_values
     queryJoins      = query_joins qL <> query_joins qR
-    queryReturning  = coalesce T.length       query_returning
+    queryReturning  = coalesce returnSomthing query_returning
     queryComments   = coalesce Prelude.length query_comments
 
 instance Semigroup Query where
