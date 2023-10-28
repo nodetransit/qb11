@@ -24,7 +24,7 @@ main :: IO ()
 main = do
     putStrLn "QueryBuilder"
     hspec $ do
-        -- Run.querySpec
+        Run.querySpec
         Run.queryTSpec
         Run.tableSpec
         Run.columnSpec
