@@ -246,48 +246,48 @@ runTransactionSpec :: String -> Spec
 runTransactionSpec connStr =
   before (openConn connStr) $ do
     describe "postgresql drop users" $ do
-      it "rollback transaction" $ \conn -> do
-        let qc = createCountUsersWithEmail ["ayumi@nodetransit.com"]
+      it "rollback transaction test" $ \conn -> do
+        let qc = createCountUsersWithEmail ["theurbanwanderess@nodetransit.com"]
         structuredQuery qc `shouldBe` "SELECT COUNT(*) AS count FROM t_users WHERE email IN (?)"
 
         countbefore <- getCount =<< queryQuery conn qc
         countbefore `shouldBe` 1
 
-        PG.withTransaction conn $ do
-          let q1 = createDeleteUserWithEmail "ayumi@nodetransit.com"
-          _ <- execQuery conn q1
+        PG.begin conn
+        let q1 = createDeleteUserWithEmail "theurbanwanderess@nodetransit.com"
+        _ <- execQuery conn q1
 
-          countafter <- getCount =<< queryQuery conn qc
-          countafter `shouldBe` 0
+        countafter <- getCount =<< queryQuery conn qc
+        countafter `shouldBe` 0
 
-          PG.rollback conn
+        PG.rollback conn
 
         countrollback <- getCount =<< queryQuery conn qc
         countrollback `shouldBe` 1
 
-      it "with transaction" $ \conn -> do
-          let qc = createCountUsersWithEmail ["ayumi@nodetransit.com"]
-          structuredQuery qc `shouldBe` "SELECT COUNT(*) AS count FROM t_users WHERE email IN (?)"
-          countbefore <- flip forM (\(Only i) -> return i) =<< queryQuery conn qc :: IO [Int64]
-          Prelude.length countbefore `shouldBe` 1
-          (countbefore !! 0) `shouldBe` 1
+      it "with transaction test" $ \conn -> do
+        let qc = createCountUsersWithEmail ["ayumi@nodetransit.com"]
+        structuredQuery qc `shouldBe` "SELECT COUNT(*) AS count FROM t_users WHERE email IN (?)"
+        countbefore <- flip forM (\(Only i) -> return i) =<< queryQuery conn qc :: IO [Int64]
+        Prelude.length countbefore `shouldBe` 1
+        (countbefore !! 0) `shouldBe` 1
 
-          PG.withTransaction conn $ do
-            let q1 = createDeleteUserWithEmail "ayumi@nodetransit.com"
-            structuredQuery q1 `shouldBe` "DELETE FROM t_users WHERE email = ?"
-            _ <- execQuery conn q1
+        PG.withTransaction conn $ do
+          let q1 = createDeleteUserWithEmail "ayumi@nodetransit.com"
+          structuredQuery q1 `shouldBe` "DELETE FROM t_users WHERE email = ?"
+          _ <- execQuery conn q1
 
-            let q2 = createDeleteUserWithEmail "frostbane@nodetransit.com"
-            structuredQuery q2 `shouldBe` "DELETE FROM t_users WHERE email = ?"
-            _ <- execQuery conn q2
+          let q2 = createDeleteUserWithEmail "frostbane@nodetransit.com"
+          structuredQuery q2 `shouldBe` "DELETE FROM t_users WHERE email = ?"
+          _ <- execQuery conn q2
 
-            -- PG.commit conn
-            return ()
+          -- PG.commit conn
+          return ()
 
-          let qafter = createCountUsersWithEmail ["ayumi@nodetransit.com", "frostbane@nodetransit.com"]
-          countbefore <- flip forM (\(Only i) -> return i) =<< queryQuery conn qafter :: IO [Int64]
-          Prelude.length countbefore `shouldBe` 1
-          (countbefore !! 0) `shouldBe` 0
+        let qafter = createCountUsersWithEmail ["ayumi@nodetransit.com", "frostbane@nodetransit.com"]
+        countbefore <- flip forM (\(Only i) -> return i) =<< queryQuery conn qafter :: IO [Int64]
+        Prelude.length countbefore `shouldBe` 1
+        (countbefore !! 0) `shouldBe` 0
 
     where
       getCount :: [Only Int64] -> IO Int64
