@@ -11,6 +11,8 @@ module Spec.Engines.PostgreQueries
     , createInsertUsers
     , createInsertUserInfo
     , createSelectUserWithInfo
+    , createDeleteUserWithEmail
+    , createCountUsersWithEmail
     , createUserJob
     , createTag
     ) where
@@ -23,6 +25,8 @@ import Data.Time
 
 import QueryBuilder
 import QueryBuilder.PostgreSql
+
+{- HLINT ignore "Redundant $" -}
 
 data User = User
     { id         :: Int
@@ -109,6 +113,22 @@ createSelectUserWithInfo n = runQuery $ do
     orderBy ["user_id"]
             asc
     limit n
+
+createDeleteUserWithEmail :: String -> Query
+createDeleteUserWithEmail email = runQuery $ do
+    delete
+    from "t_users"
+    where_ $ do
+        condition "email" (equals $ T.pack email)
+
+createCountUsersWithEmail :: [String] -> Query
+createCountUsersWithEmail emails = runQuery $ do
+    select
+    columns [ column_ "COUNT(*)" (as "count")
+            ]
+    from "t_users"
+    where_ $ do
+        condition "email" (isIn $ map T.pack emails)
 
 createUserJob :: User -> JobType -> Query
 createUserJob user job = runQuery $ do

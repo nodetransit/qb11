@@ -42,7 +42,10 @@ execQuery conn q = PG.execute conn (PGT.Query $ structuredQuery q) (bindings q)
 -- ```
 -- openConn "postgresql://testdata:a7a2E@testdata-persistence:5432/qb11"
 -- ```
+openConn :: String -> IO Connection
 openConn = connectPostgreSQL . T.encodeUtf8 . T.pack
+
+withConn :: String -> (Connection -> IO b) -> IO ()
 withConn connStr action =
     bracket
         (openConn connStr)
@@ -62,6 +65,7 @@ runPostgreSpec connStr = do
     runInsertUsersSpec connStr
     runInsertUserInfosSpec connStr
     runSelectUsersJoinSpec connStr
+    runTransactionSpec connStr
 
 initializeData :: String -> IO ()
 initializeData connStr = do
@@ -180,6 +184,9 @@ runInsertUsersSpec connStr =
   -- around (withConn connStr) $ do
   before (openConn connStr) $ do
     describe "postgresql insert users" $ do
+      -- "conn" here is the result of the action "before"
+      --    openConn :: String -> IO Connection
+      --    conn :: Connection
       it "insert users" $ \conn -> do
         let q = buildInsertUsers
         structuredQuery q `shouldBe` "-- insert users: theurbanwanderess@nodetransit.com, ayumi@nodetransit.com, frostbane@nodetransit.com\n\
@@ -235,7 +242,56 @@ runSelectUsersJoinSpec connStr =
         users <- queryQuery conn q :: IO [(Int, String, Maybe String, LocalTimestamp)]
         Prelude.length users `shouldBe` 3
 
--- runTransactionSpec ::
+runTransactionSpec :: String -> Spec
+runTransactionSpec connStr =
+  before (openConn connStr) $ do
+    describe "postgresql drop users" $ do
+      it "rollback transaction" $ \conn -> do
+        let qc = createCountUsersWithEmail ["ayumi@nodetransit.com"]
+        structuredQuery qc `shouldBe` "SELECT COUNT(*) AS count FROM t_users WHERE email IN (?)"
+
+        countbefore <- getCount =<< queryQuery conn qc
+        countbefore `shouldBe` 1
+
+        PG.withTransaction conn $ do
+          let q1 = createDeleteUserWithEmail "ayumi@nodetransit.com"
+          _ <- execQuery conn q1
+
+          countafter <- getCount =<< queryQuery conn qc
+          countafter `shouldBe` 0
+
+          PG.rollback conn
+
+        countrollback <- getCount =<< queryQuery conn qc
+        countrollback `shouldBe` 1
+
+      it "with transaction" $ \conn -> do
+          let qc = createCountUsersWithEmail ["ayumi@nodetransit.com"]
+          structuredQuery qc `shouldBe` "SELECT COUNT(*) AS count FROM t_users WHERE email IN (?)"
+          countbefore <- flip forM (\(Only i) -> return i) =<< queryQuery conn qc :: IO [Int64]
+          Prelude.length countbefore `shouldBe` 1
+          (countbefore !! 0) `shouldBe` 1
+
+          PG.withTransaction conn $ do
+            let q1 = createDeleteUserWithEmail "ayumi@nodetransit.com"
+            structuredQuery q1 `shouldBe` "DELETE FROM t_users WHERE email = ?"
+            _ <- execQuery conn q1
+
+            let q2 = createDeleteUserWithEmail "frostbane@nodetransit.com"
+            structuredQuery q2 `shouldBe` "DELETE FROM t_users WHERE email = ?"
+            _ <- execQuery conn q2
+
+            -- PG.commit conn
+            return ()
+
+          let qafter = createCountUsersWithEmail ["ayumi@nodetransit.com", "frostbane@nodetransit.com"]
+          countbefore <- flip forM (\(Only i) -> return i) =<< queryQuery conn qafter :: IO [Int64]
+          Prelude.length countbefore `shouldBe` 1
+          (countbefore !! 0) `shouldBe` 0
+
+    where
+      getCount :: [Only Int64] -> IO Int64
+      getCount result = liftM head $ forM result (\(Only i) -> return i)
 
 
 -- countUsers conn = PG.exe

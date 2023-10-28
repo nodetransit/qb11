@@ -59,6 +59,9 @@ import QueryBuilder.QueryOrder
 import QueryBuilder.JoinTable
 import qualified QueryBuilder.Returning as Returning
 
+{- HLINT ignore "Use camelCase" -}
+{- HLINT ignore "Redundant $" -}
+
 type Clause = Query -> Writer Text ()
 type Bindings = Query -> Writer [Text] ()
 
@@ -80,6 +83,19 @@ column_query = join . toColumns
     toColumn :: Column -> Text
     toColumn (Column c)             = c
     toColumn (ColumnAlias c (As a)) = c <> " AS " <> a
+
+returning_query :: [Column] -> Text
+returning_query = join . getCols
+  where
+    getCols :: [Column] -> [Text]
+    getCols = map splitCols
+
+    join :: [Text] -> Text
+    join = T.intercalate ", "
+
+    splitCols c = case c of
+        Column t             -> t
+        ColumnAlias t (As a) -> t <> " AS " <> a
 
 iff :: (Monoid m) => Bool -> Writer m () -> Writer m ()
 iff p f = do
@@ -318,19 +334,6 @@ returning_alias = join . getAliases
         Column t             -> t
         ColumnAlias _ (As a) -> a
 --}
-
-returning_query :: [Column] -> Text
-returning_query = join . getCols
-  where
-    getCols :: [Column] -> [Text]
-    getCols = map splitCols
-
-    join :: [Text] -> Text
-    join = T.intercalate ", "
-
-    splitCols c = case c of
-        Column t             -> t
-        ColumnAlias t (As a) -> t <> " AS " <> a
 
 clause_returning :: Clause
 clause_returning query = do
