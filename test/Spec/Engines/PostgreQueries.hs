@@ -5,11 +5,7 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 
 module Spec.Engines.PostgreQueries
-    ( User(..)
-    , UserInfo(..)
-    , JobType(..)
-    , Job(..)
-    , createInsertUsers
+    ( createInsertUsers
     , createInsertUserInfo
     , createSelectUserWithInfo
     , createDeleteUserWithEmail
@@ -27,45 +23,12 @@ import Data.Time
 import QueryBuilder
 import QueryBuilder.PostgreSql
 
+import Fixtures.User
+import Fixtures.UserInfo
+import Fixtures.Job
+import Fixtures.JobType
+
 {- HLINT ignore "Redundant $" -}
-
-data User = User
-    { id         :: Int
-    , level_id   :: Int
-    , email      :: Text
-    , registered :: LocalTime
-    , deleted    :: Maybe LocalTime
-    }
-
-type Users = [User]
-
-data UserInfo = UserInfo
-    { id        :: Int
-    , user_id   :: Int
-    , name      :: Text
-    , country   :: Maybe Text
-    , address   :: Maybe Text
-    , telephone :: Maybe Text
-    }
-
-data Job = Job
-    { id            :: Int
-    , job_type_id   :: Int
-    , user_id       :: Int
-    , date          :: LocalTime
-    , successfull   :: Maybe Bool
-    , retries       :: Maybe Int
-    , cancelled     :: Maybe LocalTime
-    , cancel_reason :: Maybe Text
-    , failed        :: Maybe LocalTime
-    , fail_reason   :: Maybe Text
-    }
-
-data JobType = JobType
-    { id          :: Int
-    , name        :: Maybe Text
-    , description :: Maybe Text
-    }
 
 createInsertUsers :: Users -> Query
 createInsertUsers users = runQuery $ do

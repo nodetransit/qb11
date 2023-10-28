@@ -29,6 +29,11 @@ import qualified Data.ByteString as BS
 import QueryBuilder
 import QueryBuilder.PostgreSql as QB
 
+import Fixtures.User
+import Fixtures.UserInfo
+import Fixtures.Job
+import Fixtures.JobType
+
 postgreSpec :: Spec
 postgreSpec = do
     describe "postgresql tests" $ do

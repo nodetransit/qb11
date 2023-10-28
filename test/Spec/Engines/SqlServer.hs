@@ -29,6 +29,11 @@ import qualified Data.ByteString as BS
 import QueryBuilder
 import QueryBuilder.SqlServer as QB
 
+import Fixtures.User
+import Fixtures.UserInfo
+import Fixtures.Job
+import Fixtures.JobType
+
 sqlServerSpec :: Spec
 sqlServerSpec = do
     describe "sql server tests" $ do
