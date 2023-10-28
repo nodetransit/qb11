@@ -48,6 +48,9 @@ import QueryBuilder.Set
 import QueryBuilder.QueryOrder
 import QueryBuilder.JoinTable
 
+{- HLINT ignore "Use camelCase" -}
+{- HLINT ignore "Redundant $" -}
+
 type Clause = Query -> Writer Text ()
 type Bindings = Query -> Writer [Text] ()
 
