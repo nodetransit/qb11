@@ -22,7 +22,10 @@
 # GHC 9.2.6    lts-20.12
 
 
-resolver: lts-7.24
+# resolver: lts-7.24
+## windoze won't compile with 7.24
+resolver: lts-12.14
+
 # resolver: lts-3.5
 # resolver: nightly-2015-09-21
 # resolver: ghc-7.10.2

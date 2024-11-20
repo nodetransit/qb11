@@ -46,6 +46,6 @@ tests:
     - hspec-discover
     - QuickCheck
     - time
-    - postgresql-simple
+  # - postgresql-simple
   # - mysql-simple
   # - sqlite-simple
