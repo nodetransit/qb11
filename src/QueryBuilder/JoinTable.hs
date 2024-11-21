@@ -2,6 +2,7 @@
 
 module QueryBuilder.JoinTable
     ( JoinTable(..)
+    , JoinTableUsing(..)
     , JoinType(..)
     ) where
 
@@ -18,6 +19,16 @@ data JoinTable = JoinTable
     , join_type       :: JoinType
     , join_alias      :: Alias
     , join_conditions :: QueryCondition
+    }
+    deriving ( Show
+             , Eq
+             )
+
+data JoinTableUsing = JoinTableUsing
+    { join_table :: Text
+    , join_type  :: JoinType
+    , join_alias :: Alias
+    , join_using :: [Text]
     }
     deriving ( Show
              , Eq
