@@ -19,12 +19,12 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/qb11#readme>
 
 dependencies:
-- base >= 4.7
-- text
-- mtl
-- transformers
-- bytestring
-- utf8-string
+  - base >= 4.7
+  - text
+  - mtl
+  - transformers
+  - bytestring
+  - utf8-string
 
 library:
   source-dirs: src
@@ -36,16 +36,19 @@ tests:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
     dependencies:
-    - qb11
-    - hspec
-  # - hspec-megaparsec
-    - hspec-discover
-    - QuickCheck
-    - time
-  # - postgresql-simple
-  # - mysql-simple
-  # - sqlite-simple
+      - qb11
+      - hspec
+    # - hspec-megaparsec
+      - hspec-discover
+      - QuickCheck
+      - time
+    # - postgresql-simple
+    # - mysql-simple
+    # - sqlite-simple
+      - ms-tds >= 0.4 && < 0.5
+      - mssql-simple >= 0.6 && < 0.7
+

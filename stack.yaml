@@ -30,17 +30,11 @@
 # resolver: lts-12.14
 resolver: lts-22.22
 
-# resolver: lts-3.5
-# resolver: nightly-2015-09-21
-# resolver: ghc-7.10.2
-# resolver: https://example.com/snapshots/2018-01-01.yaml
-
-# resolver: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/10.yaml
-# resolver: lts-19.10
-
 packages:
-- .
+  - .
 
-extra-deps: []
+extra-deps:
+  - mssql-simple-0.6.0.5
+  - ms-tds-0.4.0.3
 
 allow-newer: false
