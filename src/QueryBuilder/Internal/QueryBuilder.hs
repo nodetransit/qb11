@@ -17,6 +17,7 @@ module QueryBuilder.Internal.QueryBuilder
     , column_query
     , iff
     , mapExec
+    , Clause(..)
     , clause_comments
     , clause_query_type
     , clause_columns
@@ -36,6 +37,7 @@ module QueryBuilder.Internal.QueryBuilder
     , clause_offset
     , clause_returning
 
+    , Bindings(..)
     , bindings_join
     , bindings_insert_values
     , bindings_set

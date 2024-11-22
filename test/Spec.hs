@@ -15,6 +15,7 @@ import Spec.QueryBuilder as Run
 import Spec.Examples.ExampleTest as Run
 
 import Spec.Engines.Postgre as Run
+import Spec.Engines.SqlServer as Run
 
 import Data.Text (Text)
 import QueryBuilder.ToText
@@ -40,4 +41,5 @@ main = do
         Run.selectExampleSpec
 
         Run.postgreSpec
+        Run.sqlServerSpec
 
