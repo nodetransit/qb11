@@ -97,6 +97,8 @@ queryBuilderSpec =
                               , "10"
                               ]
 
+      it "select with using" $ shouldBeImplemented
+
     context "build update" $ do
       let q = buildUpdateCustomers
       it "simple update query" $ do

@@ -37,6 +37,7 @@ module QueryBuilder.Query
     , crossJoin_
     , as
     , on
+    , using
     , where_
     , whereM_
     , groupBy
@@ -236,6 +237,10 @@ as t = As t
 
 on = id
 {-# INLINE on #-}
+
+-- using = (a -> a) -> ConditionM
+using = id 
+{-# INLINE using #-}
 
 groupBy :: (Monad m) => [Column] -> QueryT m
 groupBy c = Internal.QueryT $ do

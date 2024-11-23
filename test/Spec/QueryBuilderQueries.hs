@@ -6,6 +6,7 @@ module Spec.QueryBuilderQueries
     ( buildSelectUsers
     , buildSelectUsersGroup
     , buildSelectUsersWithBindings
+    , buildJoinUsing
     , buildUpdateCustomers
     , buildInsertCustomers
     , buildDeleteUsers
@@ -95,6 +96,19 @@ buildSelectUsersWithBindings = (runIdentity . runQueryT) $ do
         and_ $ do
             condition "tx.failed" (equals true)
             or "tx.cancelled" (notEquals "''")
+
+buildJoinUsing :: Query
+buildJoinUsing = (runIdentity . runQueryT) $ do
+    comment "test joining tables with using clause"
+    select
+    from "users"
+    columns [ "users.country"
+            , "user_infos.address"
+            ]
+    join "user_infos" using [ "id"
+                            , "country"
+                            ]
+    join_ "user_files" (as "files") using ["file_id"]
 
 buildUpdateCustomers :: Query
 buildUpdateCustomers =

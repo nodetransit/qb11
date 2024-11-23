@@ -258,8 +258,9 @@ clause_join query = do
             As a       -> do
                 tell $ " AS "
                 tell $ a
-        tell $ " ON "
-        tell $ (condition_clause . join_conditions) q
+        tell $ mkCond q
+    mkCond q@(JoinTable _ _ _ _) = " ON " <> (condition_clause . join_conditions) q
+    mkCond q@(JoinTableUsing _ _ _ _) = " USING " <> (condition_clause . join_using) q
 
 clause_order_by :: Clause
 clause_order_by query = do

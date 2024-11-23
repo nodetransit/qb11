@@ -186,11 +186,18 @@ makeJoinTable utype table alias cond = JoinTable
         close = rawQueryCondition ")" []
 
 makeJoinUsingTable utype table alias keys = JoinTableUsing
-    { join_table      = table
-    , join_type       = utype
-    , join_alias      = alias
-    , join_conditions = keys
+    { join_table = table
+    , join_type  = utype
+    , join_alias = alias
+    , join_using = grouped
     }
+  where
+    grouped =  open <> keys_ <> close
+      where
+        open  = rawQueryCondition "(" []
+        close = rawQueryCondition ")" []
+        cols  = intercalate "," keys
+        keys_ = rawQueryCondition cols []
 
 makeComments :: [Text] -> [Text]
 makeComments = removeEmpty . splitN . splitR

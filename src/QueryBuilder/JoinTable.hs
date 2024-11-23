@@ -1,8 +1,11 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings
+           , DuplicateRecordFields
+           , OverloadedRecordDot 
+           , DisambiguateRecordFields
+#-}
 
 module QueryBuilder.JoinTable
     ( JoinTable(..)
-    , JoinTableUsing(..)
     , JoinType(..)
     ) where
 
@@ -14,25 +17,19 @@ import Prelude hiding (Left, Right)
 import QueryBuilder.Alias
 import QueryBuilder.Condition
 
-data JoinTable = JoinTable
-    { join_table      :: Text
-    , join_type       :: JoinType
-    , join_alias      :: Alias
-    , join_conditions :: QueryCondition
-    }
-    deriving ( Show
-             , Eq
-             )
-
-data JoinTableUsing = JoinTableUsing
-    { join_table :: Text
-    , join_type  :: JoinType
-    , join_alias :: Alias
-    , join_using :: [Text]
-    }
-    deriving ( Show
-             , Eq
-             )
+data JoinTable = JoinTable { join_table      :: Text
+                           , join_type       :: JoinType
+                           , join_alias      :: Alias
+                           , join_conditions :: QueryCondition
+                           }
+               | JoinTableUsing { join_table :: Text
+                                , join_type  :: JoinType
+                                , join_alias :: Alias
+                                , join_using :: QueryCondition
+                                }
+               deriving ( Show
+                        , Eq
+                        )
 
 data JoinType = Inner
               | Left
