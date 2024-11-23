@@ -135,6 +135,7 @@ createUpdate query = (snd . runWriter) $ do
                   , clause_limit
                   , clause_update_table
                   , clause_set
+                  , clause_returning_inserted
                   , clause_where_condition
                   ]
 

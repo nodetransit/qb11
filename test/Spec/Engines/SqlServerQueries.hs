@@ -16,6 +16,8 @@ module Spec.Engines.SqlServerQueries
     , createSelectUserWithInfo
     , createDeleteUserWithEmailLike
     , createCountUsersWithEmail
+    , createUpdateUserName
+    , createClearUserPhones
     , createUserJob
     , createTag
     ) where
@@ -160,4 +162,17 @@ createTag id name = runQuery $ do
              , value $ name
              ] ]
 
+createUpdateUserName :: Text -> Query
+createUpdateUserName name = runQuery $ do
+    update
+    table "t_user_infos"
+    set ["[name]" .= name]
+    where_ $ condition "user_id" (equals "1001")
+    returning ["id"]
 
+createClearUserPhones :: Int -> Query
+createClearUserPhones max = runQuery $ do
+    update
+    table "t_user_infos"
+    set ["telephone" .= ("NULL" :: Raw)]
+    limit max

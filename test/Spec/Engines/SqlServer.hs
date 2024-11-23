@@ -32,16 +32,16 @@ import QueryBuilder.SqlServer as QB
 sqlServerSpec :: Spec
 sqlServerSpec = do
     describe "sql server tests" $ do
-        runTodo
+        -- runTodo
         runInsertUsersSpec
         runSelectUsersJoinSpec
         runDeleteUsersSpec
+        runUpdateUsersSpec
 
-runTodo :: Spec
-runTodo =
-    describe "unimplemented tests" $ do
-      it "update without limit" $ shouldBeImplemented
-      it "update with limit" $ shouldBeImplemented
+-- runTodo :: Spec
+-- runTodo =
+--     describe "unimplemented tests" $ do
+--       it "x" $ shouldBeImplemented
 
 runInsertUsersSpec :: Spec
 runInsertUsersSpec =
@@ -87,4 +87,19 @@ runDeleteUsersSpec =
         structuredQuery q `shouldBe` "DELETE FROM t_users \
                                       \OUTPUT Deleted.id AS [delete], Deleted.email AS email \
                                       \WHERE email LIKE ?"
+
+runUpdateUsersSpec :: Spec
+runUpdateUsersSpec  =
+    context "update queries" $ do
+      it "without limit" $ do
+        let q = createUpdateUserName "茜"
+        structuredQuery q `shouldBe` "UPDATE t_user_infos \
+                                      \SET [name] = ? \
+                                      \OUTPUT Inserted.id \
+                                      \WHERE user_id = ?"
+      it "with limit" $ do
+        let q = createClearUserPhones 100
+        structuredQuery q `shouldBe` "UPDATE TOP (100) \
+                                      \t_user_infos \
+                                      \SET telephone = NULL"
 
