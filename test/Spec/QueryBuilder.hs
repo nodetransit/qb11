@@ -25,8 +25,8 @@ queryBuilderSpec :: Spec
 queryBuilderSpec =
   describe "query and bindings" $ do
     context "build select" $ do
-      let q = buildSelectUsers
       it "simple select query" $ do
+        let q = buildSelectUsers
         structuredQuery q `shouldBe` "-- test select query\n\
                            \-- test build order\n\
                            \SELECT DISTINCT\
@@ -54,8 +54,8 @@ queryBuilderSpec =
                               , "5"
                               ]
 
-      let q = buildSelectUsersGroup
       it "select with grouping" $ do
+        let q = buildSelectUsersGroup
         structuredQuery q `shouldBe` "-- test select query\n\
                            \SELECT DISTINCT COUNT(id) AS count, country\
                            \ FROM users\
@@ -68,8 +68,8 @@ queryBuilderSpec =
                               , "3"
                               ]
 
-      let q = buildSelectUsersWithBindings
       it "select bindings" $ do
+        let q = buildSelectUsersWithBindings
         structuredQuery q `shouldBe` "-- test\n\
                            \-- select query bindings\n\
                            \SELECT\
@@ -97,7 +97,41 @@ queryBuilderSpec =
                               , "10"
                               ]
 
-      it "select with using" $ shouldBeImplemented
+    context "joins" $ do
+      it "select with on" $ do
+        let q = buildJoinOn
+        structuredQuery q `shouldBe` "-- test joining tables with on clause\n\
+                           \SELECT\
+                               \ users.country,\
+                               \ user_infos.address\
+                           \ FROM\
+                             \ users\
+                             \ INNER JOIN\
+                               \ user_infos\
+                                   \ ON\
+                                   \ ( users.id = user_infos.id\
+                                     \ AND users.country = user_infos.country )\
+                             \ INNER JOIN\
+                               \ user_files AS [files]\
+                                   \ ON\
+                                   \ ( users.file_id = user_files.file_id )"
+
+      it "select with using" $ do
+        let q = buildJoinUsing
+        structuredQuery q `shouldBe` "-- test joining tables with using clause\n\
+                           \SELECT\
+                               \ users.country,\
+                               \ user_infos.address\
+                           \ FROM\
+                             \ users\
+                             \ INNER JOIN\
+                               \ user_infos\
+                                   \ USING\
+                                   \ ( id, country )\
+                             \ INNER JOIN\
+                               \ user_files AS [files]\
+                                   \ USING\
+                                   \ ( file_id )"
 
     context "build update" $ do
       let q = buildUpdateCustomers

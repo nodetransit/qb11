@@ -196,7 +196,7 @@ makeJoinUsingTable utype table alias keys = JoinTableUsing
       where
         open  = rawQueryCondition "(" []
         close = rawQueryCondition ")" []
-        cols  = intercalate "," keys
+        cols  = intercalate ", " keys
         keys_ = rawQueryCondition cols []
 
 makeComments :: [Text] -> [Text]
