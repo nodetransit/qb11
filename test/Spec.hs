@@ -25,6 +25,7 @@ main = do
     putStrLn "QueryBuilder"
     hspec $ do
         Run.querySpec
+        Run.permutationSpec
         Run.queryTSpec
         Run.tableSpec
         Run.columnSpec
