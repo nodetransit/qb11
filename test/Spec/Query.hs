@@ -8,11 +8,15 @@ module Spec.Query
     ) where
 
 import Test.Hspec
+import Test.Hspec.Core.Spec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck
+import Test.HUnit.Lang
 import Data.Semigroup
 import Spec.Util
 import Control.Monad
+import Control.Monad.Writer
+import Control.Monad.Trans.State
 import Data.List hiding (and, or)
 import Prelude hiding (and, or, null, not, Left, Right)
 
@@ -22,12 +26,17 @@ import QueryBuilder.Alias as Alias
 import QueryBuilder.Condition
 import QueryBuilder.QueryTable
 import QueryBuilder.QueryOrder
+import QueryBuilder.QueryOrder as Order
 import QueryBuilder.Set
 import QueryBuilder.Raw
+import qualified QueryBuilder.Returning as Return
 
 querySpec :: Spec
 querySpec =
   describe "query semigroup/monoid" $ do
+    context "query builder" $ do
+      it ("semigroup append") $ (return . fst) =<< runStateT testSemigroup defaultQuery
+
     context "query constructors should have empty columns" $ do
       it "select constructor" $ getColumnCount Select `shouldBe` 0
       it "insert constructor" $ getColumnCount Insert `shouldBe` 0
@@ -77,6 +86,149 @@ querySpec =
       it "query offset" $ query_offset q `shouldBe` Just 3
       it "query comments" $ query_comments q `shouldBe` ["select user", "join with info and logs"]
 
+testSemigroup :: StateT Query IO ()
+testSemigroup = do
+    q <- get
+    lift $ do
+        query_type        q `shouldBe` mempty
+        query_table       q `shouldBe` QueryTable mempty Alias.None
+        query_distinct    q `shouldBe` False
+        query_columns     q `shouldBe` mempty
+        query_values      q `shouldBe` mempty
+        query_set         q `shouldBe` mempty
+        query_groupBy     q `shouldBe` mempty
+        query_having      q `shouldBe` mempty
+        query_joins       q `shouldBe` mempty
+        query_conditions  q `shouldBe` mempty
+        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
+        query_limit       q `shouldBe` Nothing
+        query_offset      q `shouldBe` Nothing
+        query_returning   q `shouldBe` Return.Nothing
+        query_comments    q `shouldBe` mempty
+
+    put $ q <> Select
+    q <- get
+    lift $ do
+        query_type        q `shouldBe` "SELECT"
+        query_table       q `shouldBe` QueryTable mempty Alias.None
+        query_distinct    q `shouldBe` False
+        query_columns     q `shouldBe` mempty
+        query_values      q `shouldBe` mempty
+        query_set         q `shouldBe` mempty
+        query_groupBy     q `shouldBe` mempty
+        query_having      q `shouldBe` mempty
+        query_joins       q `shouldBe` mempty
+        query_conditions  q `shouldBe` mempty
+        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
+        query_limit       q `shouldBe` Nothing
+        query_offset      q `shouldBe` Nothing
+        query_returning   q `shouldBe` Return.Nothing
+        query_comments    q `shouldBe` mempty
+
+    put $ q <> Distinct
+    q <- get
+    lift $ do
+        query_type        q `shouldBe` "SELECT"
+        query_table       q `shouldBe` QueryTable mempty Alias.None
+        query_distinct    q `shouldBe` True
+        query_columns     q `shouldBe` mempty
+        query_values      q `shouldBe` mempty
+        query_set         q `shouldBe` mempty
+        query_groupBy     q `shouldBe` mempty
+        query_having      q `shouldBe` mempty
+        query_joins       q `shouldBe` mempty
+        query_conditions  q `shouldBe` mempty
+        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
+        query_limit       q `shouldBe` Nothing
+        query_offset      q `shouldBe` Nothing
+        query_returning   q `shouldBe` Return.Nothing
+        query_comments    q `shouldBe` mempty
+
+    put $ q <> Columns [Column "id", Column "name"]
+    q <- get
+    lift $ do
+        query_type        q `shouldBe` "SELECT"
+        query_table       q `shouldBe` QueryTable mempty Alias.None
+        query_distinct    q `shouldBe` True
+        (length . query_columns) q `shouldBe` 2
+        query_values      q `shouldBe` mempty
+        query_set         q `shouldBe` mempty
+        query_groupBy     q `shouldBe` mempty
+        query_having      q `shouldBe` mempty
+        query_joins       q `shouldBe` mempty
+        query_conditions  q `shouldBe` mempty
+        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
+        query_limit       q `shouldBe` Nothing
+        query_offset      q `shouldBe` Nothing
+        query_returning   q `shouldBe` Return.Nothing
+        query_comments    q `shouldBe` mempty
+
+    put $ q <> Table "users"
+    q <- get
+    lift $ do
+        query_type        q `shouldBe` "SELECT"
+        query_table       q `shouldBe` QueryTable "users" Alias.None
+        query_distinct    q `shouldBe` True
+        (length . query_columns) q `shouldBe` 2
+        query_values      q `shouldBe` mempty
+        query_set         q `shouldBe` mempty
+        query_groupBy     q `shouldBe` mempty
+        query_having      q `shouldBe` mempty
+        query_joins       q `shouldBe` mempty
+        query_conditions  q `shouldBe` mempty
+        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
+        query_limit       q `shouldBe` Nothing
+        query_offset      q `shouldBe` Nothing
+        query_returning   q `shouldBe` Return.Nothing
+        query_comments    q `shouldBe` mempty
+
+    put $ q <> Join Inner "infos" (runConditionM $ do
+        condition "users.id" (equalsRaw "infos.uid")
+        and "users.disabled" (notEquals false)
+        and "infos.deleted" isNotNull
+       )
+    q <- get
+    lift $ do
+        query_type        q `shouldBe` "SELECT"
+        query_table       q `shouldBe` QueryTable "users" Alias.None
+        query_distinct    q `shouldBe` True
+        (length . query_columns) q `shouldBe` 2
+        query_values      q `shouldBe` mempty
+        query_set         q `shouldBe` mempty
+        query_groupBy     q `shouldBe` mempty
+        query_having      q `shouldBe` mempty
+        (length . query_joins) q `shouldBe` 1
+        query_conditions  q `shouldBe` mempty
+        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
+        query_limit       q `shouldBe` Nothing
+        query_offset      q `shouldBe` Nothing
+        query_returning   q `shouldBe` Return.Nothing
+        query_comments    q `shouldBe` mempty
+
+    put $ q <> JoinAlias Right "logs" (As "ul") (runConditionM $ do
+        condition "users.id" (equalsRaw "ul.uid")
+        and "ul.type" (equals "error")
+       )
+    q <- get
+    lift $ do
+        query_type        q `shouldBe` "SELECT"
+        query_table       q `shouldBe` QueryTable "users" Alias.None
+        query_distinct    q `shouldBe` True
+        (length . query_columns) q `shouldBe` 2
+        query_values      q `shouldBe` mempty
+        query_set         q `shouldBe` mempty
+        query_groupBy     q `shouldBe` mempty
+        query_having      q `shouldBe` mempty
+        (length . query_joins) q `shouldBe` 2
+        query_conditions  q `shouldBe` mempty
+        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
+        query_limit       q `shouldBe` Nothing
+        query_offset      q `shouldBe` Nothing
+        query_returning   q `shouldBe` Return.Nothing
+        query_comments    q `shouldBe` mempty
+
+    return ()
+
 permutationSpec :: Spec
 permutationSpec =
   describe "query builder order permutation" $ do
@@ -97,6 +249,8 @@ permutationSpec =
                query_offset (q <> Offset 12) `shouldBe` Just 12
                query_distinct q `shouldBe` False
                query_distinct (q <> Distinct) `shouldBe` True
+               (show . query_joins) q `shouldBe` ""
+               (length . query_joins) q `shouldBe` 2
                query_comments q `shouldBe` ["test comment"]
            prop ("testing permutation: " ++ showQueries queries) $ do
                query_columns q `shouldBeTheSameColumns` [Column "id", Column "title"]

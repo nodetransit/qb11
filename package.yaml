@@ -43,8 +43,10 @@ tests:
       - qb11
       - hspec
     # - hspec-megaparsec
+      - hspec-core
       - hspec-discover
       - QuickCheck
+      - HUnit
       - time
     # - postgresql-simple
     # - mysql-simple

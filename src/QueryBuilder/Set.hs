@@ -14,7 +14,9 @@ import Data.Semigroup
 import QueryBuilder.ToText
 
 data SetValue = SetValue Text Text Text
-              deriving Show
+              deriving ( Show
+                       , Eq
+                       )
 
 set_clause :: [SetValue] -> Text
 set_clause a = T.intercalate ", " $ map g a
