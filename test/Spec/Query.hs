@@ -21,6 +21,7 @@ import Data.List hiding (and, or)
 import Prelude hiding (and, or, null, not, Left, Right)
 
 import QueryBuilder.Internal.Query
+import QueryBuilder.Internal.Condition (clause)
 import QueryBuilder.JoinTable
 import QueryBuilder.Alias as Alias
 import QueryBuilder.Condition
@@ -106,7 +107,7 @@ testSemigroup = do
         query_returning   q `shouldBe` Return.Nothing
         query_comments    q `shouldBe` mempty
 
-    put $ q <> Select
+    put $ q <> Select <> Select
     q <- get
     lift $ do
         query_type        q `shouldBe` "SELECT"
@@ -221,6 +222,28 @@ testSemigroup = do
         query_having      q `shouldBe` mempty
         (length . query_joins) q `shouldBe` 2
         query_conditions  q `shouldBe` mempty
+        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
+        query_limit       q `shouldBe` Nothing
+        query_offset      q `shouldBe` Nothing
+        query_returning   q `shouldBe` Return.Nothing
+        query_comments    q `shouldBe` mempty
+
+    put $ q <> Where (runConditionM $ do
+        condition "deleted" (notEquals "")
+        or "deleted" isNotNull
+        )
+    q <- get
+    lift $ do
+        query_type        q `shouldBe` "SELECT"
+        query_table       q `shouldBe` QueryTable "users" Alias.None
+        query_distinct    q `shouldBe` True
+        (length . query_columns) q `shouldBe` 2
+        query_values      q `shouldBe` mempty
+        query_set         q `shouldBe` mempty
+        query_groupBy     q `shouldBe` mempty
+        query_having      q `shouldBe` mempty
+        (length . query_joins) q `shouldBe` 2
+        (clause . query_conditions) q `shouldBe` ""
         query_orderBy     q `shouldBe` QueryOrder mempty Order.None
         query_limit       q `shouldBe` Nothing
         query_offset      q `shouldBe` Nothing
