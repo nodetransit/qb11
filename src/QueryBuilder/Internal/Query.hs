@@ -299,9 +299,7 @@ instance (Semigroup a, Monoid a, Applicative m) => Applicative (QueryT a m) wher
 
 instance (Semigroup a, Monoid a, Monad m) => Monad (QueryT a m) where
     return :: b -> QueryT a m b
-    -- return b = QueryT $ \b -> return (b, mempty)
-    return b = do
-        (QueryT . return) (b, mempty)
+    return = pure
     {-# INLINE return #-}
 
     -- (>>=) :: QueryT a m b -> (a -> QueryT a m b) -> QueryT a m b

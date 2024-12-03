@@ -144,9 +144,7 @@ instance (Semigroup a, Monoid a, Applicative m) => Applicative (ConditionT a m) 
 
 instance (Semigroup a, Monoid a, Monad m) => Monad (ConditionT a m) where
     return :: b -> ConditionT a m b
-    -- return b = ConditionT $ \b -> return (b, mempty)
-    return b = do
-        (ConditionT . return) (b, mempty)
+    return = pure
     {-# INLINE return #-}
 
     -- (>>=) :: ConditionT a m b -> (a -> ConditionT a m b) -> ConditionT a m b
