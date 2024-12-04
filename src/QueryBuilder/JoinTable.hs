@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings
            , DuplicateRecordFields
-           , OverloadedRecordDot 
            , DisambiguateRecordFields
 #-}
 
