@@ -4,6 +4,7 @@
 
 module Spec.Query
     ( querySpec
+    , permutationSpec
     ) where
 
 import Test.Hspec
@@ -35,21 +36,35 @@ querySpec =
 
     context "building a full query in order should be valid" $ do
       let q = checkSelectQuery
+          j1 = (query_joins q)!!0
+          j2 = (query_joins q)!!1
+          j3 = (query_joins q)!!2
+          j4 = (query_joins q)!!3
       it "query type" $ query_type q `shouldBe` "SELECT"
       it "query distinct" $ query_distinct q `shouldBe` True
       it "query table" $ (table_name . query_table) q `shouldBe` "users"
       it "query table" $ (table_alias . query_table) q `shouldBe` Alias.None
-      it "query joins" $ (length . query_joins) q `shouldBe` 2
-      it "query 1st join type" $ (join_type . head . query_joins) q `shouldBe` Inner
-      it "query 1st join table" $ (join_table . head . query_joins) q `shouldBe` "infos"
-      it "query 1st join alias" $ (join_alias  . head . query_joins) q `shouldBe` Alias.None
-      it "query 1st join condition" $ (condition_clause . join_conditions . head . query_joins) q `shouldBe` "( users.id = infos.uid AND users.disabled <> ? AND infos.deleted IS NOT NULL )"
-      it "query 1st join condition" $ (condition_bindings . join_conditions . head . query_joins) q `shouldBe` ["0"]
-      it "query 2nd join type" $ (join_type . head . tail . query_joins) q `shouldBe` Right
-      it "query 2nd join table" $ (join_table . head . tail . query_joins) q `shouldBe` "logs"
-      it "query 2nd join alias" $ (join_alias  . head . tail . query_joins) q `shouldBe` As "ul"
-      it "query 2nd join condition" $ (condition_clause . join_conditions . head . tail . query_joins) q `shouldBe` "( users.id = ul.uid AND ul.type = ? )"
-      it "query 2nd join condition" $ (condition_bindings . join_conditions  . head . tail . query_joins) q `shouldBe` ["error"]
+      it "query joins" $ (length . query_joins) q `shouldBe` 4
+      it "query 1st join type" $ join_type j1 `shouldBe` Inner
+      it "query 1st join table" $ join_table j1 `shouldBe` "infos"
+      it "query 1st join alias" $ join_alias j1 `shouldBe` Alias.None
+      it "query 1st join condition" $ (condition_clause . join_conditions) j1 `shouldBe` "( users.id = infos.uid AND users.disabled <> ? AND infos.deleted IS NOT NULL )"
+      it "query 1st join condition" $ (condition_bindings . join_conditions) j1 `shouldBe` ["0"]
+      it "query 2nd join type" $ join_type j2 `shouldBe` Right
+      it "query 2nd join table" $ join_table j2 `shouldBe` "logs"
+      it "query 2nd join alias" $ join_alias j2 `shouldBe` As "ul"
+      it "query 2nd join condition" $ (condition_clause . join_conditions) j2 `shouldBe` "( users.id = ul.uid AND ul.type = ? )"
+      it "query 2nd join condition" $ (condition_bindings . join_conditions) j2 `shouldBe` ["error"]
+      it "query 3rd join type" $ join_type j3 `shouldBe` Left
+      it "query 3rd join table" $ join_table j3 `shouldBe` "user_files"
+      it "query 3rd join alias" $ join_alias j3 `shouldBe` Alias.None
+      it "query 3rd join using" $ (condition_clause . join_using) j3 `shouldBe` "( id, date )"
+      it "query 3rd join using" $ (condition_bindings . join_using) j3 `shouldBe` []
+      it "query 4th join type" $ join_type j4 `shouldBe` Outer
+      it "query 4th join table" $ join_table j4 `shouldBe` "audit"
+      it "query 4th join alias" $ join_alias j4 `shouldBe` "user_audit"
+      it "query 4th join using" $ (condition_clause . join_using) j4 `shouldBe` "( id, name )"
+      it "query 4th join using" $ (condition_bindings . join_using) j4 `shouldBe` []
       it "query columns" $ query_columns q `shouldBeTheSameColumns` [Column "id", Column "name"]
       it "query conditions" $ (condition_clause . query_conditions) q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
       it "query conditions" $ (condition_bindings . query_conditions) q `shouldBe` [""]
@@ -62,6 +77,9 @@ querySpec =
       it "query offset" $ query_offset q `shouldBe` Just 3
       it "query comments" $ query_comments q `shouldBe` ["select user", "join with info and logs"]
 
+permutationSpec :: Spec
+permutationSpec =
+  describe "query builder order permutation" $ do
     context "building a full query in any order should be valid" $ do
       forM_ (permutations checkSelectQueryNotInOrder_pt1) $
         \queries -> do
@@ -142,6 +160,8 @@ checkSelectQuery =
         condition "users.id" (equalsRaw "ul.uid")
         and "ul.type" (equals "error")
        )
+    <> JoinUsing Left "user_files" ["id", "date"]
+    <> JoinAliasUsing Outer "audit" (As "user_audit") ["id", "name"]
     <> Where (runConditionM $ do
         condition "deleted" (notEquals "")
         or "deleted" isNotNull
@@ -165,6 +185,7 @@ checkSelectQueryNotInOrder_pt1 =
         condition "users.id" (equals "info.uid")
         and "deleted" isNotNull
       )
+    , JoinUsing Inner "album_covers" ["id"]
     , Where (runConditionM $ do
           condition "released" (notEquals "")
           and "released" isNotNull

@@ -37,6 +37,7 @@ module QueryBuilder.Query
     , crossJoin_
     , as
     , on
+    , using
     , where_
     , whereM_
     , groupBy
@@ -177,65 +178,79 @@ asc :: Order
 asc = Order.Asc
 {-# INLINE asc #-}
 
-joinQuery :: (Monad m) => JoinType -> Alias -> Text -> (a -> a) -> ConditionM -> QueryT m
-joinQuery joinType alias table _ q = Internal.QueryT $ do
-    return (True, Internal.defaultQuery <> Internal.JoinAlias joinType table alias cond)
-  where
-    cond = runConditionM q
+data JoinStruct = JoinOn ConditionM
+                | JoinUsing [Text]
 
-join :: (Monad m) => Text -> (a -> a) -> ConditionM -> QueryT m
+joinQuery :: (Monad m)
+          => JoinType
+          -> Alias
+          -> Text
+          -> (a -> JoinStruct)
+          -> a
+          -> QueryT m
+joinQuery joinType alias table f q = Internal.QueryT $ do
+    let qq = mkQuery $ f q
+    return (True, Internal.defaultQuery <> qq)
+  where
+    mkQuery (JoinOn c) = Internal.JoinAlias joinType table alias $ runConditionM c
+    mkQuery (JoinUsing ks) = Internal.JoinAliasUsing joinType table alias ks
+
+join :: (Monad m) => Text -> (a -> JoinStruct) -> a -> QueryT m
 join = joinQuery Inner Alias.None
 {-# INLINE join #-}
 
-innerJoin :: (Monad m) => Text -> (a -> a) -> ConditionM -> QueryT m
+innerJoin :: (Monad m) => Text -> (a -> JoinStruct) -> a -> QueryT m
 innerJoin = joinQuery Inner Alias.None
 {-# INLINE innerJoin #-}
 
-leftJoin :: (Monad m) => Text -> (a -> a) -> ConditionM -> QueryT m
+leftJoin :: (Monad m) => Text -> (a -> JoinStruct) -> a -> QueryT m
 leftJoin = joinQuery Left Alias.None
 {-# INLINE leftJoin #-}
 
-rightJoin :: (Monad m) => Text -> (a -> a) -> ConditionM -> QueryT m
+rightJoin :: (Monad m) => Text -> (a -> JoinStruct) -> a -> QueryT m
 rightJoin = joinQuery Right Alias.None
 {-# INLINE rightJoin #-}
 
-outerJoin :: (Monad m) => Text -> (a -> a) -> ConditionM -> QueryT m
+outerJoin :: (Monad m) => Text -> (a -> JoinStruct) -> a -> QueryT m
 outerJoin = joinQuery Outer Alias.None
 {-# INLINE outerJoin #-}
 
-crossJoin :: (Monad m) => Text -> (a -> a) -> ConditionM -> QueryT m
+crossJoin :: (Monad m) => Text -> (a -> JoinStruct) -> a -> QueryT m
 crossJoin = joinQuery Cross Alias.None
 {-# INLINE crossJoin #-}
 
-join_ :: (Monad m) => Text -> Alias -> (a -> a) -> ConditionM -> QueryT m
+join_ :: (Monad m) => Text -> Alias -> (a -> JoinStruct) -> a -> QueryT m
 join_ table alias = joinQuery Inner alias table
 {-# INLINE join_ #-}
 
-innerJoin_ :: (Monad m) => Text -> Alias -> (a -> a) -> ConditionM -> QueryT m
+innerJoin_ :: (Monad m) => Text -> Alias -> (a -> JoinStruct) -> a -> QueryT m
 innerJoin_ table alias = joinQuery Inner alias table
 {-# INLINE innerJoin_ #-}
 
-leftJoin_ :: (Monad m) => Text -> Alias -> (a -> a) -> ConditionM -> QueryT m
+leftJoin_ :: (Monad m) => Text -> Alias -> (a -> JoinStruct) -> a -> QueryT m
 leftJoin_ table alias = joinQuery Left alias table
 {-# INLINE leftJoin_ #-}
 
-rightJoin_ :: (Monad m) => Text -> Alias -> (a -> a) -> ConditionM -> QueryT m
+rightJoin_ :: (Monad m) => Text -> Alias -> (a -> JoinStruct) -> a -> QueryT m
 rightJoin_ table alias = joinQuery Right alias table
 {-# INLINE rightJoin_ #-}
 
-outerJoin_ :: (Monad m) => Text -> Alias -> (a -> a) -> ConditionM -> QueryT m
+outerJoin_ :: (Monad m) => Text -> Alias -> (a -> JoinStruct) -> a -> QueryT m
 outerJoin_ table alias = joinQuery Outer alias table
 {-# INLINE outerJoin_ #-}
 
-crossJoin_ :: (Monad m) => Text -> Alias -> (a -> a) -> ConditionM -> QueryT m
+crossJoin_ :: (Monad m) => Text -> Alias -> (a -> JoinStruct) -> a -> QueryT m
 crossJoin_ table alias = joinQuery Cross alias table
 {-# INLINE crossJoin_ #-}
 
 as :: Text -> Alias
 as t = As t
 
-on = id
+on = JoinOn
 {-# INLINE on #-}
+
+using = JoinUsing
+{-# INLINE using #-}
 
 groupBy :: (Monad m) => [Column] -> QueryT m
 groupBy c = Internal.QueryT $ do

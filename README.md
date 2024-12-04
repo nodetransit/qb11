@@ -48,3 +48,8 @@ buildSelectExample = (runIdentity . runQueryT) $ do
 since it is a builder, the order doesn't really matter
 
 
+## Testing ##
+
+```
+stack test --file-watch --test-arguments "--fail-fast"
+```

@@ -47,7 +47,9 @@ data Query = EmptyQuery
            | GroupBy [Column]
            | Having QueryCondition
            | Join JoinType Text QueryCondition
+           | JoinUsing JoinType Text [Text]
            | JoinAlias JoinType Text Alias QueryCondition
+           | JoinAliasUsing JoinType Text Alias [Text]
            | Where QueryCondition
            | OrderBy [Column] Order
            | Limit Int
@@ -99,52 +101,56 @@ defaultQuery = Query { query_type        = mempty
 modify_query :: Query -> Query -> Query
 modify_query = mq
   where
-    mq EmptyQuery           EmptyQuery          = EmptyQuery
-    mq EmptyQuery           q                   = defaultQuery <> q
-    mq q                    EmptyQuery          = defaultQuery <> q
-    mq q@(Query {})         Select              = q { query_type = "SELECT" }
-    mq q@(Query {})         Insert              = q { query_type = "INSERT" }
-    mq q@(Query {})         Update              = q { query_type = "UPDATE" }
-    mq q@(Query {})         Delete              = q { query_type = "DELETE" }
-    mq q@(Query {})         (Table t)           = q { query_table = QueryTable t Alias.None }
-    mq q@(Query {})         (TableAlias t a)    = q { query_table = QueryTable t a }
-    mq q@(Query {})         (Columns c)         = q { query_columns = c }
-    mq q@(Query {})         (Set p)             = q { query_set = p }
-    mq q@(Query {})         (Where c)           = q { query_conditions = c }
-    mq q@(Query {})         (OrderBy c o)       = q { query_orderBy = QueryOrder c o }
-    mq q@(Query {})         (GroupBy g)         = q { query_groupBy = g }
-    mq q@(Query {})         (Having c)          = q { query_having = c }
-    mq q@(Query {})         Distinct            = q { query_distinct = True }
-    mq q@(Query {})         (Limit n)           = q { query_limit = Just n }
-    mq q@(Query {})         (Offset n)          = q { query_offset = Just n }
-    mq q@(Query {})         (Values v)          = q { query_values = makeValues v }
-    mq q@(Query {})         (Join u t c)        = q { query_joins = [makeJoinTable u t Alias.None c] }
-    mq q@(Query {})         (JoinAlias u t a c) = q { query_joins = [makeJoinTable u t a c] }
-    mq q@(Query {})         (Comment t)         = q { query_comments = makeComments t }
-    mq q@(Query {})         (Returning c)       = q { query_returning = Return.Into c }
-    mq q@(Query {})         (Returning_ t)      = q { query_returning = Return.Into [Column t] }
-    mq Select               q                   = defaultQuery { query_type = "SELECT" } <> q
-    mq Insert               q                   = defaultQuery { query_type = "INSERT" } <> q
-    mq Update               q                   = defaultQuery { query_type = "UPDATE" } <> q
-    mq Delete               q                   = defaultQuery { query_type = "DELETE" } <> q
-    mq (Table t)            q                   = defaultQuery { query_table = QueryTable t Alias.None } <> q
-    mq (TableAlias t a)     q                   = defaultQuery { query_table = QueryTable t a } <> q
-    mq (Columns c)          q                   = defaultQuery { query_columns = c } <> q
-    mq (Set p)              q                   = defaultQuery { query_set = p } <> q
-    mq (Where c)            q                   = defaultQuery { query_conditions = c } <> q
-    mq (OrderBy c o)        q                   = defaultQuery { query_orderBy = QueryOrder c o } <> q
-    mq (GroupBy g)          q                   = defaultQuery { query_groupBy = g } <> q
-    mq (Having c)           q                   = defaultQuery { query_having = c } <> q
-    mq Distinct             q                   = defaultQuery { query_distinct = True } <> q
-    mq (Limit n)            q                   = defaultQuery { query_limit = Just n } <> q
-    mq (Offset n)           q                   = defaultQuery { query_offset = Just n } <> q
-    mq (Values v)           q                   = defaultQuery { query_values = makeValues v } <> q
-    mq (Join u t c)         q                   = defaultQuery { query_joins = [makeJoinTable u t Alias.None c] } <> q
-    mq (JoinAlias u t a c)  q                   = defaultQuery { query_joins = [makeJoinTable u t a c] } <> q
-    mq (Comment t)          q                   = defaultQuery { query_comments = makeComments t } <> q
-    mq (Returning c)        q                   = defaultQuery { query_returning = Return.Into c } <> q
-    mq (Returning_ t)       q                   = defaultQuery { query_returning = Return.Into [Column t] } <> q
-    mq qL                   qR                  = coalesceQuery qL qR
+    mq EmptyQuery                EmptyQuery               = EmptyQuery
+    mq EmptyQuery                q                        = defaultQuery <> q
+    mq q                         EmptyQuery               = defaultQuery <> q
+    mq q@(Query {})              Select                   = q { query_type = "SELECT" }
+    mq q@(Query {})              Insert                   = q { query_type = "INSERT" }
+    mq q@(Query {})              Update                   = q { query_type = "UPDATE" }
+    mq q@(Query {})              Delete                   = q { query_type = "DELETE" }
+    mq q@(Query {})              (Table t)                = q { query_table = QueryTable t Alias.None }
+    mq q@(Query {})              (TableAlias t a)         = q { query_table = QueryTable t a }
+    mq q@(Query {})              (Columns c)              = q { query_columns = c }
+    mq q@(Query {})              (Set p)                  = q { query_set = p }
+    mq q@(Query {})              (Where c)                = q { query_conditions = c }
+    mq q@(Query {})              (OrderBy c o)            = q { query_orderBy = QueryOrder c o }
+    mq q@(Query {})              (GroupBy g)              = q { query_groupBy = g }
+    mq q@(Query {})              (Having c)               = q { query_having = c }
+    mq q@(Query {})              Distinct                 = q { query_distinct = True }
+    mq q@(Query {})              (Limit n)                = q { query_limit = Just n }
+    mq q@(Query {})              (Offset n)               = q { query_offset = Just n }
+    mq q@(Query {})              (Values v)               = q { query_values = makeValues v }
+    mq q@(Query {})              (Join u t c)             = q { query_joins = [makeJoinTable u t Alias.None c] }
+    mq q@(Query {})              (JoinAlias u t a c)      = q { query_joins = [makeJoinTable u t a c] }
+    mq q@(Query {})              (JoinUsing u t c)        = q { query_joins = [makeJoinUsingTable u t Alias.None c] }
+    mq q@(Query {})              (JoinAliasUsing u t a c) = q { query_joins = [makeJoinUsingTable u t a c] }
+    mq q@(Query {})              (Comment t)              = q { query_comments = makeComments t }
+    mq q@(Query {})              (Returning c)            = q { query_returning = Return.Into c }
+    mq q@(Query {})              (Returning_ t)           = q { query_returning = Return.Into [Column t] }
+    mq Select                    q                        = defaultQuery { query_type = "SELECT" } <> q
+    mq Insert                    q                        = defaultQuery { query_type = "INSERT" } <> q
+    mq Update                    q                        = defaultQuery { query_type = "UPDATE" } <> q
+    mq Delete                    q                        = defaultQuery { query_type = "DELETE" } <> q
+    mq (Table t)                 q                        = defaultQuery { query_table = QueryTable t Alias.None } <> q
+    mq (TableAlias t a)          q                        = defaultQuery { query_table = QueryTable t a } <> q
+    mq (Columns c)               q                        = defaultQuery { query_columns = c } <> q
+    mq (Set p)                   q                        = defaultQuery { query_set = p } <> q
+    mq (Where c)                 q                        = defaultQuery { query_conditions = c } <> q
+    mq (OrderBy c o)             q                        = defaultQuery { query_orderBy = QueryOrder c o } <> q
+    mq (GroupBy g)               q                        = defaultQuery { query_groupBy = g } <> q
+    mq (Having c)                q                        = defaultQuery { query_having = c } <> q
+    mq Distinct                  q                        = defaultQuery { query_distinct = True } <> q
+    mq (Limit n)                 q                        = defaultQuery { query_limit = Just n } <> q
+    mq (Offset n)                q                        = defaultQuery { query_offset = Just n } <> q
+    mq (Values v)                q                        = defaultQuery { query_values = makeValues v } <> q
+    mq (Join u t c)              q                        = defaultQuery { query_joins = [makeJoinTable u t Alias.None c] } <> q
+    mq (JoinAlias u t a c)       q                        = defaultQuery { query_joins = [makeJoinTable u t a c] } <> q
+    mq (JoinUsing u t c)         q                        = defaultQuery { query_joins = [makeJoinUsingTable u t Alias.None c] } <> q
+    mq (JoinAliasUsing u t a c)  q                        = defaultQuery { query_joins = [makeJoinUsingTable u t a c] } <> q
+    mq (Comment t)               q                        = defaultQuery { query_comments = makeComments t } <> q
+    mq (Returning c)             q                        = defaultQuery { query_returning = Return.Into c } <> q
+    mq (Returning_ t)            q                        = defaultQuery { query_returning = Return.Into [Column t] } <> q
+    mq qL                        qR                       = coalesceQuery qL qR
 
 makeValues :: [[Value]] -> QueryCondition
 makeValues vl = rawQueryCondition clause bind
@@ -178,6 +184,20 @@ makeJoinTable utype table alias cond = JoinTable
       where
         open  = rawQueryCondition "(" []
         close = rawQueryCondition ")" []
+
+makeJoinUsingTable utype table alias keys = JoinTableUsing
+    { join_table = table
+    , join_type  = utype
+    , join_alias = alias
+    , join_using = grouped
+    }
+  where
+    grouped =  open <> keys_ <> close
+      where
+        open  = rawQueryCondition "(" []
+        close = rawQueryCondition ")" []
+        cols  = intercalate ", " keys
+        keys_ = rawQueryCondition cols []
 
 makeComments :: [Text] -> [Text]
 makeComments = removeEmpty . splitN . splitR
