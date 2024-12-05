@@ -21,7 +21,7 @@ import Data.List hiding (and, or)
 import Prelude hiding (and, or, null, not, Left, Right)
 
 import QueryBuilder.Internal.Query
-import QueryBuilder.Internal.Condition (clause)
+import QueryBuilder.Internal.Condition (clause, bindings)
 import QueryBuilder.JoinTable
 import QueryBuilder.Alias as Alias
 import QueryBuilder.Condition
@@ -107,7 +107,7 @@ testSemigroup = do
         query_returning   q `shouldBe` Return.Nothing
         query_comments    q `shouldBe` mempty
 
-    put $ q <> Select <> Select
+    put $ q <> Select
     q <- get
     lift $ do
         query_type        q `shouldBe` "SELECT"
@@ -148,85 +148,123 @@ testSemigroup = do
     put $ q <> Columns [Column "id", Column "name"]
     q <- get
     lift $ do
-        query_type        q `shouldBe` "SELECT"
-        query_table       q `shouldBe` QueryTable mempty Alias.None
-        query_distinct    q `shouldBe` True
+        query_type               q `shouldBe` "SELECT"
+        query_table              q `shouldBe` QueryTable mempty Alias.None
+        query_distinct           q `shouldBe` True
         (length . query_columns) q `shouldBe` 2
-        query_values      q `shouldBe` mempty
-        query_set         q `shouldBe` mempty
-        query_groupBy     q `shouldBe` mempty
-        query_having      q `shouldBe` mempty
-        query_joins       q `shouldBe` mempty
-        query_conditions  q `shouldBe` mempty
-        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
-        query_limit       q `shouldBe` Nothing
-        query_offset      q `shouldBe` Nothing
-        query_returning   q `shouldBe` Return.Nothing
-        query_comments    q `shouldBe` mempty
+        query_values             q `shouldBe` mempty
+        query_set                q `shouldBe` mempty
+        query_groupBy            q `shouldBe` mempty
+        query_having             q `shouldBe` mempty
+        query_joins              q `shouldBe` mempty
+        query_conditions         q `shouldBe` mempty
+        query_orderBy            q `shouldBe` QueryOrder mempty Order.None
+        query_limit              q `shouldBe` Nothing
+        query_offset             q `shouldBe` Nothing
+        query_returning          q `shouldBe` Return.Nothing
+        query_comments           q `shouldBe` mempty
 
     put $ q <> Table "users"
     q <- get
     lift $ do
-        query_type        q `shouldBe` "SELECT"
-        query_table       q `shouldBe` QueryTable "users" Alias.None
-        query_distinct    q `shouldBe` True
+        query_type               q `shouldBe` "SELECT"
+        query_table              q `shouldBe` QueryTable "users" Alias.None
+        query_distinct           q `shouldBe` True
         (length . query_columns) q `shouldBe` 2
-        query_values      q `shouldBe` mempty
-        query_set         q `shouldBe` mempty
-        query_groupBy     q `shouldBe` mempty
-        query_having      q `shouldBe` mempty
-        query_joins       q `shouldBe` mempty
-        query_conditions  q `shouldBe` mempty
-        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
-        query_limit       q `shouldBe` Nothing
-        query_offset      q `shouldBe` Nothing
-        query_returning   q `shouldBe` Return.Nothing
-        query_comments    q `shouldBe` mempty
+        query_values             q `shouldBe` mempty
+        query_set                q `shouldBe` mempty
+        query_groupBy            q `shouldBe` mempty
+        query_having             q `shouldBe` mempty
+        query_joins              q `shouldBe` mempty
+        query_conditions         q `shouldBe` mempty
+        query_orderBy            q `shouldBe` QueryOrder mempty Order.None
+        query_limit              q `shouldBe` Nothing
+        query_offset             q `shouldBe` Nothing
+        query_returning          q `shouldBe` Return.Nothing
+        query_comments           q `shouldBe` mempty
 
     put $ q <> Join Inner "infos" (runConditionM $ do
-        condition "users.id" (equalsRaw "infos.uid")
-        and "users.disabled" (notEquals false)
-        and "infos.deleted" isNotNull
-       )
+            condition "users.id" (equalsRaw "infos.uid")
+            and "users.disabled" (notEquals false)
+            and "infos.deleted" isNotNull
+        )
     q <- get
     lift $ do
-        query_type        q `shouldBe` "SELECT"
-        query_table       q `shouldBe` QueryTable "users" Alias.None
-        query_distinct    q `shouldBe` True
+        query_type               q `shouldBe` "SELECT"
+        query_table              q `shouldBe` QueryTable "users" Alias.None
+        query_distinct           q `shouldBe` True
         (length . query_columns) q `shouldBe` 2
-        query_values      q `shouldBe` mempty
-        query_set         q `shouldBe` mempty
-        query_groupBy     q `shouldBe` mempty
-        query_having      q `shouldBe` mempty
-        (length . query_joins) q `shouldBe` 1
-        query_conditions  q `shouldBe` mempty
-        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
-        query_limit       q `shouldBe` Nothing
-        query_offset      q `shouldBe` Nothing
-        query_returning   q `shouldBe` Return.Nothing
-        query_comments    q `shouldBe` mempty
+        query_values             q `shouldBe` mempty
+        query_set                q `shouldBe` mempty
+        query_groupBy            q `shouldBe` mempty
+        query_having             q `shouldBe` mempty
+        (length . query_joins)   q `shouldBe` 1
+        query_conditions         q `shouldBe` mempty
+        query_orderBy            q `shouldBe` QueryOrder mempty Order.None
+        query_limit              q `shouldBe` Nothing
+        query_offset             q `shouldBe` Nothing
+        query_returning          q `shouldBe` Return.Nothing
+        query_comments           q `shouldBe` mempty
 
     put $ q <> JoinAlias Right "logs" (As "ul") (runConditionM $ do
-        condition "users.id" (equalsRaw "ul.uid")
-        and "ul.type" (equals "error")
-       )
+            condition "users.id" (equalsRaw "ul.uid")
+            and "ul.type" (equals "error")
+        )
     q <- get
     lift $ do
-        query_type        q `shouldBe` "SELECT"
-        query_table       q `shouldBe` QueryTable "users" Alias.None
-        query_distinct    q `shouldBe` True
+        query_type               q `shouldBe` "SELECT"
+        query_table              q `shouldBe` QueryTable "users" Alias.None
+        query_distinct           q `shouldBe` True
         (length . query_columns) q `shouldBe` 2
-        query_values      q `shouldBe` mempty
-        query_set         q `shouldBe` mempty
-        query_groupBy     q `shouldBe` mempty
-        query_having      q `shouldBe` mempty
-        (length . query_joins) q `shouldBe` 2
-        query_conditions  q `shouldBe` mempty
-        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
-        query_limit       q `shouldBe` Nothing
-        query_offset      q `shouldBe` Nothing
-        query_returning   q `shouldBe` Return.Nothing
-        query_comments    q `shouldBe` mempty
+        query_values             q `shouldBe` mempty
+        query_set                q `shouldBe` mempty
+        query_groupBy            q `shouldBe` mempty
+        query_having             q `shouldBe` mempty
+        (length . query_joins)   q `shouldBe` 2
+        query_conditions         q `shouldBe` mempty
+        query_orderBy            q `shouldBe` QueryOrder mempty Order.None
+        query_limit              q `shouldBe` Nothing
+        query_offset             q `shouldBe` Nothing
+        query_returning          q `shouldBe` Return.Nothing
+        query_comments           q `shouldBe` mempty
+
+    put $ q <> JoinUsing Left "user_files" ["id", "date"]
+    q <- get
+    lift $ do
+        query_type               q `shouldBe` "SELECT"
+        query_table              q `shouldBe` QueryTable "users" Alias.None
+        query_distinct           q `shouldBe` True
+        (length . query_columns) q `shouldBe` 2
+        query_values             q `shouldBe` mempty
+        query_set                q `shouldBe` mempty
+        query_groupBy            q `shouldBe` mempty
+        query_having             q `shouldBe` mempty
+        (length . query_joins)   q `shouldBe` 3
+        query_conditions         q `shouldBe` mempty
+        query_orderBy            q `shouldBe` QueryOrder mempty Order.None
+        query_limit              q `shouldBe` Nothing
+        query_offset             q `shouldBe` Nothing
+        query_returning          q `shouldBe` Return.Nothing
+        query_comments           q `shouldBe` mempty
+
+    put $ q <> JoinAliasUsing Outer "audit" (As "user_audit") ["id", "name"]
+    q <- get
+    lift $ do
+        query_type               q `shouldBe` "SELECT"
+        query_table              q `shouldBe` QueryTable "users" Alias.None
+        query_distinct           q `shouldBe` True
+        (length . query_columns) q `shouldBe` 2
+        query_values             q `shouldBe` mempty
+        query_set                q `shouldBe` mempty
+        query_groupBy            q `shouldBe` mempty
+        query_having             q `shouldBe` mempty
+        (length . query_joins)   q `shouldBe` 4
+        query_conditions         q `shouldBe` mempty
+        query_orderBy            q `shouldBe` QueryOrder mempty Order.None
+        query_limit              q `shouldBe` Nothing
+        query_offset             q `shouldBe` Nothing
+        query_returning          q `shouldBe` Return.Nothing
+        query_comments           q `shouldBe` mempty
 
     put $ q <> Where (runConditionM $ do
         condition "deleted" (notEquals "")
@@ -234,21 +272,154 @@ testSemigroup = do
         )
     q <- get
     lift $ do
-        query_type        q `shouldBe` "SELECT"
-        query_table       q `shouldBe` QueryTable "users" Alias.None
-        query_distinct    q `shouldBe` True
-        (length . query_columns) q `shouldBe` 2
-        query_values      q `shouldBe` mempty
-        query_set         q `shouldBe` mempty
-        query_groupBy     q `shouldBe` mempty
-        query_having      q `shouldBe` mempty
-        (length . query_joins) q `shouldBe` 2
-        (clause . query_conditions) q `shouldBe` ""
-        query_orderBy     q `shouldBe` QueryOrder mempty Order.None
-        query_limit       q `shouldBe` Nothing
-        query_offset      q `shouldBe` Nothing
-        query_returning   q `shouldBe` Return.Nothing
-        query_comments    q `shouldBe` mempty
+        query_type                    q `shouldBe` "SELECT"
+        query_table                   q `shouldBe` QueryTable "users" Alias.None
+        query_distinct                q `shouldBe` True
+        (length . query_columns)      q `shouldBe` 2
+        query_values                  q `shouldBe` mempty
+        query_set                     q `shouldBe` mempty
+        query_groupBy                 q `shouldBe` mempty
+        query_having                  q `shouldBe` mempty
+        (length . query_joins)        q `shouldBe` 4
+        (clause . query_conditions)   q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+        (bindings . query_conditions) q `shouldBe` [""]
+        query_orderBy                 q `shouldBe` QueryOrder mempty Order.None
+        query_limit                   q `shouldBe` Nothing
+        query_offset                  q `shouldBe` Nothing
+        query_returning               q `shouldBe` Return.Nothing
+        query_comments                q `shouldBe` mempty
+
+    put $ q <> GroupBy [Column "type", Column "access" ]
+    q <- get
+    lift $ do
+        query_type                    q `shouldBe` "SELECT"
+        query_table                   q `shouldBe` QueryTable "users" Alias.None
+        query_distinct                q `shouldBe` True
+        (length . query_columns)      q `shouldBe` 2
+        query_values                  q `shouldBe` mempty
+        query_set                     q `shouldBe` mempty
+        (length . query_groupBy)      q `shouldBe` 2
+        query_having                  q `shouldBe` mempty
+        (length . query_joins)        q `shouldBe` 4
+        (clause . query_conditions)   q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+        (bindings . query_conditions) q `shouldBe` [""]
+        query_orderBy                 q `shouldBe` QueryOrder mempty Order.None
+        query_limit                   q `shouldBe` Nothing
+        query_offset                  q `shouldBe` Nothing
+        query_returning               q `shouldBe` Return.Nothing
+        query_comments                q `shouldBe` mempty
+
+    put $ q <> Having (runConditionM $ do
+            condition "type" (like "%admin%")
+        )
+    q <- get
+    lift $ do
+        query_type                    q `shouldBe` "SELECT"
+        query_table                   q `shouldBe` QueryTable "users" Alias.None
+        query_distinct                q `shouldBe` True
+        (length . query_columns)      q `shouldBe` 2
+        query_values                  q `shouldBe` mempty
+        query_set                     q `shouldBe` mempty
+        (length . query_groupBy)      q `shouldBe` 2
+        (clause . query_having)       q `shouldBe` "type LIKE ?"
+        (bindings . query_having)     q `shouldBe` ["%admin%"]
+        (length . query_joins)        q `shouldBe` 4
+        (clause . query_conditions)   q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+        (bindings . query_conditions) q `shouldBe` [""]
+        query_orderBy                 q `shouldBe` QueryOrder mempty Order.None
+        query_limit                   q `shouldBe` Nothing
+        query_offset                  q `shouldBe` Nothing
+        query_returning               q `shouldBe` Return.Nothing
+        query_comments                q `shouldBe` mempty
+
+    put $ q <> OrderBy [Column "registered", Column "last_login"] Asc
+    q <- get
+    lift $ do
+        query_type                               q `shouldBe` "SELECT"
+        query_table                              q `shouldBe` QueryTable "users" Alias.None
+        query_distinct                           q `shouldBe` True
+        (length . query_columns)                 q `shouldBe` 2
+        query_values                             q `shouldBe` mempty
+        query_set                                q `shouldBe` mempty
+        (length . query_groupBy)                 q `shouldBe` 2
+        (clause . query_having)                  q `shouldBe` "type LIKE ?"
+        (bindings . query_having)                q `shouldBe` ["%admin%"]
+        (length . query_joins)                   q `shouldBe` 4
+        (clause . query_conditions)              q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+        (bindings . query_conditions)            q `shouldBe` [""]
+        (length . order_columns . query_orderBy) q `shouldBe` 2
+        (order . query_orderBy)                  q `shouldBe` Order.Asc
+        query_limit                              q `shouldBe` Nothing
+        query_offset                             q `shouldBe` Nothing
+        query_returning                          q `shouldBe` Return.Nothing
+        query_comments                           q `shouldBe` mempty
+
+    put $ q <> Limit 12
+    q <- get
+    lift $ do
+        query_type                               q `shouldBe` "SELECT"
+        query_table                              q `shouldBe` QueryTable "users" Alias.None
+        query_distinct                           q `shouldBe` True
+        (length . query_columns)                 q `shouldBe` 2
+        query_values                             q `shouldBe` mempty
+        query_set                                q `shouldBe` mempty
+        (length . query_groupBy)                 q `shouldBe` 2
+        (clause . query_having)                  q `shouldBe` "type LIKE ?"
+        (bindings . query_having)                q `shouldBe` ["%admin%"]
+        (length . query_joins)                   q `shouldBe` 4
+        (clause . query_conditions)              q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+        (bindings . query_conditions)            q `shouldBe` [""]
+        (length . order_columns . query_orderBy) q `shouldBe` 2
+        (order . query_orderBy)                  q `shouldBe` Order.Asc
+        query_limit                              q `shouldBe` Just 12
+        query_offset                             q `shouldBe` Nothing
+        query_returning                          q `shouldBe` Return.Nothing
+        query_comments                           q `shouldBe` mempty
+
+    put $ q <> Offset 3
+    q <- get
+    lift $ do
+        query_type                               q `shouldBe` "SELECT"
+        query_table                              q `shouldBe` QueryTable "users" Alias.None
+        query_distinct                           q `shouldBe` True
+        (length . query_columns)                 q `shouldBe` 2
+        query_values                             q `shouldBe` mempty
+        query_set                                q `shouldBe` mempty
+        (length . query_groupBy)                 q `shouldBe` 2
+        (clause . query_having)                  q `shouldBe` "type LIKE ?"
+        (bindings . query_having)                q `shouldBe` ["%admin%"]
+        (length . query_joins)                   q `shouldBe` 4
+        (clause . query_conditions)              q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+        (bindings . query_conditions)            q `shouldBe` [""]
+        (length . order_columns . query_orderBy) q `shouldBe` 2
+        (order . query_orderBy)                  q `shouldBe` Order.Asc
+        query_limit                              q `shouldBe` Just 12
+        query_offset                             q `shouldBe` Just 3
+        query_returning                          q `shouldBe` Return.Nothing
+        query_comments                           q `shouldBe` mempty
+
+    put $ q <> Comment ["select user", "join with info and logs"]
+    q <- get
+    lift $ do
+        query_type                               q `shouldBe` "SELECT"
+        query_table                              q `shouldBe` QueryTable "users" Alias.None
+        query_distinct                           q `shouldBe` True
+        (length . query_columns)                 q `shouldBe` 2
+        query_values                             q `shouldBe` mempty
+        query_set                                q `shouldBe` mempty
+        (length . query_groupBy)                 q `shouldBe` 2
+        (clause . query_having)                  q `shouldBe` "type LIKE ?"
+        (bindings . query_having)                q `shouldBe` ["%admin%"]
+        (length . query_joins)                   q `shouldBe` 4
+        (clause . query_conditions)              q `shouldBe` "deleted <> ? OR deleted IS NOT NULL"
+        (bindings . query_conditions)            q `shouldBe` [""]
+        (length . order_columns . query_orderBy) q `shouldBe` 2
+        (order . query_orderBy)                  q `shouldBe` Order.Asc
+        query_limit                              q `shouldBe` Just 12
+        query_offset                             q `shouldBe` Just 3
+        query_returning                          q `shouldBe` Return.Nothing
+        (length . query_comments)                q `shouldBe` 2
+        query_comments                           q `shouldBe` ["select user", "join with info and logs"]
 
     return ()
 
@@ -272,7 +443,6 @@ permutationSpec =
                query_offset (q <> Offset 12) `shouldBe` Just 12
                query_distinct q `shouldBe` False
                query_distinct (q <> Distinct) `shouldBe` True
-               (show . query_joins) q `shouldBe` ""
                (length . query_joins) q `shouldBe` 2
                query_comments q `shouldBe` ["test comment"]
            prop ("testing permutation: " ++ showQueries queries) $ do
