@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS -Wno-missing-fields #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE DuplicateRecordFields
-           , OverloadedRecordDot 
-           , DisambiguateRecordFields
-#-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE DisambiguateRecordFields #-}
 
 module Spec.Engines.PostgreQueries
     ( User(..)
@@ -97,8 +95,8 @@ createInsertUserInfo ui = runQuery $ do
     columns [ "user_id"
             , "name"
             ]
-    values [[ value $ T.pack . show $ ui.user_id
-            , value $ ui.name
+    values [[ value $ (T.pack . show . (user_id :: UserInfo -> Int)) ui
+            , value $ (name :: UserInfo -> Text) ui
             ]]
 
 createSelectUserWithInfo :: Int -> Query
@@ -142,8 +140,8 @@ createUserJob user job = runQuery $ do
             , column "user_id"
             , column "date"
             ]
-    values [ [ value $ T.pack . show $ job.id
-             , value $ T.pack . show $ user.id
+    values [ [ value $ (T.pack . show . (id :: JobType -> Int)) job
+             , value $ (T.pack . show . (id :: User -> Int)) user
              , value ("CURRENT_TIMESTAMP" :: Raw)
              ] ]
 

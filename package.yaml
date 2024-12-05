@@ -51,6 +51,6 @@ tests:
     # - postgresql-simple
     # - mysql-simple
     # - sqlite-simple
-      - ms-tds >= 0.4 && < 0.5
-      - mssql-simple >= 0.6 && < 0.7
+    # - ms-tds >= 0.4 && < 0.5
+    # - mssql-simple >= 0.6 && < 0.7
 

@@ -27,8 +27,8 @@
 # resolver: lts-7.24
 ## windoze won't compile with 7.24
 # 
-# resolver: lts-12.14
-resolver: lts-22.22
+resolver: lts-12.14
+# resolver: lts-22.22
 
 packages:
   - .
